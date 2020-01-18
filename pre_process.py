@@ -3,7 +3,7 @@ import re
 import tweepy as tw # Installed via pip
 import pandas as pd
 api_key = "QOp19hmqlyZ4DcU388vHtFUsX"
-api_secret = "lxIv8SFUqMSRHxgprkzzSaj8OCP1VRtoVlprjVGADe0qCvMul6 "
+api_secret = "lxIv8SFUqMSRHxgprkzzSaj8OCP1VRtoVlprjVGADe0qCvMul6"
 access_token = "843012610383663105-L4272lsoa1tvS6HXp5sSeGAPlPvMDci"
 access_token_secret = "QJrruOYNJZZilBNCQjhotKzRVsJGOraKZqPQgDB6UXUpA"
 auth = tw.OAuthHandler(api_key, api_secret)
@@ -18,12 +18,16 @@ api = tw.API(auth, wait_on_rate_limit=True)
 # - Text sentiments tsv already sorted in order of tweet id so binary search can be performed to retrieve their sentiments
 #
 # 1) Form id list for every 100 tweets by reading tweet id (from the second backslash to the first dash) from first column of b-t4sa - use while loop appending to id list until null or limit of 100 is reached
-# 2) Use statuses_lookup with map_=true to determine if tweets have been deleted
-# 3) If deleted, status will be empty (only id attribute persists) - do not take any further action
-# 4) If not-deleted, bin search for text sentiments in other text file and append to row in csv (hence don't bother doing anything with deleted text id)
+# 2) Use statuses_lookup with to determine if tweets have been deleted
+# 3) If deleted, will not be included in returned tweet list so can use all existing tweets from then
+# 4) bin search for text sentiments in other text file and append to row in csv (hence don't bother doing anything with deleted text id)
 # Repeat until all tweet id's have been iterated through
 #
 # Different data items for each image bc it may provide a different result when put through the model
+def existenceCheck(api, idList):
+    tweets = api.statuses_lookup(idList)
+    for tweet in tweets:
+        print(tweet.id)
 
 def main():
     idList = []
@@ -34,14 +38,15 @@ def main():
             #print(id.group(0))
             idList.extend([id.group(0)])
             if (len(idList) == 5): #100
-                # for x in range(len(idList)):
-                #     print(idList[x])
+                existenceCheck(api, idList)
                 idList.clear()
                 print("\n")
         if (len(idList) > 0):
-            # for x in range(len(idList)):
-            #     print(idList[x])
+            # lookup
+            existenceCheck(api, idList)
         readFile.close()
+
+    # bin search in other file for this ting
 
     # with open("test_t4sa.tsv", "w") as writeFile:
     #     writer = csv.writer(writeFile, delimiter = "\t")
