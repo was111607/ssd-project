@@ -28,10 +28,10 @@ api = tw.API(auth, wait_on_rate_limit=True)
 #
 # Different data items for each image bc it may provide a different result when put through the model
 
-def searchId(lPoint, rPoint, target): # target is int
+def getTextSntmt(lPoint, rPoint, target): # target is int
     while (lPoint <= rPoint):
         mPoint = int(math.floor(lPoint + ((rPoint - lPoint) / 2)))
-        line = lc.getline("t4sa_text_sentiment.tsv", mPoint).rstrip()
+        line = lc.getline("t4sa_text_sentiment.tsv", mPoint).rstrip() # Retrieves line at index indicated by mPoint
         id = int(line.split()[0])
         # print(id)
         # print(target)
@@ -58,40 +58,58 @@ def searchId(lPoint, rPoint, target): # target is int
 #### Figure out a way to collate text content (from raw_tweets use bin search?) and image sentiments into 1 row.
 ### write 3 csvs, 1 text 1 image 1 both
 def existenceCheck(api, idList):
-    existingIds = []
+    existingIdsTexts = []
     tweets = api.statuses_lookup(idList)
     for tweet in tweets:
-        existingIds.extend([tweet.id_str])
-    return existingIds
+        txtRmvUrl = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet.text, flags=re.MULTILINE).rstrip() # mline in case tweet text encompasses multiple lines
+        existingIdsTexts.extend([[tweet.id_str, txtRmvUrl]])
+        print(txtRmvUrl)
+    return existingIdsTexts
 
 def main():
     idList = []
-    existingIds = []
-
+    existingIdsTexts = []
+    imageData = {}
     with open("test_bt4sa.txt", "r") as readFile:
-        for line in readFile:
-            id = re.search(r'(?<=/)\w+(?=-)', line)
-            #print(id.group(0))
-            idList.extend([id.group(0)])
+        for line in readFile: # Image sentiments
+            id = re.search(r"(?<=/)\w+(?=-)", line).group(0)
+            imageData[id] = line.rstrip()
+            idList.extend([id])
             if (len(idList) == 100): # change to 100
-                existingIds.extend(existenceCheck(api, idList))
+                existingIdsTexts.extend(existenceCheck(api, idList))
                 idList.clear()
-                print(f"existingIds length: {len(existingIds)}")
+                print(f"existingIdsTexts length: {len(existingIdsTexts)}")
         if (len(idList) > 0):
             # lookup
-            existingIds.extend(existenceCheck(api, idList))
-            print(f"existingIds length: {len(existingIds)}")
+            existingIdsTexts.extend(existenceCheck(api, idList))
+            print(f"existingIdsTexts length: {len(existingIdsTexts)}")
         readFile.close()
 
     # bin search in other file for this ting
     count = 0
-    with open("test_write.tsv", "w") as writeFile:
-        writer = csv.writer(writeFile, delimiter = "\t")
-        for id in existingIds:
-            result = searchId(1, 1179957, int(id))
-            writer.writerow(result.split()) # 1 skips header
+    with open("existing_all.csv", "w", newline="") as writeAll, open("existing_text.csv", "w", newline="") as writeText, open("existing_image.csv", "w", newline="") as writeImg:
+        writerText = csv.writer(writeText, delimiter=",", quotechar='"', quoting=csv.QUOTE_ALL)
+        writerText.writerow(["TWID", "NEG", "NEU", "POS", "TEXT"])
+        writerImg = csv.writer(writeImg, delimiter=",", quotechar='"', quoting=csv.QUOTE_ALL)
+        writerImg.writerow(["IMG", "I-SNTMT"])
+        writerAll = csv.writer(writeAll, delimiter=",", quotechar='"', quoting=csv.QUOTE_ALL)
+        writerAll.writerow(["TWID", "NEG", "NEU", "POS", "TEXT", "IMG", "I-SNTMT"])
+        for tweet in existingIdsTexts:
+            id = tweet[0]
+            text = tweet[1]
+            result = getTextSntmt(1, 1179957, int(id)).split()
+            result.extend([text])
+            writerText.writerow(result) # Write text data only
+            imgDataList = imageData[id].split()
+            writerImg.writerow(imgDataList) # Write image data only
+            result.extend(imgDataList)
+            writerAll.writerow(result) # Write both data
             count += 1
-            print(f"number written into tsv: {count}")
-        writeFile.close()
+            # print(result)
+            # print(imageData[id])
+            print(f"number written into csv's: {count}")
+        writeAll.close()
+        writeText.close()
+        writeImg.close()
 if __name__ == "__main__":
     main()
