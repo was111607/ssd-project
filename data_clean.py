@@ -63,6 +63,11 @@ def lowerCase(text):
             normalisedTweet.append(word)
     return " ".join(normalisedTweet)
 
+def saveData(df):
+    with open ("existing_text_tokenised.csv", "w") as writeFile:
+        df.to_csv(writeFile, index=False)
+        writeFile.close()
+
 def main():
     file = "./existing_text.csv"
     pd.set_option('display.max_colwidth', -1)
@@ -78,7 +83,7 @@ def main():
     df["TOK_TEXT"] = df["NEW_TEXT"].apply(word_tokenize)
     df["TOK_TEXT"] = df["TOK_TEXT"].apply(removeStopWords)
     df["TOK_TEXT"] = df["TOK_TEXT"].apply(lemmatise)
-    print(df["TOK_TEXT"])
+    saveData(df)
 
 if __name__ == "__main__":
     main()
