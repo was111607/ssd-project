@@ -5,10 +5,12 @@ import string
 import tweepy as tw # Installed via pip
 import pandas as pd
 import nltk
+from stop_words import get_stop_words
 from nltk.corpus import gazetteers
 from nltk.corpus import stopwords
+from nltk.corpus import names
 from nltk.tokenize import word_tokenize
-#from nltk.tokenize import Regexptokenizer
+from nltk.tokenize import RegexpTokenizer
 from nltk.stem import WordNetLemmatizer
 # 1) Create dataframe with pandas - use the text only csv?
 # 2) Can single out the tweet text column
@@ -20,9 +22,14 @@ from nltk.stem import WordNetLemmatizer
 # 6) Lemmatize all text
 
 #(?<![A-Z])[A-Z][a-z]+(?![A-Z]+)
-placesList = set(gazetteers.words())
-stopwords = set([re.sub(r"'", "", word) for word in stopwords.words("english")])
+placeList = set(gazetteers.words())
+# stopwords = set([re.sub(r"'", "", word) for word in stopwords.words("english")])
+nameList = set(names.words())
+nltkStopWords = set([re.sub(r"'", "", word) for word in stopwords.words("english")])
+externStopWords = set([re.sub(r"'", "", word) for word in get_stop_words("english")])
+stopWords = nltkStopWords.union(externStopWords)
 lemmatiser = WordNetLemmatizer()
+tokenizer = RegexpTokenizer(r"\w+")
 #set(re.sub(r"'", "", stopwords.words("english")))
 #print(stopwords)
 
@@ -39,7 +46,8 @@ def removeRTs(text):
     #return re.sub(r"^RT\s@.*:\s", "", text)
 
 def removeStopWords(toks):
-    return [word for word in toks if word not in stopwords]
+    return [word for word in toks if word not in stopWords]
+
 def lemmatise(toks):
     return [lemmatiser.lemmatize(word) for word in toks]
 
@@ -47,20 +55,26 @@ def spaceHashes(text):
     tweet = str(text)
     origHashtags = re.findall(r"#\w+", tweet)
     for tag in origHashtags:
-        sepTag = re.sub(r"([a-z])([A-Z])", r"\1 \2", tag)
+        sepTag = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", tag)
+        sepTag = re.sub(r"([a-z])([0-9])", r"\1 \2", sepTag)
         for char in re.findall(r"(?<![A-Z])[A-Z](?![A-Z])", sepTag):
             sepTag = sepTag.replace(char, char.lower())
         tweet = tweet.replace(tag, sepTag) # Lowercase individual capital letters SORT THIS OUT IN HASHES
     return tweet
 
+def removeNEChars(text):
+    return re.sub(r"[^[a-zA-Z0-9\s]\w*", "", str(text))
+
 def lowerCase(text):
     tweet = str(text).split()
     normalisedTweet = []
     for word in tweet:
-        if not (word in placesList) and not re.match(r"\w*[A-Z]\w*[A-Z]\w*", word):
-            normalisedTweet.append(word.lower())
-        else:
+        if (word in placeList) or (word in nameList) or (re.match(r"\w*[A-Z]\w*[A-Z]\w*", word)):
             normalisedTweet.append(word)
+        elif (word[:-1] in nameList or word[:-1] in placeList) and word[len(word) - 1] is "s":
+            normalisedTweet.append(word[:-1])
+        else:
+            normalisedTweet.append(word.lower())
     return " ".join(normalisedTweet)
 
 def saveData(df):
@@ -78,6 +92,7 @@ def main():
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(spaceHashes) # Words within hashtags separated and lowercased
     df["NEW_TEXT"] = df["NEW_TEXT"].replace("&amp;", "and", regex=True) # Replace ampersand with 'and'
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(removePunct) # Remove punctuation (including emojis - emulate reviews)
+    df["NEW_TEXT"] = df["NEW_TEXT"].apply(removeNEChars)
     df["NEW_TEXT"] = df["NEW_TEXT"].replace("\s{2,}", " ", regex=True) # Remove double (or more) spacing
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(lowerCase)
     df["TOK_TEXT"] = df["NEW_TEXT"].apply(word_tokenize)
