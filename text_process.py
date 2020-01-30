@@ -15,15 +15,18 @@ import nltk
 
 
 # Load in data as pandas - process images?
+# Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
 # Do text classification and image processing
 # When classify together with images, just concatenate vectors together (process images separately)
 # Stochastic graident descent?
+# split into 70/20/10train test val
 
 def main():
     file = "./existing_model_inputs.csv"
     pd.set_option('display.max_colwidth', -1)
-    df = pd.read_csv(file, header=0)
+    df = pd.read_csv(file, header = 0, lineterminator = "\n")
+    print(df)
 
 if __name__ == "__main__":
     main()

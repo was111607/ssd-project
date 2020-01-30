@@ -28,6 +28,12 @@ nameList = set(names.words())
 # nltkStopWords = set([re.sub(r"'", "", word) for word in stopwords.words("english")])
 # externStopWords = set([re.sub(r"'", "", word) for word in get_stop_words("english")])
 # stopWords = nltkStopWords.union(externStopWords)
+# remove sentimental stopwords, leaving determiners and conjuncters to be removed from the text:
+sent_stopwords = ["ain", "aren", "arent", "can", "cant", "cannot", "could", "couldn", "couldnt", "did", "didn", "didnt", "do", "does", "doesnt", "doing",
+"don", "dont", "few", "had", "hadnt", "has", "hasn", "hasnt", "have", "haven", "havent", "having", "hed", "hell", "hes", "is", "isn", "isnt", "it", "its",
+ "might", "mightnt", "mustn", "mustnt", "needn", "neednt", "no", "nor", "not", "shan", "shant", "she", "shed", "shell", "shes", "should", "shouldve", "shouldn",
+ "shouldnt", "thatll", "thats", "theres", "theyd", "theyll", "theyre", "theyve", "was", "wasn", "wasnt", "wed", "well", "weve", "were", "weren", "werent", "whats",
+ "whens", "wheres", "whos", "whys", "won", "wont", "would", "wouldnt", "youd", "youll", "youre", "youve"]
 lemmatiser = WordNetLemmatizer()
 tokenizer = RegexpTokenizer(r"\w+")
 #set(re.sub(r"'", "", stopwords.words("english")))
