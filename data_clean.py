@@ -5,8 +5,8 @@ import string
 import tweepy as tw # Installed via pip
 import pandas as pd
 import nltk
-# from stop_words import get_stop_words
-# from nltk.corpus import stopwords
+from stop_words import get_stop_words
+from nltk.corpus import stopwords
 from nltk.corpus import gazetteers
 from nltk.corpus import names
 from nltk.tokenize import word_tokenize
@@ -20,24 +20,23 @@ from nltk.stem import WordNetLemmatizer
 # 7) lowercase all text
 # 8) Tokenise text - remove punctation and lowercase text at the same time
 # 6) Lemmatize all text
-# Stopwords not removed as may contain negative stopwords
+
+# Remove sentimental stopwords from stopwords, leaving determiners and conjuncters to be removed from the text:
+sntmt_stopwords = {"against", "ain", "aren", "arent", "but", "can", "cant", "cannot", "could", "couldn", "couldnt", "did", "didn", "didnt", "do", "doesn", "does", "doesnt", "doing",
+"don", "dont", "few", "had", "hadn", "hadnt", "has", "hasn", "hasnt", "have", "haven", "havent", "having", "hed", "hell", "hes", "id", "is", "ill", "isn", "isnt", "it", "its",
+ "ive", "might", "mightn", "mightnt", "mustn", "mustnt", "needn", "neednt", "no", "nor", "not", "shan", "shant", "she", "shed", "shell", "shes", "should", "shouldve", "shouldn",
+ "shouldnt", "thatll", "thats", "theres", "theyd", "theyll", "theyre", "theyve", "was", "wasn", "wasnt", "wed", "well", "weve", "were", "weren", "werent", "whats",
+ "whens", "wheres", "whos", "whys", "won", "wont", "would", "wouldn", "wouldnt", "youd", "youll", "youre", "youve"}
+nltkStopWords = set([re.sub(r"'", "", word) for word in stopwords.words("english")])
+externStopWords = set([re.sub(r"'", "", word) for word in get_stop_words("english")])
+stopWords = nltkStopWords.union(externStopWords)
+stopWords = stopWords - sntmt_stopwords
 
 placeList = set(gazetteers.words())
-# stopwords = set([re.sub(r"'", "", word) for word in stopwords.words("english")])
 nameList = set(names.words())
-# nltkStopWords = set([re.sub(r"'", "", word) for word in stopwords.words("english")])
-# externStopWords = set([re.sub(r"'", "", word) for word in get_stop_words("english")])
-# stopWords = nltkStopWords.union(externStopWords)
-# remove sentimental stopwords, leaving determiners and conjuncters to be removed from the text:
-sent_stopwords = ["ain", "aren", "arent", "can", "cant", "cannot", "could", "couldn", "couldnt", "did", "didn", "didnt", "do", "does", "doesnt", "doing",
-"don", "dont", "few", "had", "hadnt", "has", "hasn", "hasnt", "have", "haven", "havent", "having", "hed", "hell", "hes", "is", "isn", "isnt", "it", "its",
- "might", "mightnt", "mustn", "mustnt", "needn", "neednt", "no", "nor", "not", "shan", "shant", "she", "shed", "shell", "shes", "should", "shouldve", "shouldn",
- "shouldnt", "thatll", "thats", "theres", "theyd", "theyll", "theyre", "theyve", "was", "wasn", "wasnt", "wed", "well", "weve", "were", "weren", "werent", "whats",
- "whens", "wheres", "whos", "whys", "won", "wont", "would", "wouldnt", "youd", "youll", "youre", "youve"]
 lemmatiser = WordNetLemmatizer()
 tokenizer = RegexpTokenizer(r"\w+")
 #set(re.sub(r"'", "", stopwords.words("english")))
-#print(stopwords)
 
 def removePunct(text):
     rmvApos = re.sub(r"'", "", str(text))
@@ -51,8 +50,8 @@ def removeRTs(text):
     return re.sub(r"^RT\s", "", str(text))
     #return re.sub(r"^RT\s@.*:\s", "", text)
 
-# def removeStopWords(toks):
-#     return [word for word in toks if word not in stopWords]
+def removeStopWords(toks):
+    return [word for word in toks if word not in stopWords]
 
 def lemmatise(toks):
     return [lemmatiser.lemmatize(word) for word in toks]
@@ -111,7 +110,7 @@ def main():
     df["NEW_TEXT"] = df["NEW_TEXT"].replace("\s{2,}", " ", regex=True) # Remove double (or more) spacing
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(lowerCase)
     df["TOK_TEXT"] = df["NEW_TEXT"].apply(word_tokenize)
-    #df["TOK_TEXT"] = df["TOK_TEXT"].apply(removeStopWords)
+    df["TOK_TEXT"] = df["TOK_TEXT"].apply(removeStopWords)
     df["TOK_TEXT"] = df["TOK_TEXT"].apply(lemmatise)
     saveData(df)
 
