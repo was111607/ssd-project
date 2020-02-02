@@ -1,17 +1,23 @@
 import os
 import csv
+import math
 import re
 import string
+import numpy as np
 import tweepy as tw # Installed via pip
 import pandas as pd
 import nltk
+from collections import Counter
 from stop_words import get_stop_words
 from nltk.corpus import stopwords
 from nltk.corpus import gazetteers
 from nltk.corpus import names
-from nltk.tokenize import word_tokenize
-from nltk.tokenize import RegexpTokenizer
+# from nltk.tokenize import word_tokenize
+# from nltk.tokenize import RegexpTokenizer
 from nltk.stem import WordNetLemmatizer
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+
 # 1) Create dataframe with pandas - use the text only csv?
 # 2) Can single out the tweet text column
 # 3) Remove RTs, name mentions (@s), punctuation, new lines
@@ -20,6 +26,13 @@ from nltk.stem import WordNetLemmatizer
 # 7) lowercase all text
 # 8) Tokenise text - remove punctation and lowercase text at the same time
 # 6) Lemmatize all text
+
+# 1) Split data into train/test/val sets
+# 2) Initialise tokeniser and fit on training set data with fit_on_texts (with oov_token set to True)
+# 3) Apply texts_to_sequences on rest of data
+# 4) In same method as 3 pre-pad to MAX_SEQ_LENGTH + 1 (First index will be reserved for image sentiments - In future set 0 to "NEG" 1 to "NEU" and 2 to "POS")
+
+# Make file analysing the analytics of the data? Such as vocbulary length, etc...
 
 # Remove sentimental stopwords from stopwords, leaving determiners and conjuncters to be removed from the text:
 sntmt_stopwords = {"against", "ain", "aren", "arent", "but", "can", "cant", "cannot", "could", "couldn", "couldnt", "did", "didn", "didnt", "do", "doesn", "does", "doesnt", "doing",
@@ -35,12 +48,12 @@ stopWords = stopWords - sntmt_stopwords
 placeList = set(gazetteers.words())
 nameList = set(names.words())
 lemmatiser = WordNetLemmatizer()
-tokenizer = RegexpTokenizer(r"\w+")
-#set(re.sub(r"'", "", stopwords.words("english")))
+tokeniser = Tokenizer(oov_token="outofvocab")
+counter = Counter()
 
 def removePunct(text):
     rmvApos = re.sub(r"'", "", str(text))
-    rmvPunc = re.sub(r"[^\w\s']+", " ", rmvApos) # Whitespace for connecting punctuations - removed later anyway
+    rmvPunc = re.sub(r"[^\w\s']+", " ", rmvApos) # Whitespace for connecting punctuation
     return rmvPunc.strip()
 
 def removeMentions(text):
@@ -50,11 +63,17 @@ def removeRTs(text):
     return re.sub(r"^RT\s", "", str(text))
     #return re.sub(r"^RT\s@.*:\s", "", text)
 
-def removeStopWords(toks):
-    return [word for word in toks if word not in stopWords]
+def removeStopWords(text):
+    tweet = str(text).split()
+    tweet = [word for word in tweet if word not in stopWords]
+    return " ".join(tweet)
+    # return [word for word in toks if word not in stopWords]
 
-def lemmatise(toks):
-    return [lemmatiser.lemmatize(word) for word in toks]
+def lemmatise(text):
+    tweet = str(text).split()
+    tweet = [lemmatiser.lemmatize(word) for word in tweet]
+    return " ".join(tweet)
+    # return [lemmatiser.lemmatize(word) for word in toks]
 
 def spaceHashes(text):
     tweet = str(text)
@@ -64,7 +83,7 @@ def spaceHashes(text):
         sepTag = re.sub(r"([a-z])([0-9])", r"\1 \2", sepTag)
     #    for char in re.findall(r"(?<![A-Z])[A-Z](?![A-Z])", sepTag):
     #        sepTag = sepTag.replace(char, char.lower())
-        tweet = tweet.replace(tag, sepTag) # Lowercase individual capital letters SORT THIS OUT IN HASHES
+        tweet = tweet.replace(tag, sepTag)
     return tweet
 
 def removeNEChars(text):
@@ -91,15 +110,18 @@ def lowerCase(text):
                 normalisedTweet.append(word.lower())
     return " ".join(normalisedTweet)
 
-def saveData(df):
-    with open ("existing_text_tokenised.csv", "w") as writeFile:
-        df.to_csv(writeFile, index=False)
-        writeFile.close()
+def saveData(df, train, test, val):
+    with open("existing_text_shuffled", "w") as writeShuff, open ("existing_text_train.csv", "w") as writeTrain, open ("existing_text_test.csv", "w") as writeTest, open ("existing_text_val.csv", "w") as writeVal:
+        df.to_csv(writeShuff, index=False)
+        train.to_csv(writeTrain, index=False)
+        test.to_csv(writeTest, index=False)
+        val.to_csv(writeVal, index=False)
+        writeShuff.close()
+        writeTrain.close()
+        writeTest.close()
+        writeVal.close()
 
-def main():
-    file = "./existing_text.csv"
-    pd.set_option('display.max_colwidth', -1)
-    df = pd.read_csv(file, header=0)
+def cleanData(df):
     df["NEW_TEXT"] = df["TEXT"]
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(removeRTs).apply(removeMentions) # Remove @ mentions and 'RT' text
     df["NEW_TEXT"] = df["NEW_TEXT"].replace(r"\n"," ", regex=True) # Newlines converted into whitespace
@@ -109,10 +131,30 @@ def main():
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(removeNEChars)
     df["NEW_TEXT"] = df["NEW_TEXT"].replace("\s{2,}", " ", regex=True) # Remove double (or more) spacing
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(lowerCase)
-    df["TOK_TEXT"] = df["NEW_TEXT"].apply(word_tokenize)
-    df["TOK_TEXT"] = df["TOK_TEXT"].apply(removeStopWords)
-    df["TOK_TEXT"] = df["TOK_TEXT"].apply(lemmatise)
-    saveData(df)
+    df["NEW_TEXT"] = df["NEW_TEXT"].apply(removeStopWords)
+    df["NEW_TEXT"] = df["NEW_TEXT"].apply(lemmatise)
+    return df
+
+def tokeniseTraining(train):
+    tweets = list(train["NEW_TEXT"].values)
+    for tweet in tweets:
+        counter.update(tweet.split())
+    tokeniser.fit_on_texts(tweets)
+    train["TOKENISED"] = tokeniser.texts_to_sequences(tweets)#train["NEW_TEXT"].apply(tokeniseText)
+    train["TOKENISED"] = pad_sequences(train["TOKENISED"], padding = "pre", value = 0).tolist() # Converts numpy array to list
+    return train
+
+def main():
+    file = "./existing_text.csv"
+    pd.set_option('display.max_colwidth', -1)
+    df = pd.read_csv(file, header = 0)
+    df = cleanData(df)
+    df = df.sample(frac = 1).reset_index(drop = True) # Shuffles data
+    train, test, val = np.split(df, [int(.7 * len(df)), int(.9 * len(df))])
+    test = test.reset_index(drop = True)
+    val = val.reset_index(drop = True)
+    train = tokeniseTraining(train)
+    saveData(df, train, test, val)
 
 if __name__ == "__main__":
     main()
