@@ -28,10 +28,11 @@ api = tw.API(auth, wait_on_rate_limit=True)
 #
 # Different data items for each image bc it may provide a different result when put through the model
 
+# Binary search
 def getTextSntmt(lPoint, rPoint, target): # target is int
     while (lPoint <= rPoint):
         mPoint = int(math.floor(lPoint + ((rPoint - lPoint) / 2)))
-        line = lc.getline("t4sa_text_sentiment.tsv", mPoint).rstrip() # Retrieves line at index indicated by mPoint
+        line = lc.getline("./entire datasets/t4sa_text_sentiment.tsv", mPoint).rstrip() # Retrieves line at index indicated by mPoint
         id = int(line.split()[0])
         # print(id)
         # print(target)
@@ -63,28 +64,30 @@ def existenceCheck(api, idList):
     for tweet in tweets:
         txtRmvUrl = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet.text, flags=re.MULTILINE).rstrip() # mline in case tweet text encompasses multiple lines
         existingIdsTexts.extend([[tweet.id_str, txtRmvUrl]])
-        print(txtRmvUrl)
     return existingIdsTexts
 
 def main():
     idList = []
     existingIdsTexts = []
     imageData = {}
-    with open("test_bt4sa.txt", "r") as readFile:
+    with open("./entire datasets/b-t4sa_all.txt", "r") as readFile:
         for line in readFile: # Image sentiments
             id = re.search(r"(?<=/)\w+(?=-)", line).group(0)
-            imageData[id] = line.rstrip()
-            idList.extend([id])
-            if (len(idList) == 100): # change to 100
-                existingIdsTexts.extend(existenceCheck(api, idList))
-                idList.clear()
-                print(f"existingIdsTexts length: {len(existingIdsTexts)}")
+            if (id in imageData):
+                imageData[id].append(line.rstrip())
+            else:
+                imageData[id] = [line.rstrip()]
+                idList.extend([id])
+                if (len(idList) == 100):
+                    existingIdsTexts.extend(existenceCheck(api, idList))
+                    idList.clear()
+                    #print(f"existingIdsTexts length: {len(existingIdsTexts)}")
+                print(f"existingIdsTexts length: {len(existingIdsTexts)}") # Get rid after
         if (len(idList) > 0):
             # lookup
             existingIdsTexts.extend(existenceCheck(api, idList))
             print(f"existingIdsTexts length: {len(existingIdsTexts)}")
         readFile.close()
-
     # bin search in other file for this ting
     count = 0
     with open("existing_all.csv", "w", newline="") as writeAll, open("existing_text.csv", "w", newline="") as writeText, open("existing_image.csv", "w", newline="") as writeImg:
@@ -100,16 +103,20 @@ def main():
             result = getTextSntmt(1, 1179957, int(id)).split()
             result.extend([text])
             writerText.writerow(result) # Write text data only
-            imgDataList = imageData[id].split()
-            writerImg.writerow(imgDataList) # Write image data only
-            result.extend(imgDataList)
-            writerAll.writerow(result) # Write both data
-            count += 1
+            for image in imageData[id]:
+                imgDataList = image.split()
+                writerImg.writerow(imgDataList) # Write image data only - Write one row per image in dic list?
+                #result.extend(imgDataList)
+                writerAll.writerow(result + imgDataList) # Write both data - Write one row per image in dic list?
+                count += 1
             # print(result)
             # print(imageData[id])
-            print(f"number written into csv's: {count}")
+            print(f"Rows written into all csv: {count}")
         writeAll.close()
         writeText.close()
         writeImg.close()
+        print("\n")
+        print(f"Unique tweets existing: {len(existingIdsTexts)}")
+        print(f"Total rows written into existing_all.csv: {count}")
 if __name__ == "__main__":
     main()

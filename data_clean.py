@@ -1,12 +1,8 @@
-import os
-import csv
-import math
 import re
-import string
 import numpy as np
-import tweepy as tw # Installed via pip
 import pandas as pd
-import nltk
+import pickle
+
 from collections import Counter
 from stop_words import get_stop_words
 from nltk.corpus import stopwords
@@ -32,7 +28,7 @@ from keras.preprocessing.sequence import pad_sequences
 # 3) Apply texts_to_sequences on rest of data
 # 4) In same method as 3 pre-pad to MAX_SEQ_LENGTH + 1 (First index will be reserved for image sentiments - In future set 0 to "NEG" 1 to "NEU" and 2 to "POS")
 
-# Make file analysing the analytics of the data? Such as vocbulary length, etc...
+# Make file analysing the analytics of the data? Such as vocabulary length, etc...
 
 # Remove sentimental stopwords from stopwords, leaving determiners and conjuncters to be removed from the text:
 sntmt_stopwords = {"against", "ain", "aren", "arent", "but", "can", "cant", "cannot", "could", "couldn", "couldnt", "did", "didn", "didnt", "do", "doesn", "does", "doesnt", "doing",
@@ -111,15 +107,17 @@ def lowerCase(text):
     return " ".join(normalisedTweet)
 
 def saveData(df, train, test, val):
-    with open("existing_text_shuffled", "w") as writeShuff, open ("existing_text_train.csv", "w") as writeTrain, open ("existing_text_test.csv", "w") as writeTest, open ("existing_text_val.csv", "w") as writeVal:
+    with open("existing_text_shuffled", "w") as writeShuff, open("existing_text_train.csv", "w") as writeTrain, open("existing_text_test.csv", "w") as writeTest, open("existing_text_val.csv", "w") as writeVal, open("training_counter.pickle", "wb") as writeCounter:
         df.to_csv(writeShuff, index=False)
         train.to_csv(writeTrain, index=False)
         test.to_csv(writeTest, index=False)
         val.to_csv(writeVal, index=False)
+        pickle.dump(counter, writeCounter)
         writeShuff.close()
         writeTrain.close()
         writeTest.close()
         writeVal.close()
+        writeCounter.close()
 
 def cleanData(df):
     df["NEW_TEXT"] = df["TEXT"]
