@@ -82,6 +82,7 @@ def spaceHashes(text):
         tweet = tweet.replace(tag, sepTag)
     return tweet
 
+# Remove non-english characters
 def removeNEChars(text):
     return re.sub(r"[^[a-zA-Z0-9\s]\w*", "", str(text))
 
@@ -119,6 +120,14 @@ def saveData(df, train, test, val):
         writeVal.close()
         writeCounter.close()
 
+def avgWordCount(df, isBefore):
+    avg = df["NEW_TEXT"].apply(lambda x: len(str(x).split())).mean()
+    if (isBefore == 1):
+        print(f"Average word count before stop-word removal: {avg}") # Find mean word count of text
+    else:
+        print(f"Average word count after stop-word removal: {avg}") # Find mean word count of text
+
+# Method to find average length of review before stopword removal and after to figure out (Maybe run multiple times??)
 def cleanData(df):
     df["NEW_TEXT"] = df["TEXT"]
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(removeRTs).apply(removeMentions) # Remove @ mentions and 'RT' text
@@ -129,8 +138,10 @@ def cleanData(df):
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(removeNEChars)
     df["NEW_TEXT"] = df["NEW_TEXT"].replace("\s{2,}", " ", regex=True) # Remove double (or more) spacing
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(lowerCase)
+    avgWordCount(df, 1)
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(removeStopWords)
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(lemmatise)
+    avgWordCount(df, 0)
     return df
 
 def tokeniseTraining(train):
