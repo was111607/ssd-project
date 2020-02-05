@@ -22,8 +22,16 @@ import nltk
 # Stochastic graident descent?
 # split into 70/20/10train test val
 
+# Initially for text
+# Objective (optimiser) function, loss function, metrics to define model in Keras
+# Investigate activation function
+# Embedding layer - LSTM layer - (optional) CNN elements - hidden layer - softmax layer - output layer
+# Feature-level fusion: combined image and text vectors within LSTM or before to classify simultaneously
+# Decision-level fusion: classify image and text vectors separately, combine within the softmax layer
+
+# model.add(embedding) - size of vocab (retrieve from pickle file) + 1, output dim - have to tinker around, input_length=55 (size of sequences), set mask_zero to true.
 def main():
-    file = "./existing_model_inputs.csv"
+    file ="./existing_image_sorted.csv"# "./existing_model_inputs.csv"
     pd.set_option('display.max_colwidth', -1)
     df = pd.read_csv(file, header = 0, lineterminator = "\n")
     print(df)

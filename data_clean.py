@@ -2,6 +2,7 @@ import re
 import numpy as np
 import pandas as pd
 import pickle
+import csv
 
 from collections import Counter
 from stop_words import get_stop_words
@@ -109,10 +110,10 @@ def lowerCase(text):
 
 def saveData(df, train, test, val):
     with open("existing_text_shuffled", "w") as writeShuff, open("existing_text_train.csv", "w") as writeTrain, open("existing_text_test.csv", "w") as writeTest, open("existing_text_val.csv", "w") as writeVal, open("training_counter.pickle", "wb") as writeCounter:
-        df.to_csv(writeShuff, index=False)
-        train.to_csv(writeTrain, index=False)
-        test.to_csv(writeTest, index=False)
-        val.to_csv(writeVal, index=False)
+        df.to_csv(writeShuff, index=False, quotechar='"', quoting=csv.QUOTE_ALL)
+        train.to_csv(writeTrain, index=False, quotechar='"', quoting=csv.QUOTE_ALL)
+        test.to_csv(writeTest, index=False, quotechar='"', quoting=csv.QUOTE_ALL)
+        val.to_csv(writeVal, index=False, quotechar='"', quoting=csv.QUOTE_ALL)
         pickle.dump(counter, writeCounter)
         writeShuff.close()
         writeTrain.close()
@@ -150,7 +151,7 @@ def tokeniseTraining(train):
         counter.update(tweet.split())
     tokeniser.fit_on_texts(tweets)
     train["TOKENISED"] = tokeniser.texts_to_sequences(tweets)#train["NEW_TEXT"].apply(tokeniseText)
-    train["TOKENISED"] = pad_sequences(train["TOKENISED"], padding = "pre", value = 0).tolist() # Converts numpy array to list
+    train["TOKENISED"] = pad_sequences(train["TOKENISED"], maxlen = 55, padding = "pre", value = 0).tolist() # Converts numpy array to list
     return train
 
 def main():
