@@ -110,10 +110,10 @@ def lowerCase(text):
 
 def saveData(df, train, test, val):
     with open("existing_text_shuffled", "w") as writeShuff, open("existing_text_train.csv", "w") as writeTrain, open("existing_text_test.csv", "w") as writeTest, open("existing_text_val.csv", "w") as writeVal, open("training_counter.pickle", "wb") as writeCounter:
-        df.to_csv(writeShuff, index=False, quotechar='"', quoting=csv.QUOTE_ALL)
-        train.to_csv(writeTrain, index=False, quotechar='"', quoting=csv.QUOTE_ALL)
-        test.to_csv(writeTest, index=False, quotechar='"', quoting=csv.QUOTE_ALL)
-        val.to_csv(writeVal, index=False, quotechar='"', quoting=csv.QUOTE_ALL)
+        df.to_csv(writeShuff, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
+        train.to_csv(writeTrain, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
+        test.to_csv(writeTest, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
+        val.to_csv(writeVal, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
         pickle.dump(counter, writeCounter)
         writeShuff.close()
         writeTrain.close()
@@ -145,14 +145,14 @@ def cleanData(df):
     avgWordCount(df, 0)
     return df
 
-def tokeniseTraining(train):
-    tweets = list(train["NEW_TEXT"].values)
+def tokenise(df):
+    tweets = list(df["NEW_TEXT"].values)
     for tweet in tweets:
         counter.update(tweet.split())
     tokeniser.fit_on_texts(tweets)
-    train["TOKENISED"] = tokeniser.texts_to_sequences(tweets)#train["NEW_TEXT"].apply(tokeniseText)
-    train["TOKENISED"] = pad_sequences(train["TOKENISED"], maxlen = 55, padding = "pre", value = 0).tolist() # Converts numpy array to list
-    return train
+    df["TOKENISED"] = tokeniser.texts_to_sequences(tweets)#train["NEW_TEXT"].apply(tokeniseText)
+    df["TOKENISED"] = pad_sequences(df["TOKENISED"], maxlen = 30, padding = "pre", value = 0).tolist() # Converts numpy array to list
+    return df
 
 def main():
     file = "./existing_text.csv"
@@ -163,7 +163,7 @@ def main():
     train, test, val = np.split(df, [int(.7 * len(df)), int(.9 * len(df))])
     test = test.reset_index(drop = True)
     val = val.reset_index(drop = True)
-    train = tokeniseTraining(train)
+    train = tokenise(train)
     saveData(df, train, test, val)
 
 if __name__ == "__main__":
