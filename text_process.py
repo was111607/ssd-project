@@ -39,12 +39,13 @@ from keras.layers import LSTM
 def buildModel():
     with open("/media/was/USB DISK/training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 20k
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 64
     model = Sequential()
-    model.add(embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True))
+    model.add(Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True))
+    model.add(LSTM(embedDim, ))
 
     return None
 def main():

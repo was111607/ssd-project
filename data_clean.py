@@ -50,7 +50,9 @@ counter = Counter()
 
 def removePunct(text):
     rmvApos = re.sub(r"'", "", str(text))
-    rmvPunc = re.sub(r"[^\w\s']+", " ", rmvApos) # Whitespace for connecting punctuation
+    #punc = re.sub("[\w\s]+", "", string.printable)
+    rmvPunc = re.sub(r"[^\w\s\U00010000-\U0010ffff\U00002764]+", " ", rmvApos, flags=re.UNICODE)
+    #rmvPunc = re.sub(r"[^\w\s]+", " ", rmvApos) # [^\w\s']+ Whitespace for connecting punctuation
     return rmvPunc.strip()
 
 def removeMentions(text):
@@ -72,6 +74,9 @@ def lemmatise(text):
     return " ".join(tweet)
     # return [lemmatiser.lemmatize(word) for word in toks]
 
+def spaceEmojis(text):
+    return re.sub(r"([\U00010000-\U0010ffff\U00002764])", r" \1 ", str(text), flags=re.UNICODE)
+
 def spaceHashes(text):
     tweet = str(text)
     origHashtags = re.findall(r"#\w+", tweet)
@@ -85,7 +90,7 @@ def spaceHashes(text):
 
 # Remove non-english characters
 def removeNEChars(text):
-    return re.sub(r"[^[a-zA-Z0-9\s]\w*", "", str(text))
+    return re.sub(r"[^[a-zA-Z0-9\s\U00010000-\U0010ffff\U00002764]\w*", "", str(text), flags=re.UNICODE)
 
 def lowerCase(text):
     tweet = str(text).split()
@@ -136,6 +141,7 @@ def cleanData(df):
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(spaceHashes) # Words within hashtags separated and lowercased
     df["NEW_TEXT"] = df["NEW_TEXT"].replace("&amp;", "and", regex=True) # Replace ampersand with 'and'
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(removePunct) # Remove punctuation (including emojis - emulate reviews)
+    df["NEW_TEXT"] = df["NEW_TEXT"].apply(spaceEmojis)
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(removeNEChars)
     df["NEW_TEXT"] = df["NEW_TEXT"].replace("\s{2,}", " ", regex=True) # Remove double (or more) spacing
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(lowerCase)
