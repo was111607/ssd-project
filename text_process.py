@@ -6,6 +6,7 @@ import tweepy as tw # Installed via pip
 import pandas as pd
 import nltk
 import pickle
+from keras.models import Model
 from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras.layers import Dense, Embedding
@@ -44,27 +45,43 @@ from keras.applications.vgg19 import VGG19
 # Then model proceeds as normal
 
 # Load model without top, flatten output then append to each word vector (total 1920 + 20588 dims)
-def loadVGG19(path):
-    model = VGG19(weights = "imagenet", include_top = False)
-    img = load_img(path, target_size = (224, 224))
-    img = img_to_array(img)
-    img = img.reshape((1, img.shape[0], img.shape[1], img.shape[2]))
-    img = preprocess_input(img)
-    #np.nvstack
-    featureMatrix = model.predict(img) # (1, 7, 7, 512)
+def getImgReps(pathList):
+    images = []
+    vgg19 = VGG19(weights = "imagenet")
+    model = Sequential()
+    for layer in vgg19.layers[:-1]:
+        model.add(layer)
+    model.add(Dense(512, activation = "relu"))
+    firstImg = None
+    for path in pathList:
+        img = load_img(path, target_size = (224, 224))
+        img = img_to_array(img)
+        img = np.expand_dims(img, axis=0)
+        if (len(images) == 0):
+            if (firstImg is None):
+                firstImg = img
+            else:
+                images = np.nvstack([firstImg, img])
+        images = np.nvstack([images, img])
+    featureMatrix = model.predict(img) # (x, 512)
+    return featureMatrix
 
-def buildModel():
+def getTextEmbeddings():
     with open("/media/was/USB DISK/training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
-    embedDim = 64
+    embedDim = 512
     model = Sequential()
-    model.add(Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)) # Output is 30*64 matrix (each word represented in 64 dimensions) = 1920
-    model.add(LSTM(embedDim, )) # LSTM, then into softmax, then add ReLU somehere
-
+    model.add(Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    # Append image reps to embeddings
+    model.add(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))) # LSTM, then into softmax, then add ReLU somehere
+    # DENSE
+    # softmax output
+    # Output
     return None
+
 def main():
     file = "./train_text_input_subset.csv"
     pd.set_option('display.max_colwidth', -1)
