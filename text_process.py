@@ -84,7 +84,7 @@ def mainModel():
     imageFtrs = Input(shape=(512,))
     added = add([reduceImgFtrs, textFtrs])
     lstm = LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2)(added)
-    output = Dense(3, activation = "softmax")
+    output = Dense(3, activation = "softmax")(lstm)
     model = Model(inputs=[textFtrs, imageFtrs], output=added)
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
