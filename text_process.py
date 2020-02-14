@@ -6,16 +6,13 @@ import tweepy as tw # Installed via pip
 import pandas as pd
 import nltk
 import pickle
-from keras.models import Model
+import numpy as np
+from keras.models import Model, Sequential
 from keras.preprocessing import sequence
-from keras.models import Sequential
-from keras.layers import Dense, Embedding
-from keras.layers import LSTM
-from keras.preprocessing.image import load_img
-from keras.preprocessing.image import img_to_array
-from keras.applications.vgg19 import preprocess_input
-from keras.applications.vgg19 import decode_predictions
-from keras.applications.vgg19 import VGG19
+from keras.preprocessing.image import load_img, img_to_array
+from keras.layers import Dense, Embedding, LSTM, Input
+from keras.layers.merge import add
+from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
 
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
@@ -49,7 +46,7 @@ def getImgReps(pathList):
     images = []
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
-    for layer in vgg19.layers[:-1]:
+    for layer in vgg19.layers[:-1]: # Output of FC2 layer
         model.add(layer)
     model.add(Dense(512, activation = "relu"))
     firstImg = None
@@ -66,17 +63,33 @@ def getImgReps(pathList):
     featureMatrix = model.predict(img) # (x, 512)
     return featureMatrix
 
-def getTextEmbeddings():
+numarray = np.array([np.arange(1, 513), np.arange(1, 513)])
+vgg19 = VGG19(weights='imagenet')
+# model = Sequential()
+# for layer in vgg19.layers[:-1]:
+#     model.add(layer)
+reduceImgFtrs = Dense(512, activation = "relu")(vgg19.layers[-2].output)
+textFtrs = Input(shape=(512,))
+added = add([reduceImgFtrs, textFtrs])
+model = Model(inputs=[vgg19.input, textFtrs], output=added)
+
+def mainModel():
     with open("/media/was/USB DISK/training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
-    model = Sequential()
-    model.add(Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    imageFtrs = Input(shape=(512,))
+    added = add([reduceImgFtrs, textFtrs])
+    lstm = LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2)(added)
+    output = Dense(3, activation = "softmax")
+    model = Model(inputs=[textFtrs, imageFtrs], output=added)
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
     # Append image reps to embeddings
-    model.add(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))) # LSTM, then into softmax, then add ReLU somehere
+#    model.add(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))) # LSTM, then into softmax, then add ReLU somehere
     # DENSE
     # softmax output
     # Output
