@@ -10,7 +10,7 @@ import numpy as np
 from keras.models import Model, Sequential
 from keras.preprocessing import sequence
 from keras.preprocessing.image import load_img, img_to_array
-from keras.layers import Dense, Embedding, LSTM, Input
+from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
 from keras.layers.merge import add
 from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
 
@@ -21,6 +21,7 @@ from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
 # When classify together with images, just concatenate vectors together (process images separately)
 # Stochastic graident descent?
 # split into 70/20/10train test val
+# HyperParameter optimisation
 
 # Initially for text
 # Objective (optimiser) function, loss function, metrics to define model in Keras
@@ -42,26 +43,49 @@ from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
 # Then model proceeds as normal
 
 # Load model without top, flatten output then append to each word vector (total 1920 + 20588 dims)
-def getImgReps(pathList):
+counter = 0
+def getImageRep(path):
+    global counter
+    print(counter)
+    counter += 1
+    img = load_img(str(path), target_size = (224, 224))
+    img = img_to_array(img)
+    img = np.expand_dims(img, axis=0)
+    return img
+
+def getImgReps(df): # pathList old arg
     images = []
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers[:-1]: # Output of FC2 layer
         model.add(layer)
     model.add(Dense(512, activation = "relu"))
-    firstImg = None
-    for path in pathList:
-        img = load_img(path, target_size = (224, 224))
-        img = img_to_array(img)
-        img = np.expand_dims(img, axis=0)
-        if (len(images) == 0):
-            if (firstImg is None):
-                firstImg = img
-            else:
-                images = np.nvstack([firstImg, img])
-        images = np.nvstack([images, img])
-    featureMatrix = model.predict(img) # (x, 512)
-    return featureMatrix
+    df["REPRESENTATION"] = df.apply(getImageRep)
+
+#    firstImg = None
+    # pathListLen = len(pathList)
+    # input(len(pathList))
+    #featureMatrix = np.empty(pathListLen, dtype = object)
+    #for i in range(pathListLen):
+    # for path in pathList:
+    #     print(counter)
+    # #    img = load_img(pathList[i], target_size = (224, 224))
+    #     #featureMatrix[i] = img
+    #     # img = load_img(path, target_size = (224, 224))
+    #     # img = img_to_array(img)
+    #     # img = np.expand_dims(img, axis=0)
+    #     if (len(images) == 0):
+    #         if (firstImg is None):
+    #             firstImg = img
+    #         else:
+    #             images = np.vstack([firstImg, img])
+    #     else:
+    #         images = np.vstack([images, img])
+    #     counter += 1
+    # featureMatrix = np.concatenate(featureMatrix)
+    # featureMatrix = model.predict(img) # (x, 512)
+    # return featureMatrix
+    return df
 
 numarray = np.array([np.arange(1, 513), np.arange(1, 513)])
 vgg19 = VGG19(weights='imagenet')
@@ -81,26 +105,28 @@ def mainModel():
     seqLength = 30
     embedDim = 512
     textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-    imageFtrs = Input(shape=(512,))
-    added = add([reduceImgFtrs, textFtrs])
-    lstm = LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2)(added)
-    output = Dense(3, activation = "softmax")(lstm)
-    model = Model(inputs=[textFtrs, imageFtrs], output=added)
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-
-    # Append image reps to embeddings
-#    model.add(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))) # LSTM, then into softmax, then add ReLU somehere
-    # DENSE
-    # softmax output
-    # Output
+    textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    imageFtrs = Input(shape=(embedDim,))
+    added = add([textFtrs, imageFtrs])
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(added)
+    hidden = Dense(256, activation = "relu")(lstm)
+    x = Dropout(0.5)(hidden)
+    output = Dense(3, activation = "softmax")(x)
+    model = Model(inputs = [textFtrs, imageFtrs], output = added)
+    model.compile(optimizer = "adam", loss = "binary_crossentropy", metrics = ["accuracy"])
     return None
 
 def main():
     file = "./train_text_input_subset.csv"
     pd.set_option('display.max_colwidth', -1)
     df = pd.read_csv(file, header = 0)
-    sequences = pd["TOKENISED"]
-    model = buildModel()
+    imageSequences = df["TOKENISED"]
+    print(imageSequences)
+#    paths = df["IMG"].tolist()
+    paths = df["IMG"]
+    print(paths)
+#    imageFeatures = getImgReps(paths)
+    model = mainModel()
 
 if __name__ == "__main__":
     main()
