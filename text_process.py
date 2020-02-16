@@ -127,15 +127,16 @@ def main():
     file = "./train_text_input_subset.csv"
     pd.set_option('display.max_colwidth', -1)
     df = pd.read_csv(file, header = 0)
-    imageSequences = df["TOKENISED"]
-    print(imageSequences)
+    XTrain = pd.eval(df["TOKENISED"]) # CONVERT THIS TO NUMPY ARRAY OF LISTS
 #    paths = df["IMG"].tolist()
+    print(XTrain)
     paths = df["IMG"]
     print(paths)
-    imageFeatures = getImgReps(paths)
-    saveData(imageFeatures)
-    model = mainModel()
-    X_train =
+#    imageFeatures = getImgReps(paths)
+#    saveData(imageFeatures)
+#    model = mainModel()
+    YTrain = df["TXT_SNTMT"].to_numpy("int32")
+    print(YTrain)
     # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS
 
 if __name__ == "__main__":
