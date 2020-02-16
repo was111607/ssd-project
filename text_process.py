@@ -13,7 +13,7 @@ from keras.preprocessing.image import load_img, img_to_array
 from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
 from keras.layers.merge import add
 from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
-
+from ast import literal_eval
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -123,11 +123,14 @@ def saveData(df):
         df.to_csv(writeFile, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
         writeFile.close()
 
+def toList(list):
+    return literal_eval(str(list))
+
 def main():
     file = "./train_text_input_subset.csv"
     pd.set_option('display.max_colwidth', -1)
     df = pd.read_csv(file, header = 0)
-    XTrain = pd.eval(df["TOKENISED"]) # CONVERT THIS TO NUMPY ARRAY OF LISTS
+    XTrain = df["TOKENISED"].apply(toList).to_numpy() # CONVERT THIS TO NUMPY ARRAY OF LISTS
 #    paths = df["IMG"].tolist()
     print(XTrain)
     paths = df["IMG"]
