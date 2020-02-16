@@ -87,15 +87,15 @@ def getImgReps(df): # pathList old arg
     # return featureMatrix
     return df
 
-numarray = np.array([np.arange(1, 513), np.arange(1, 513)])
-vgg19 = VGG19(weights='imagenet')
-# model = Sequential()
-# for layer in vgg19.layers[:-1]:
-#     model.add(layer)
-reduceImgFtrs = Dense(512, activation = "relu")(vgg19.layers[-2].output)
-textFtrs = Input(shape=(512,))
-added = add([reduceImgFtrs, textFtrs])
-model = Model(inputs=[vgg19.input, textFtrs], output=added)
+# numarray = np.array([np.arange(1, 513), np.arange(1, 513)])
+# vgg19 = VGG19(weights='imagenet')
+# # model = Sequential()
+# # for layer in vgg19.layers[:-1]:
+# #     model.add(layer)
+# reduceImgFtrs = Dense(512, activation = "relu")(vgg19.layers[-2].output)
+# textFtrs = Input(shape=(512,))
+# added = add([reduceImgFtrs, textFtrs])
+# model = Model(inputs=[vgg19.input, textFtrs], output=added)
 
 def mainModel():
     with open("/media/was/USB DISK/training_counter.pickle", "rb") as readFile:
@@ -104,17 +104,24 @@ def mainModel():
         readFile.close()
     seqLength = 30
     embedDim = 512
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-    textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
     imageFtrs = Input(shape=(embedDim,))
     added = add([textFtrs, imageFtrs])
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(added)
     hidden = Dense(256, activation = "relu")(lstm)
     x = Dropout(0.5)(hidden)
     output = Dense(3, activation = "softmax")(x)
-    model = Model(inputs = [textFtrs, imageFtrs], output = added)
+    model = Model(inputs = [input, imageFtrs], output = added)
     model.compile(optimizer = "adam", loss = "binary_crossentropy", metrics = ["accuracy"])
-    return None
+    return model
+
+def saveData(df):
+    with open("image_features.csv", "w") as writeFile:
+        df.to_csv(writeFile, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
+        writeFile.close()
 
 def main():
     file = "./train_text_input_subset.csv"
@@ -125,8 +132,11 @@ def main():
 #    paths = df["IMG"].tolist()
     paths = df["IMG"]
     print(paths)
-#    imageFeatures = getImgReps(paths)
+    imageFeatures = getImgReps(paths)
+    saveData(imageFeatures)
     model = mainModel()
+    X_train =
+    # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS
 
 if __name__ == "__main__":
     main()
