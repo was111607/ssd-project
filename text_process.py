@@ -85,7 +85,7 @@ def getImgReps(df): # pathList old arg
     # featureMatrix = np.concatenate(featureMatrix)
     # featureMatrix = model.predict(img) # (x, 512)
     # return featureMatrix
-    return df
+    return df.to_numpy()
 
 # numarray = np.array([np.arange(1, 513), np.arange(1, 513)])
 # vgg19 = VGG19(weights='imagenet')
@@ -114,8 +114,9 @@ def mainModel():
     hidden = Dense(256, activation = "relu")(lstm)
     x = Dropout(0.5)(hidden)
     output = Dense(3, activation = "softmax")(x)
-    model = Model(inputs = [input, imageFtrs], output = added)
+    model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "binary_crossentropy", metrics = ["accuracy"])
+    print(model.summary())
     return model
 
 def saveData(df):
@@ -124,23 +125,30 @@ def saveData(df):
         writeFile.close()
 
 def toList(list):
-    return literal_eval(str(list))
+    return np.array(literal_eval(str(list)))
 
 def main():
-    file = "./train_text_input_subset.csv"
+    trainFile = "./model_input_training_subset.csv"
+    valFile = "./model_input_validation_subset.csv"
+    testFile = "./model_input_testing_subset.csv"
     pd.set_option('display.max_colwidth', -1)
-    df = pd.read_csv(file, header = 0)
-    XTrain = df["TOKENISED"].apply(toList).to_numpy() # CONVERT THIS TO NUMPY ARRAY OF LISTS
-#    paths = df["IMG"].tolist()
-    print(XTrain)
-    paths = df["IMG"]
+    dfTrain = pd.read_csv(trainFile, header = 0)
+    XTrain = dfTrain["TOKENISED"].apply(toList).to_numpy() # CONVERT THIS TO NUMPY ARRAY OF LISTS
+    XVal =
+#     print(XTrain.type())
+# #    paths = df["IMG"].tolist()
+#     print(XTrain)
+    trainPaths = dfTrain["IMG"].to_numpy("str")
     print(paths)
-#    imageFeatures = getImgReps(paths)
+#    imageFeatures = getImgReps(trainPaths) # Check how images are added to this ting/, Multi input consider
 #    saveData(imageFeatures)
-#    model = mainModel()
+    model = mainModel()
     YTrain = df["TXT_SNTMT"].to_numpy("int32")
+    #YTrain = df.apply(lambda x: )
     print(YTrain)
-    # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS
+    results = model.fit(XTrain, YTrain, epochs= 2, batch_size = 500, validation_data = (XVal, YVal))
+    # Convert validation subsets to be with the fit, investigate best epoch and batch size
+    # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS # Multiple inputs, labels and outputs
 
 if __name__ == "__main__":
     main()

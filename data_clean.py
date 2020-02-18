@@ -114,7 +114,7 @@ def lowerCase(text):
     return " ".join(normalisedTweet)
 
 def saveData(df, train, test, val):
-    with open("existing_text_shuffled", "w") as writeShuff, open("existing_text_train.csv", "w") as writeTrain, open("existing_text_test.csv", "w") as writeTest, open("existing_text_val.csv", "w") as writeVal, open("training_counter.pickle", "wb") as writeCounter:
+    with open("existing_text_shuffled.csv", "w") as writeShuff, open("existing_text_train.csv", "w") as writeTrain, open("existing_text_test.csv", "w") as writeTest, open("existing_text_val.csv", "w") as writeVal, open("training_counter.pickle", "wb") as writeCounter:
         df.to_csv(writeShuff, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
         train.to_csv(writeTrain, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
         test.to_csv(writeTest, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
@@ -151,11 +151,12 @@ def cleanData(df):
     avgWordCount(df, 0)
     return df
 
-def tokenise(df):
+def tokenise(df, isTest):
     tweets = list(df["NEW_TEXT"].values)
     for tweet in tweets:
         counter.update(tweet.split())
-    tokeniser.fit_on_texts(tweets)
+    if (isTest is True):
+        tokeniser.fit_on_texts(tweets)
     df["TOKENISED"] = tokeniser.texts_to_sequences(tweets)#train["NEW_TEXT"].apply(tokeniseText)
     df["TOKENISED"] = pad_sequences(df["TOKENISED"], maxlen = 30, padding = "pre", value = 0).tolist() # Converts numpy array to list
     return df
@@ -169,7 +170,10 @@ def main():
     train, test, val = np.split(df, [int(.7 * len(df)), int(.9 * len(df))])
     test = test.reset_index(drop = True)
     val = val.reset_index(drop = True)
-    train = tokenise(train)
+    train = tokenise(train, True)
+    test = tokenise(test, False)
+    val = tokenise(val, False)
+    #print(train["TOKENISED"])
     saveData(df, train, test, val)
 
 if __name__ == "__main__":
