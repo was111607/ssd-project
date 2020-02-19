@@ -2,9 +2,7 @@ import os
 import csv
 import re
 import string
-import tweepy as tw # Installed via pip
 import pandas as pd
-import nltk
 import pickle
 import numpy as np
 from keras.models import Model, Sequential
