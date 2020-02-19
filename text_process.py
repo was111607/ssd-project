@@ -13,6 +13,7 @@ from keras.preprocessing.image import load_img, img_to_array
 from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
 from keras.layers.merge import add
 from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
+from keras.utils import to_categorical
 from ast import literal_eval
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
@@ -60,7 +61,12 @@ def getImgReps(df): # pathList old arg
     for layer in vgg19.layers[:-1]: # Output of FC2 layer
         model.add(layer)
     model.add(Dense(512, activation = "relu"))
+#    new = df.sample(n = 10)
     df["REPRESENTATION"] = df.apply(getImageRep)
+    featureMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
+    #print(featureMatrix.shape)
+    return model.predict(featureMatrix)
+
 
 #    firstImg = None
     # pathListLen = len(pathList)
@@ -85,7 +91,7 @@ def getImgReps(df): # pathList old arg
     # featureMatrix = np.concatenate(featureMatrix)
     # featureMatrix = model.predict(img) # (x, 512)
     # return featureMatrix
-    return df.to_numpy()
+    #return df.to_numpy()
 
 # numarray = np.array([np.arange(1, 513), np.arange(1, 513)])
 # vgg19 = VGG19(weights='imagenet')
@@ -115,40 +121,56 @@ def mainModel():
     x = Dropout(0.5)(hidden)
     output = Dense(3, activation = "softmax")(x)
     model = Model(inputs = [input, imageFtrs], output = output)
-    model.compile(optimizer = "adam", loss = "binary_crossentropy", metrics = ["accuracy"])
+    model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     print(model.summary())
     return model
 
-def saveData(df):
-    with open("image_features.csv", "w") as writeFile:
+def saveData(df, fname):
+    with open(fname, "w") as writeFile:
         df.to_csv(writeFile, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
         writeFile.close()
 
-def toList(list):
+def toArray(list):
     return np.array(literal_eval(str(list)))
 
 def main():
     trainFile = "./model_input_training_subset.csv"
     valFile = "./model_input_validation_subset.csv"
-    testFile = "./model_input_testing_subset.csv"
+    #testFile = "./model_input_testing_subset.csv"
     pd.set_option('display.max_colwidth', -1)
     dfTrain = pd.read_csv(trainFile, header = 0)
-    XTrain = dfTrain["TOKENISED"].apply(toList).to_numpy() # CONVERT THIS TO NUMPY ARRAY OF LISTS
-    XVal =
+    dfVal = pd.read_csv(valFile, header = 0)
+    XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray)) # CONVERT THIS TO NUMPY ARRAY OF LISTS
+    XVal = np.stack(dfVal["TOKENISED"].apply(toArray))
 #     print(XTrain.type())
 # #    paths = df["IMG"].tolist()
 #     print(XTrain)
-    trainPaths = dfTrain["IMG"].to_numpy("str")
-    print(paths)
-#    imageFeatures = getImgReps(trainPaths) # Check how images are added to this ting/, Multi input consider
-#    saveData(imageFeatures)
+    trainPaths = dfTrain["IMG"]#.to_numpy("str")
+    valPaths = dfVal["IMG"]#.to_numpy("str")
+    #print(trainPaths)
+    trainImgFeatures = getImgReps(trainPaths)
+    valImgFeatures = getImgReps(valPaths)
+    # input(XTrain)
+    # print(XTrain[0])
+    # input(XVal[0].shape)
+    # input(trainImgFeatures.shape)
+    # input(valImgFeatures.shape)
+    saveData(trainImgFeatures, "image_features_training.csv")
+    saveData(valImgFeatures, "image_features_validation.csv")
     model = mainModel()
-    YTrain = df["TXT_SNTMT"].to_numpy("int32")
+    YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
+    YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
     #YTrain = df.apply(lambda x: )
-    print(YTrain)
-    results = model.fit(XTrain, YTrain, epochs= 2, batch_size = 500, validation_data = (XVal, YVal))
+    results = model.fit([XTrain, trainImgFeatures], to_categorical(YTrain), epochs = 500, batch_size = 64, validation_data = ([XVal, valImgFeatures], to_categorical(YVal)))
+    print(results)
     # Convert validation subsets to be with the fit, investigate best epoch and batch size
     # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS # Multiple inputs, labels and outputs
 
+    # dfTest = pd.read_csv(testFile, header = 0)
+    # XTest = dfTest["TOKENISED"].apply(toList).to_numpy()
+    # YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
+    # testPaths = dfTest["IMG"].to_numpy("str")
+    # testImgFeatures = getImgReps(testPaths)
+    # saveData(testImgFeatures, "image_features_testing.csv")
 if __name__ == "__main__":
     main()
