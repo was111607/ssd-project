@@ -58,8 +58,8 @@ def getImageRep(path):
     global counter
     print(counter)
     counter += 1
-    #img = loadImage(path)
-    img = load_img(str(path), target_size = (224, 224))
+    img = loadImage(path)
+    #img = load_img(str(path), target_size = (224, 224))
     img = img_to_array(img)
     img = np.expand_dims(img, axis = 0)
     return img
@@ -194,8 +194,8 @@ def main():
 # #    paths = df["IMG"].tolist()
 #     print(XTrain)
 
-    trainPaths = dfTrain["IMG"]#.apply(toURL)#.to_numpy("str")
-    valPaths = dfVal["IMG"]#.apply(toURL)#.to_numpy("str")
+    trainPaths = dfTrain["IMG"].apply(toURL)#.to_numpy("str")
+    valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
 
     # For tweepy method use above variables but converted to lists to feed into getImgReps to use get_statuses_lookup
 
@@ -209,11 +209,12 @@ def main():
     # input(valImgFeatures.shape)
     saveData(trainImgFeatures.tolist(), "image_features_training.csv") # MODIFY VECTOR INTO LENGTHS OF 30??? TES ARRAY LENGTH IN OTEST
     saveData(valImgFeatures.tolist(), "image_features_validation.csv")
-    model = mainModel()
+    featureModel = featureModel()
+    decisionModel = decisionModel()
     YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
     YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
     #YTrain = df.apply(lambda x: )
-    results = model.fit([XTrain, trainImgFeatures], to_categorical(YTrain), epochs = 500, batch_size = 64, validation_data = ([XVal, valImgFeatures], to_categorical(YVal)))
+    results = featureModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), epochs = 500, batch_size = 64, validation_data = ([XVal, valImgFeatures], to_categorical(YVal)))
     print(results)
     # Convert validation subsets to be with the fit, investigate best epoch and batch size
     # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS # Multiple inputs, labels and outputs
