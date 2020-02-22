@@ -179,7 +179,7 @@ def toArray(list):
     return np.array(literal_eval(str(list)))
 
 def toURL(path): # ENABLE IN PATHS DF
-    return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com/" + str(path)
+    return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
 def main():
     trainFile = "./model_input_training_subset.csv"
