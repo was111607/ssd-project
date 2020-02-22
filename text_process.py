@@ -9,10 +9,12 @@ from keras.models import Model, Sequential
 from keras.preprocessing import sequence
 from keras.preprocessing.image import load_img, img_to_array
 from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
-from keras.layers.merge import add
+from keras.layers.merge import add, concatenate
 from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
 from keras.utils import to_categorical
 from ast import literal_eval
+from io import BytesIO
+from urllib.request import urlopen
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -42,30 +44,48 @@ from ast import literal_eval
 # Then model proceeds as normal
 
 # Load model without top, flatten output then append to each word vector (total 1920 + 20588 dims)
+
+# Skimage to retrieve and resize from tweet links
+# Maybe have to run all programs in succession to be able to run?
 counter = 0
+
+def loadImage(path):
+    with urlopen(path) as url:
+        img = load_img(BytesIO(url.read()), target_size=(224, 224))
+    return img
+
 def getImageRep(path):
     global counter
     print(counter)
     counter += 1
+    #img = loadImage(path)
     img = load_img(str(path), target_size = (224, 224))
     img = img_to_array(img)
-    img = np.expand_dims(img, axis=0)
+    img = np.expand_dims(img, axis = 0)
     return img
 
-def getImgReps(df): # pathList old arg
-    images = []
+def getImageClass(df):
+    model = VGG19(weights = "imagenet")
+#    df = df.sample(n = 10)
+    df["REPRESENTATION"] = df.apply(getImageRep)
+    classMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
+    #print(classMatrix.shape)
+    return model.predict(classMatrix)
+
+def getImageReps(df): # pathList old arg
+#    images = []
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers[:-1]: # Output of FC2 layer
         model.add(layer)
     model.add(Dense(512, activation = "relu"))
-#    new = df.sample(n = 10)
+#    df = df.sample(n = 10)
     df["REPRESENTATION"] = df.apply(getImageRep)
     featureMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
     #print(featureMatrix.shape)
     return model.predict(featureMatrix)
 
-
+## FIGURE OUT HOW TO GET COMPUTING NODE TO PROCESS AND RETRIEVE IMAGES - TWEEPY?
 #    firstImg = None
     # pathListLen = len(pathList)
     # input(len(pathList))
@@ -101,7 +121,32 @@ def getImgReps(df): # pathList old arg
 # added = add([reduceImgFtrs, textFtrs])
 # model = Model(inputs=[vgg19.input, textFtrs], output=added)
 
-def mainModel():
+# Features accounted for separately
+def decisionModel():
+    with open("/media/was/USB DISK/training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(textFtrs)
+    imageFtrs = Input(shape=(1000,)) # embedDim
+    concat = concatenate([textFtrs, imageFtrs])
+    hidden1 = Dense(756, activation = "relu")(concat) # Make similar to feature??
+    x1 = Dropout(0.5)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    x2 = Dropout(0.5)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
+    model = Model(inputs = [input, imageFtrs], output = output)
+    model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
+    print(model.summary())
+    return model
+
+def featureModel():
     with open("/media/was/USB DISK/training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -123,13 +168,18 @@ def mainModel():
     print(model.summary())
     return model
 
-def saveData(df, fname):
+def saveData(list, fname):
     with open(fname, "w") as writeFile:
-        df.to_csv(writeFile, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
+        writer = csv.writer(writeFile, delimiter=",", quotechar='"', quoting=csv.QUOTE_ALL)
+        for i in list:
+            writer.writerow(i)
         writeFile.close()
 
 def toArray(list):
     return np.array(literal_eval(str(list)))
+
+def toURL(path): # ENABLE IN PATHS DF
+    return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com/" + str(path)
 
 def main():
     trainFile = "./model_input_training_subset.csv"
@@ -143,18 +193,22 @@ def main():
 #     print(XTrain.type())
 # #    paths = df["IMG"].tolist()
 #     print(XTrain)
-    trainPaths = dfTrain["IMG"]#.to_numpy("str")
-    valPaths = dfVal["IMG"]#.to_numpy("str")
+
+    trainPaths = dfTrain["IMG"]#.apply(toURL)#.to_numpy("str")
+    valPaths = dfVal["IMG"]#.apply(toURL)#.to_numpy("str")
+
+    # For tweepy method use above variables but converted to lists to feed into getImgReps to use get_statuses_lookup
+
     #print(trainPaths)
-    trainImgFeatures = getImgReps(trainPaths)
-    valImgFeatures = getImgReps(valPaths)
+    trainImgFeatures = getImageReps(trainPaths)
+    valImgFeatures = getImageReps(valPaths)
     # input(XTrain)
     # print(XTrain[0])
     # input(XVal[0].shape)
     # input(trainImgFeatures.shape)
     # input(valImgFeatures.shape)
-    saveData(trainImgFeatures, "image_features_training.csv")
-    saveData(valImgFeatures, "image_features_validation.csv")
+    saveData(trainImgFeatures.tolist(), "image_features_training.csv") # MODIFY VECTOR INTO LENGTHS OF 30??? TES ARRAY LENGTH IN OTEST
+    saveData(valImgFeatures.tolist(), "image_features_validation.csv")
     model = mainModel()
     YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
     YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
