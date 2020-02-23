@@ -83,7 +83,7 @@ def getImageReps(df): # pathList old arg
     df["REPRESENTATION"] = df.apply(getImageRep)
     featureMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
     #print(featureMatrix.shape)
-    return model.predict(featureMatrix)
+    return model.predict(featureMatrix, batch_size = 64)
 
 ## FIGURE OUT HOW TO GET COMPUTING NODE TO PROCESS AND RETRIEVE IMAGES - TWEEPY?
 #    firstImg = None
