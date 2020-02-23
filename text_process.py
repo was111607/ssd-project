@@ -127,7 +127,7 @@ def getImageReps(df): # pathList old arg
 
 # Features accounted for separately
 def decisionModel():
-    with open("/media/was/USB DISK/training_counter.pickle", "rb") as readFile:
+    with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
         readFile.close()
@@ -153,7 +153,7 @@ def decisionModel():
     return model
 
 def featureModel():
-    with open("/media/was/USB DISK/training_counter.pickle", "rb") as readFile:
+    with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
         readFile.close()
@@ -213,6 +213,8 @@ def main():
     # input(XVal[0].shape)
     # input(trainImgFeatures.shape)
     # input(valImgFeatures.shape)
+
+    #LOAD SAVED DATA AND UPLOAD PICKLE
     saveData(trainImgFeatures.tolist(), "image_features_training.csv") # MODIFY VECTOR INTO LENGTHS OF 30??? TES ARRAY LENGTH IN OTEST
     saveData(valImgFeatures.tolist(), "image_features_validation.csv")
     fModel = featureModel()
