@@ -8,7 +8,7 @@ import numpy as np
 from keras.models import Model, Sequential
 from keras.preprocessing import sequence
 from keras.preprocessing.image import load_img, img_to_array
-from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
+from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout, Reshape
 from keras.layers.merge import add, concatenate
 from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
 from keras.utils import to_categorical
@@ -65,12 +65,16 @@ def getImageRep(path):
     return img
 
 def getImageClass(df):
-    model = VGG19(weights = "imagenet")
+    vgg19 = VGG19(weights = "imagenet")
+    model = Sequential()
+    for layer in vgg19.layers: # Output of FC2 layer
+        model.add(layer)
+    model.add(Dense(512, activation = "relu"))
 #    df = df.sample(n = 10)
     df["REPRESENTATION"] = df.apply(getImageRep)
     classMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
     #print(classMatrix.shape)
-    return model.predict(classMatrix)
+    return model.predict(classMatrix, batch_size = 64)
 
 def getImageReps(df): # pathList old arg
 #    images = []
@@ -134,8 +138,10 @@ def decisionModel():
     #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
     #print(textFtrs.output)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(textFtrs)
-    imageFtrs = Input(shape=(1000,)) # embedDim
-    concat = concatenate([textFtrs, imageFtrs])
+    lstmShape = lstm.shape
+    imageFtrs = Input(shape=(embedDim,)) # embedDim
+    #reshapeImgFtrs = Reshape((int(lstmShape[0]), 1, embedDim))(imageFtrs)
+    concat = concatenate([lstm, imageFtrs], axis = -1)
     hidden1 = Dense(756, activation = "relu")(concat) # Make similar to feature??
     x1 = Dropout(0.5)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
@@ -209,12 +215,12 @@ def main():
     # input(valImgFeatures.shape)
     saveData(trainImgFeatures.tolist(), "image_features_training.csv") # MODIFY VECTOR INTO LENGTHS OF 30??? TES ARRAY LENGTH IN OTEST
     saveData(valImgFeatures.tolist(), "image_features_validation.csv")
-    featureModel = featureModel()
-    decisionModel = decisionModel()
+    fModel = featureModel()
+    dModel = decisionModel()
     YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
     YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
     #YTrain = df.apply(lambda x: )
-    results = featureModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), epochs = 500, batch_size = 64, validation_data = ([XVal, valImgFeatures], to_categorical(YVal)))
+    results = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), epochs = 500, batch_size = 64, validation_data = ([XVal, valImgFeatures], to_categorical(YVal)))
     print(results)
     # Convert validation subsets to be with the fit, investigate best epoch and batch size
     # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS # Multiple inputs, labels and outputs
