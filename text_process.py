@@ -56,7 +56,7 @@ def loadImage(path):
 
 def getImageRep(path):
     global counter
-    if (counter % 5000 == 0):
+    if (counter % 100 == 0):
         print(counter)
     img = loadImage(path)
     #img = load_img(str(path), target_size = (224, 224))
@@ -224,9 +224,9 @@ def predictAndSave(df, model, noPartitions, saveName):
     print("Saved to " + saveName + ".csv")
 
 def main():
-    trainFile = "./model_input_training.csv"
-    valFile = "./model_input_validation.csv"
-    testFile = "./model_input_testing.csv"
+    trainFile = "./model_input_training_subset.csv"
+    valFile = "./model_input_validation_subset.csv"
+    testFile = "./model_input_testing_subset.csv"
     pd.set_option('display.max_colwidth', -1)
     dfTrain = pd.read_csv(trainFile, header = 0)
     dfVal = pd.read_csv(valFile, header = 0)
@@ -245,13 +245,13 @@ def main():
     featureVGG = initFeatureVGG()
     decisionVGG = initDecisionVGG()
 
-    predictAndSave(trainPaths, featureVGG, 25, "image_features_training")
-    predictAndSave(valPaths, featureVGG, 8, "image_features_validation")
-    predictAndSave(testPaths, featureVGG, 4, "image_features_testing")
+    predictAndSave(trainPaths, featureVGG, 25, "image_features_training50")
+    predictAndSave(valPaths, featureVGG, 8, "image_features_validation50")
+    predictAndSave(testPaths, featureVGG, 4, "image_features_testing50")
 
-    predictAndSave(trainPaths, decisionVGG, 25, "image_classifications_training")
-    predictAndSave(valPaths, decisionVGG, 8, "image_classifications_validation")
-    predictAndSave(testPaths, decisionVGG, 4, "image_classifications_testing")
+    predictAndSave(trainPaths, decisionVGG, 25, "image_classifications_training50")
+    predictAndSave(valPaths, decisionVGG, 8, "image_classifications_validation50")
+    predictAndSave(testPaths, decisionVGG, 4, "image_classifications_testing50")
     input("Predicting and saving data completed")
     # UNCOMMENT BELOW AFTER SAVING ALL THE DATA #######################
     # fModel = featureModel()
