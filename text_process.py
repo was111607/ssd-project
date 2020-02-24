@@ -210,7 +210,7 @@ def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
 def batchPredict(df, model, noPartitions):
-    df = df.sample(n = 20)
+    #df = df.sample(n = 20)
     updatedPartitions = np.empty((0, 512))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
@@ -245,7 +245,7 @@ def main():
     featureVGG = initFeatureVGG()
     decisionVGG = initDecisionVGG()
 
-    predictAndSave(trainPaths, featureVGG, 20, "image_features_training")
+    predictAndSave(trainPaths, featureVGG, 25, "image_features_training")
     predictAndSave(valPaths, featureVGG, 8, "image_features_validation")
     predictAndSave(testPaths, featureVGG, 4, "image_features_testing")
 
