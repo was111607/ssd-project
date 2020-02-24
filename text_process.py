@@ -47,7 +47,7 @@ from urllib.request import urlopen
 
 # Skimage to retrieve and resize from tweet links
 # Maybe have to run all programs in succession to be able to run?
-counter = 0
+counter = 1
 
 def loadImage(path):
     with urlopen(path) as url:
@@ -56,12 +56,13 @@ def loadImage(path):
 
 def getImageRep(path):
     global counter
-    print(counter)
-    counter += 1
+    if (counter % 5000 == 0):
+        print(counter)
     img = loadImage(path)
     #img = load_img(str(path), target_size = (224, 224))
     img = img_to_array(img)
     img = np.expand_dims(img, axis = 0)
+    counter += 1
     return img
 
 def getImageClass(df, model):
@@ -209,20 +210,27 @@ def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
 def batchPredict(df, model, noPartitions):
-    #df = df.sample(n = 20)
+    df = df.sample(n = 20)
     updatedPartitions = np.empty((0, 512))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
     return updatedPartitions
 
+def predictAndSave(df, model, noPartitions, saveName):
+    print("Predicting for " + saveName)
+    predictions = batchPredict(df, model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImageReps(trainPaths) #batchPredict
+    saveData(predictions.tolist(), saveName + ".csv") # MODIFY VECTOR INTO LENGTHS OF 30??? TES ARRAY LENGTH IN OTEST
+    print("Saved to " + saveName + ".csv")
+
 def main():
-    trainFile = "./model_input_training_subset.csv"
-    valFile = "./model_input_validation_subset.csv"
-    #testFile = "./model_input_testing_subset.csv"
+    trainFile = "./model_input_training.csv"
+    valFile = "./model_input_validation.csv"
+    testFile = "./model_input_testing.csv"
     pd.set_option('display.max_colwidth', -1)
     dfTrain = pd.read_csv(trainFile, header = 0)
     dfVal = pd.read_csv(valFile, header = 0)
+    dfTest = pd.read_csv(testFile, header = 0)
     XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray)) # CONVERT THIS TO NUMPY ARRAY OF LISTS
     XVal = np.stack(dfVal["TOKENISED"].apply(toArray))
 #     print(XTrain.type())
@@ -231,31 +239,31 @@ def main():
 
     trainPaths = dfTrain["IMG"].apply(toURL)#.to_numpy("str")
     valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
+    testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
     # For tweepy method use above variables but converted to lists to feed into getImgReps to use get_statuses_lookup
-
-    #print(trainPaths)
     featureVGG = initFeatureVGG()
     decisionVGG = initDecisionVGG()
 
-    trainImgFeatures = batchPredict(trainPaths, featureVGG, 20)#getImgPredict(trainPaths, featureVGG)#getImageReps(trainPaths) #batchPredict
-    valImgFeatures = batchPredict(valPaths, decisionVGG, 4)#getImgPredict(valPaths, decisionVGG)#getImageReps(valPaths)
-    # input(XTrain)
-    # print(XTrain[0])
-    # input(XVal[0].shape)
-    # input(trainImgFeatures.shape)
-    # input(valImgFeatures.shape)
+    predictAndSave(trainPaths, featureVGG, 20, "image_features_training")
+    predictAndSave(valPaths, featureVGG, 8, "image_features_validation")
+    predictAndSave(testPaths, featureVGG, 4, "image_features_testing")
 
-    #LOAD SAVED DATA AND UPLOAD PICKLE
-    saveData(trainImgFeatures.tolist(), "image_features_training.csv") # MODIFY VECTOR INTO LENGTHS OF 30??? TES ARRAY LENGTH IN OTEST
-    saveData(valImgFeatures.tolist(), "image_features_validation.csv")
-    fModel = featureModel()
-    dModel = decisionModel()
-    YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
-    YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
-    #YTrain = df.apply(lambda x: )
-    results = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), epochs = 500, batch_size = 64, validation_data = ([XVal, valImgFeatures], to_categorical(YVal)))
-    print(results)
+    predictAndSave(trainPaths, decisionVGG, 25, "image_classifications_training")
+    predictAndSave(valPaths, decisionVGG, 8, "image_classifications_validation")
+    predictAndSave(testPaths, decisionVGG, 4, "image_classifications_testing")
+    input("Predicting and saving data completed")
+    # UNCOMMENT BELOW AFTER SAVING ALL THE DATA #######################
+    # fModel = featureModel()
+    # dModel = decisionModel()
+    # YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
+    # YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
+    # #YTrain = df.apply(lambda x: )
+    # results = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), epochs = 500, batch_size = 64, validation_data = ([XVal, valImgFeatures], to_categorical(YVal)))
+    # print(results)
+
+
+
     # Convert validation subsets to be with the fit, investigate best epoch and batch size
     # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS # Multiple inputs, labels and outputs
 
