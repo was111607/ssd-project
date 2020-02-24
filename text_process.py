@@ -64,31 +64,52 @@ def getImageRep(path):
     img = np.expand_dims(img, axis = 0)
     return img
 
-def getImageClass(df):
-    vgg19 = VGG19(weights = "imagenet")
-    model = Sequential()
-    for layer in vgg19.layers: # Output of FC2 layer
-        model.add(layer)
-    model.add(Dense(512, activation = "relu"))
+def getImageClass(df, model):
+    # vgg19 = VGG19(weights = "imagenet")
+    # model = Sequential()
+    # for layer in vgg19.layers: # Output of FC2 layer
+    #     model.add(layer)
+    # model.add(Dense(512, activation = "relu"))
 #    df = df.sample(n = 10)
     df["REPRESENTATION"] = df.apply(getImageRep)
     classMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
     #print(classMatrix.shape)
     return model.predict(classMatrix, batch_size = 64)
 
-def getImageReps(df): # pathList old arg
+def getImageReps(df, model): # pathList old arg
 #    images = []
-    vgg19 = VGG19(weights = "imagenet")
-    model = Sequential()
-    for layer in vgg19.layers[:-1]: # Output of FC2 layer
-        model.add(layer)
-    model.add(Dense(512, activation = "relu"))
+    # vgg19 = VGG19(weights = "imagenet")
+    # model = Sequential()
+    # for layer in vgg19.layers[:-1]: # Output of FC2 layer
+    #     model.add(layer)
+    # model.add(Dense(512, activation = "relu"))
 #    df = df.sample(n = 10)
     df["REPRESENTATION"] = df.apply(getImageRep)
     featureMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
     #print(featureMatrix.shape)
     return model.predict(featureMatrix, batch_size = 64)
 
+def getImgPredict(df, model): # pathList old arg
+    df["REPRESENTATION"] = df.apply(getImageRep)
+    featureMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
+    #print(featureMatrix.shape)
+    return model.predict(featureMatrix, batch_size = 64)
+
+def initDecisionVGG():
+    vgg19 = VGG19(weights = "imagenet")
+    model = Sequential()
+    for layer in vgg19.layers: # Output of FC2 layer
+        model.add(layer)
+    model.add(Dense(512, activation = "relu"))
+    return model
+
+def initFeatureVGG():
+    vgg19 = VGG19(weights = "imagenet")
+    model = Sequential()
+    for layer in vgg19.layers[:-1]: # Output of FC2 layer
+        model.add(layer)
+    model.add(Dense(512, activation = "relu"))
+    return model
 ## FIGURE OUT HOW TO GET COMPUTING NODE TO PROCESS AND RETRIEVE IMAGES - TWEEPY?
 #    firstImg = None
     # pathListLen = len(pathList)
@@ -187,6 +208,14 @@ def toArray(list):
 def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
+def batchPredict(df, model, noPartitions):
+    #df = df.sample(n = 20)
+    updatedPartitions = np.empty((0, 512))
+    partitions = np.array_split(df, noPartitions)
+    for partition in partitions:
+        updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
+    return updatedPartitions
+
 def main():
     trainFile = "./model_input_training_subset.csv"
     valFile = "./model_input_validation_subset.csv"
@@ -206,8 +235,11 @@ def main():
     # For tweepy method use above variables but converted to lists to feed into getImgReps to use get_statuses_lookup
 
     #print(trainPaths)
-    trainImgFeatures = getImageReps(trainPaths)
-    valImgFeatures = getImageReps(valPaths)
+    featureVGG = initFeatureVGG()
+    decisionVGG = initDecisionVGG()
+
+    trainImgFeatures = batchPredict(trainPaths, featureVGG, 20)#getImgPredict(trainPaths, featureVGG)#getImageReps(trainPaths) #batchPredict
+    valImgFeatures = batchPredict(valPaths, decisionVGG, 4)#getImgPredict(valPaths, decisionVGG)#getImageReps(valPaths)
     # input(XTrain)
     # print(XTrain[0])
     # input(XVal[0].shape)
