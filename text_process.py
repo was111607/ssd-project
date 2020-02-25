@@ -7,7 +7,7 @@ import numpy as np
 import os
 from os import path
 from keras.callbacks import CSVLogger, EarlyStopping
-from keras.models import Model, Sequential, model_from_json
+from keras.models import Model, Sequential, model_from_json, load_model
 from keras.preprocessing import sequence
 from keras.preprocessing.image import load_img, img_to_array
 from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout, Reshape
@@ -157,16 +157,18 @@ def saveHistory(fname, history):
     with open(dir + fname + ".pickle", "wb") as writeFile:
         pickle.dump(history.history, writeFile)
         writeFile.close()
+    print("Saved history for " + fname)
 
-def saveModel(model, fname):
+def saveModel(fname, model):
         # serialize model to JSON
     dir = "./models/"
     if not path.exists(dir):
         os.mkdir(dir)
-    with open(dir + fname + ".csv", "w") as writeFile:
-        writeFile.write(model.to_json())
-        writeFile.close()
-    model.save_weights(dir + fname + "_weights" + ".h5")
+    model.save(dir + fname + ".h5")
+    # with open(dir + fname + ".csv", "w") as writeFile:
+    #     writeFile.write(model.to_json())
+    #     writeFile.close()
+    # model.save_weights(dir + fname + "_weights" + ".h5")
     print("Saved model for " + fname)
 
 def toArray(list):
@@ -249,15 +251,15 @@ def main():
     fModel = featureModel()
     fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
     fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
-    saveHistory("feature_model_history")
-    saveModel(fModel, "feature_model")
+    saveHistory("feature_model_history", fModelHistory)
+    saveModel("feature_model", fModel)
     # print(results)
 
     dModel = decisionModel()
     dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
     dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
-    saveHistory("decision_model_history")
-    saveModel(dModel, "decision_model")
+    saveHistory("decision_model_history", dModelHistory)
+    saveModel("decision_model", dModel)
     # Convert validation subsets to be with the fit, investigate best epoch and batch size
     # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS # Multiple inputs, labels and outputs
 
