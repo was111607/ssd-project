@@ -232,6 +232,8 @@ def main():
     valImgFeatures = getInputArray(dir + "/image_features_validation40.csv")
     testImgFeatures = getInputArray(dir + "/image_features_testing40.csv")
 
+    input(XTrain)
+    input(trainImgFeatures)
     dir = "./image classifications"
     if not path.exists(dir): # Currently set to
         os.mkdir(dir)
