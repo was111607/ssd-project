@@ -1,17 +1,19 @@
-import os
 import csv
 import re
 import string
 import pandas as pd
 import pickle
 import numpy as np
-from keras.models import Model, Sequential
+import os
+from os import path
+from keras.callbacks import CSVLogger, EarlyStopping
+from keras.models import Model, Sequential, model_from_json
 from keras.preprocessing import sequence
 from keras.preprocessing.image import load_img, img_to_array
 from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout, Reshape
 from keras.layers.merge import add, concatenate
 from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
-from keras.utils import to_categorical
+from keras.utils import to_categorical, plot_model
 from ast import literal_eval
 from io import BytesIO
 from urllib.request import urlopen
@@ -65,31 +67,6 @@ def getImageRep(path):
     counter += 1
     return img
 
-def getImageClass(df, model):
-    # vgg19 = VGG19(weights = "imagenet")
-    # model = Sequential()
-    # for layer in vgg19.layers: # Output of FC2 layer
-    #     model.add(layer)
-    # model.add(Dense(512, activation = "relu"))
-#    df = df.sample(n = 10)
-    df["REPRESENTATION"] = df.apply(getImageRep)
-    classMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
-    #print(classMatrix.shape)
-    return model.predict(classMatrix, batch_size = 64)
-
-def getImageReps(df, model): # pathList old arg
-#    images = []
-    # vgg19 = VGG19(weights = "imagenet")
-    # model = Sequential()
-    # for layer in vgg19.layers[:-1]: # Output of FC2 layer
-    #     model.add(layer)
-    # model.add(Dense(512, activation = "relu"))
-#    df = df.sample(n = 10)
-    df["REPRESENTATION"] = df.apply(getImageRep)
-    featureMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
-    #print(featureMatrix.shape)
-    return model.predict(featureMatrix, batch_size = 64)
-
 def getImgPredict(df, model): # pathList old arg
     df["REPRESENTATION"] = df.apply(getImageRep)
     featureMatrix = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
@@ -111,43 +88,12 @@ def initFeatureVGG():
         model.add(layer)
     model.add(Dense(512, activation = "relu"))
     return model
-## FIGURE OUT HOW TO GET COMPUTING NODE TO PROCESS AND RETRIEVE IMAGES - TWEEPY?
-#    firstImg = None
-    # pathListLen = len(pathList)
-    # input(len(pathList))
-    #featureMatrix = np.empty(pathListLen, dtype = object)
-    #for i in range(pathListLen):
-    # for path in pathList:
-    #     print(counter)
-    # #    img = load_img(pathList[i], target_size = (224, 224))
-    #     #featureMatrix[i] = img
-    #     # img = load_img(path, target_size = (224, 224))
-    #     # img = img_to_array(img)
-    #     # img = np.expand_dims(img, axis=0)
-    #     if (len(images) == 0):
-    #         if (firstImg is None):
-    #             firstImg = img
-    #         else:
-    #             images = np.vstack([firstImg, img])
-    #     else:
-    #         images = np.vstack([images, img])
-    #     counter += 1
-    # featureMatrix = np.concatenate(featureMatrix)
-    # featureMatrix = model.predict(img) # (x, 512)
-    # return featureMatrix
-    #return df.to_numpy()
-
-# numarray = np.array([np.arange(1, 513), np.arange(1, 513)])
-# vgg19 = VGG19(weights='imagenet')
-# # model = Sequential()
-# # for layer in vgg19.layers[:-1]:
-# #     model.add(layer)
-# reduceImgFtrs = Dense(512, activation = "relu")(vgg19.layers[-2].output)
-# textFtrs = Input(shape=(512,))
-# added = add([reduceImgFtrs, textFtrs])
-# model = Model(inputs=[vgg19.input, textFtrs], output=added)
 
 # Features accounted for separately
+def visualiseModel(model, fname):
+    if not path.exists(fname):
+        plot_model(model, to_file=fname)
+
 def decisionModel():
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
@@ -164,13 +110,13 @@ def decisionModel():
     imageFtrs = Input(shape=(embedDim,)) # embedDim
     #reshapeImgFtrs = Reshape((int(lstmShape[0]), 1, embedDim))(imageFtrs)
     concat = concatenate([lstm, imageFtrs], axis = -1)
-    hidden1 = Dense(756, activation = "relu")(concat) # Make similar to feature??
-    x1 = Dropout(0.5)(hidden1)
-    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
+    hidden2 = Dense(256, activation = "relu")(hidden1) # Make similar to feature??
     x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
+    visualiseModel(model, "decision_model.png")
     print(model.summary())
     return model
 
@@ -193,6 +139,7 @@ def featureModel():
     output = Dense(3, activation = "softmax")(x)
     model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
+    visualiseModel(model, "feature_model.png")
     print(model.summary())
     return model
 
@@ -202,6 +149,25 @@ def saveData(list, fname):
         for i in list:
             writer.writerow(i)
         writeFile.close()
+
+def saveHistory(fname, history):
+    dir = "./model histories/"
+    if not path.exists(dir):
+        os.mkdir(dir)
+    with open(dir + fname + ".pickle", "wb") as writeFile:
+        pickle.dump(history.history, writeFile)
+        writeFile.close()
+
+def saveModel(model, fname):
+        # serialize model to JSON
+    dir = "./models/"
+    if not path.exists(dir):
+        os.mkdir(dir)
+    with open(dir + fname + ".csv", "w") as writeFile:
+        writeFile.write(model.to_json())
+        writeFile.close()
+    model.save_weights(dir + fname + "_weights" + ".h5")
+    print("Saved model for " + fname)
 
 def toArray(list):
     return np.array(literal_eval(str(list)))
@@ -223,6 +189,10 @@ def predictAndSave(df, model, noPartitions, saveName):
     saveData(predictions.tolist(), saveName + ".csv") # MODIFY VECTOR INTO LENGTHS OF 30??? TES ARRAY LENGTH IN OTEST
     print("Saved to " + saveName + ".csv")
 
+def getInputArray(fname):
+    input = pd.read_csv(fname, header = 0)
+    return input.to_numpy()
+
 def main():
     trainFile = "./model_input_training_subset.csv"
     valFile = "./model_input_validation_subset.csv"
@@ -233,6 +203,10 @@ def main():
     dfTest = pd.read_csv(testFile, header = 0)
     XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray)) # CONVERT THIS TO NUMPY ARRAY OF LISTS
     XVal = np.stack(dfVal["TOKENISED"].apply(toArray))
+    XTest = np.stack(dfVal["TOKENISED"].apply(toArray))
+    YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
+    YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
+    YTest = dfVal["TXT_SNTMT"].to_numpy("int32")
 #     print(XTrain.type())
 # #    paths = df["IMG"].tolist()
 #     print(XTrain)
@@ -245,25 +219,45 @@ def main():
     featureVGG = initFeatureVGG()
     decisionVGG = initDecisionVGG()
 
-    predictAndSave(trainPaths, featureVGG, 25, "image_features_training50")
-    predictAndSave(valPaths, featureVGG, 8, "image_features_validation50")
-    predictAndSave(testPaths, featureVGG, 4, "image_features_testing50")
+    dir = "./image features"
+    if not path.exists(dir): # Currently set to
+        os.mkdir(dir)
+        predictAndSave(trainPaths, featureVGG, 25, dir + "/image_features_training40")
+        predictAndSave(valPaths, featureVGG, 8, dir + "/image_features_validation40")
+        predictAndSave(testPaths, featureVGG, 4, dir + "/image_features_testing40")
+        input("Predicting and saving feature data completed")
+    trainImgFeatures = getInputArray(dir + "/image_features_training40.csv")
+    valImgFeatures = getInputArray(dir + "/image_features_validation40.csv")
+    testImgFeatures = getInputArray(dir + "/image_features_testing40.csv")
 
-    predictAndSave(trainPaths, decisionVGG, 25, "image_classifications_training50")
-    predictAndSave(valPaths, decisionVGG, 8, "image_classifications_validation50")
-    predictAndSave(testPaths, decisionVGG, 4, "image_classifications_testing50")
-    input("Predicting and saving data completed")
-    # UNCOMMENT BELOW AFTER SAVING ALL THE DATA #######################
-    # fModel = featureModel()
-    # dModel = decisionModel()
-    # YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
-    # YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
-    # #YTrain = df.apply(lambda x: )
-    # results = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), epochs = 500, batch_size = 64, validation_data = ([XVal, valImgFeatures], to_categorical(YVal)))
+    dir = "./image classifications"
+    if not path.exists(dir): # Currently set to
+        os.mkdir(dir)
+        predictAndSave(trainPaths, decisionVGG, 25, dir + "/image_classifications_training40")
+        predictAndSave(valPaths, decisionVGG, 8, dir + "/image_classifications_validation40")
+        predictAndSave(testPaths, decisionVGG, 4, dir + "/image_classifications_testing40")
+        input("Predicting and saving classification data completed")
+    trainImgClass = getInputArray(dir + "/image_classifications_training40.csv")
+    valImgClass = getInputArray(dir + "/image_classifications_validation40.csv")
+    testImgClass = getInputArray(dir + "/image_classifications_testing40.csv")
+
+    dir = "./logs"
+    if not path.exists(dir):
+        os.mkdir(dir)
+
+    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
+    fModel = featureModel()
+    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
+    saveHistory("feature_model_history")
+    saveModel(fModel, "feature_model")
     # print(results)
 
-
-
+    dModel = decisionModel()
+    dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
+    dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
+    saveHistory("decision_model_history")
+    saveModel(dModel, "decision_model")
     # Convert validation subsets to be with the fit, investigate best epoch and batch size
     # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS # Multiple inputs, labels and outputs
 
