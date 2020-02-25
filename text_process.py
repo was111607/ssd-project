@@ -192,7 +192,7 @@ def predictAndSave(df, model, noPartitions, saveName):
     print("Saved to " + saveName + ".csv")
 
 def getInputArray(fname):
-    input = pd.read_csv(fname, header = 0)
+    input = pd.read_csv(fname, header = None)
     return input.to_numpy()
 
 def main():
