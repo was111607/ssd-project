@@ -116,7 +116,7 @@ def decisionModel():
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
-    visualiseModel(model, "decision_model.png")
+    # visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
     print(model.summary())
     return model
 
@@ -139,7 +139,7 @@ def featureModel():
     output = Dense(3, activation = "softmax")(x)
     model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
-    visualiseModel(model, "feature_model.png")
+    # visualiseModel(model, "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
     print(model.summary())
     return model
 
