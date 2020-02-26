@@ -216,37 +216,37 @@ def main():
     decisionVGG = initDecisionVGG()
 
     dir = "./image features"
-    #if not path.exists(dir): # Currently set to
-    #    os.mkdir(dir)
-    #    predictAndSave(trainPaths, featureVGG, 25, dir + "/image_features_training40")
-    #    predictAndSave(valPaths, featureVGG, 8, dir + "/image_features_validation40")
-    predictAndSave(testPaths, featureVGG, 4, dir + "/image_features_testing40")
-    #    input("Predicting and saving feature data completed")
-    #trainImgFeatures = getInputArray(dir + "/image_features_training40.csv")
-    #valImgFeatures = getInputArray(dir + "/image_features_validation40.csv")
-    #testImgFeatures = getInputArray(dir + "/image_features_testing40.csv")
+    if not path.exists(dir): # Currently set to
+        os.mkdir(dir)
+        predictAndSave(trainPaths, featureVGG, 25, dir + "/image_features_training40")
+        predictAndSave(valPaths, featureVGG, 8, dir + "/image_features_validation40")
+        predictAndSave(testPaths, featureVGG, 4, dir + "/image_features_testing40")
+        input("Predicting and saving feature data completed")
+    trainImgFeatures = getInputArray(dir + "/image_features_training40.csv")
+    valImgFeatures = getInputArray(dir + "/image_features_validation40.csv")
+    testImgFeatures = getInputArray(dir + "/image_features_testing40.csv")
 
     dir = "./image classifications"
-    #if not path.exists(dir): # Currently set to
-    #    os.mkdir(dir)
-    #    predictAndSave(trainPaths, decisionVGG, 25, dir + "/image_classifications_training40")
-    #    predictAndSave(valPaths, decisionVGG, 8, dir + "/image_classifications_validation40")
-    predictAndSave(testPaths, decisionVGG, 4, dir + "/image_classifications_testing40")
-    #    input("Predicting and saving classification data completed")
-    # trainImgClass = getInputArray(dir + "/image_classifications_training40.csv")
-    # valImgClass = getInputArray(dir + "/image_classifications_validation40.csv")
-    # testImgClass = getInputArray(dir + "/image_classifications_testing40.csv")
-    #
-    # dir = "./logs"
-    # if not path.exists(dir):
-    #     os.mkdir(dir)
-    #
-    # earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
-    # fModel = featureModel()
-    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
-    # saveHistory("feature_model_history", fModelHistory)
-    # saveModel("feature_model", fModel)
+    if not path.exists(dir): # Currently set to
+        os.mkdir(dir)
+        predictAndSave(trainPaths, decisionVGG, 25, dir + "/image_classifications_training40")
+        predictAndSave(valPaths, decisionVGG, 8, dir + "/image_classifications_validation40")
+        predictAndSave(testPaths, decisionVGG, 4, dir + "/image_classifications_testing40")
+        input("Predicting and saving classification data completed")
+    trainImgClass = getInputArray(dir + "/image_classifications_training40.csv")
+    valImgClass = getInputArray(dir + "/image_classifications_validation40.csv")
+    testImgClass = getInputArray(dir + "/image_classifications_testing40.csv")
+
+    dir = "./logs"
+    if not path.exists(dir):
+        os.mkdir(dir)
+
+    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
+    fModel = featureModel()
+    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
+    saveHistory("feature_model_history", fModelHistory)
+    saveModel("feature_model", fModel)
     # print(results)
 
     dModel = decisionModel()
