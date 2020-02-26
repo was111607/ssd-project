@@ -2,7 +2,9 @@ import pandas as pd
 import numpy as np
 from os import path
 from keras.models import load_model
+from keras.utils import to_categorical
 from ast import literal_eval
+
 
 def toArray(list):
     return np.array(literal_eval(str(list)))
@@ -28,8 +30,8 @@ def main():
     testImgClass = getInputArray("./image classifications/image_classifications_testing40.csv")
     fModel = loadModel("feature_model")
     dModel = loadModel("decision_model")
-    fModelScore = fModel.evaluate([XTest, testImgFeatures], YTest)
-    dModelScore = dModel.evaluate([XTest, testImgClass], YTest)
+    fModelScore = fModel.evaluate([XTest, testImgFeatures], to_categorical(YTest))
+    dModelScore = dModel.evaluate([XTest, testImgClass], to_categorical(YTest))
     print(fModelScore)
     print(dModelScore)
 
