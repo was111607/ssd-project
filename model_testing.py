@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
+import pickle
+import matplotlib.pyplot as plt
 from os import path
 from keras.models import load_model
 from keras.utils import to_categorical
 from ast import literal_eval
-
 
 def toArray(list):
     return np.array(literal_eval(str(list)))
@@ -20,6 +21,11 @@ def loadModel(fname):
     except OSError:
         print("Cannot find model by " + fname + "to load.")
 
+def saveScore(score, fname):
+    with open(fname + ".pickle", "wb") as writeFile:
+        pickle.dump(score, writeFile)
+        writeFile.close()
+
 def main():
     testFile = "./model_input_testing_subset.csv"
     dfTest = pd.read_csv(testFile, header = 0)
@@ -34,6 +40,8 @@ def main():
     dModelScore = dModel.evaluate([XTest, testImgClass], to_categorical(YTest))
     print(fModelScore)
     print(dModelScore)
+    saveScore(fModelScore, "feature_model_score")
+    saveScore(dModelScore, "decision_model_score")
 
 if __name__ == "__main__":
     main()
