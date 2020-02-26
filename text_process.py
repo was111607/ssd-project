@@ -1,18 +1,16 @@
 import csv
 import re
-import string
 import pandas as pd
 import pickle
 import numpy as np
 import os
 from os import path
 from keras.callbacks import CSVLogger, EarlyStopping
-from keras.models import Model, Sequential, model_from_json, load_model
-from keras.preprocessing import sequence
+from keras.models import Model, Sequential
 from keras.preprocessing.image import load_img, img_to_array
-from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout, Reshape
+from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
 from keras.layers.merge import add, concatenate
-from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
+from keras.applications.vgg19 import VGG19
 from keras.utils import to_categorical, plot_model
 from ast import literal_eval
 from io import BytesIO
@@ -205,54 +203,50 @@ def main():
     dfTest = pd.read_csv(testFile, header = 0)
     XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray)) # CONVERT THIS TO NUMPY ARRAY OF LISTS
     XVal = np.stack(dfVal["TOKENISED"].apply(toArray))
-    XTest = np.stack(dfVal["TOKENISED"].apply(toArray))
+    XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
     YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
-    YTest = dfVal["TXT_SNTMT"].to_numpy("int32")
-#     print(XTrain.type())
-# #    paths = df["IMG"].tolist()
-#     print(XTrain)
+    YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
 
     trainPaths = dfTrain["IMG"].apply(toURL)#.to_numpy("str")
     valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
-    # For tweepy method use above variables but converted to lists to feed into getImgReps to use get_statuses_lookup
     featureVGG = initFeatureVGG()
     decisionVGG = initDecisionVGG()
 
     dir = "./image features"
-    if not path.exists(dir): # Currently set to
-        os.mkdir(dir)
-        predictAndSave(trainPaths, featureVGG, 25, dir + "/image_features_training40")
-        predictAndSave(valPaths, featureVGG, 8, dir + "/image_features_validation40")
-        predictAndSave(testPaths, featureVGG, 4, dir + "/image_features_testing40")
-        input("Predicting and saving feature data completed")
-    trainImgFeatures = getInputArray(dir + "/image_features_training40.csv")
-    valImgFeatures = getInputArray(dir + "/image_features_validation40.csv")
-    testImgFeatures = getInputArray(dir + "/image_features_testing40.csv")
+    #if not path.exists(dir): # Currently set to
+    #    os.mkdir(dir)
+    #    predictAndSave(trainPaths, featureVGG, 25, dir + "/image_features_training40")
+    #    predictAndSave(valPaths, featureVGG, 8, dir + "/image_features_validation40")
+    predictAndSave(testPaths, featureVGG, 4, dir + "/image_features_testing40")
+    #    input("Predicting and saving feature data completed")
+    #trainImgFeatures = getInputArray(dir + "/image_features_training40.csv")
+    #valImgFeatures = getInputArray(dir + "/image_features_validation40.csv")
+    #testImgFeatures = getInputArray(dir + "/image_features_testing40.csv")
 
     dir = "./image classifications"
-    if not path.exists(dir): # Currently set to
-        os.mkdir(dir)
-        predictAndSave(trainPaths, decisionVGG, 25, dir + "/image_classifications_training40")
-        predictAndSave(valPaths, decisionVGG, 8, dir + "/image_classifications_validation40")
-        predictAndSave(testPaths, decisionVGG, 4, dir + "/image_classifications_testing40")
-        input("Predicting and saving classification data completed")
-    trainImgClass = getInputArray(dir + "/image_classifications_training40.csv")
-    valImgClass = getInputArray(dir + "/image_classifications_validation40.csv")
-    testImgClass = getInputArray(dir + "/image_classifications_testing40.csv")
-
-    dir = "./logs"
-    if not path.exists(dir):
-        os.mkdir(dir)
-
-    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
-    fModel = featureModel()
-    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
-    saveHistory("feature_model_history", fModelHistory)
-    saveModel("feature_model", fModel)
+    #if not path.exists(dir): # Currently set to
+    #    os.mkdir(dir)
+    #    predictAndSave(trainPaths, decisionVGG, 25, dir + "/image_classifications_training40")
+    #    predictAndSave(valPaths, decisionVGG, 8, dir + "/image_classifications_validation40")
+    predictAndSave(testPaths, decisionVGG, 4, dir + "/image_classifications_testing40")
+    #    input("Predicting and saving classification data completed")
+    # trainImgClass = getInputArray(dir + "/image_classifications_training40.csv")
+    # valImgClass = getInputArray(dir + "/image_classifications_validation40.csv")
+    # testImgClass = getInputArray(dir + "/image_classifications_testing40.csv")
+    #
+    # dir = "./logs"
+    # if not path.exists(dir):
+    #     os.mkdir(dir)
+    #
+    # earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
+    # fModel = featureModel()
+    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
+    # saveHistory("feature_model_history", fModelHistory)
+    # saveModel("feature_model", fModel)
     # print(results)
 
     dModel = decisionModel()
@@ -260,14 +254,6 @@ def main():
     dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
     saveHistory("decision_model_history", dModelHistory)
     saveModel("decision_model", dModel)
-    # Convert validation subsets to be with the fit, investigate best epoch and batch size
-    # ORGANISE PARAMS FOR MODEL FITTING, THEY ARE NUMPY ARRAYS # Multiple inputs, labels and outputs
 
-    # dfTest = pd.read_csv(testFile, header = 0)
-    # XTest = dfTest["TOKENISED"].apply(toList).to_numpy()
-    # YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
-    # testPaths = dfTest["IMG"].to_numpy("str")
-    # testImgFeatures = getImgReps(testPaths)
-    # saveData(testImgFeatures, "image_features_testing.csv")
 if __name__ == "__main__":
     main()
