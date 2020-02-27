@@ -92,6 +92,28 @@ def visualiseModel(model, fname):
     if not path.exists(fname):
         plot_model(model, to_file=fname)
 
+def textModel():
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(textFtrs)
+    #hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
+    hidden = Dense(256, activation = "relu")(lstm) # Make similar to feature??
+    x = Dropout(0.5)(hidden)
+    output = Dense(3, activation = "softmax")(x)
+    model = Model(input = input, output = output)
+    model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
+#    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
+    print(model.summary())
+    return model
+
 def decisionModel():
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
@@ -104,14 +126,12 @@ def decisionModel():
     #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
     #print(textFtrs.output)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(textFtrs)
-    lstmShape = lstm.shape
     imageFtrs = Input(shape=(embedDim,)) # embedDim
-    #reshapeImgFtrs = Reshape((int(lstmShape[0]), 1, embedDim))(imageFtrs)
     concat = concatenate([lstm, imageFtrs], axis = -1)
     hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
     hidden2 = Dense(256, activation = "relu")(hidden1) # Make similar to feature??
-    x2 = Dropout(0.5)(hidden2)
-    output = Dense(3, activation = "softmax")(x2)
+    x = Dropout(0.5)(hidden2)
+    output = Dense(3, activation = "softmax")(x)
     model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     # visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
@@ -132,12 +152,37 @@ def featureModel():
     imageFtrs = Input(shape=(embedDim,))
     added = add([textFtrs, imageFtrs])
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(added)
+    #hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
     hidden = Dense(256, activation = "relu")(lstm)
     x = Dropout(0.5)(hidden)
     output = Dense(3, activation = "softmax")(x)
     model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     # visualiseModel(model, "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
+    print(model.summary())
+    return model
+
+def decisionModel2():
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(textFtrs)
+    imageFtrs = Input(shape=(embedDim,)) # embedDim
+    concat = concatenate([lstm, imageFtrs], axis = -1)
+    hidden1 = Dense(512)(concat) # Make similar to feature??
+    hidden2 = Dense(256, activation = "relu")(hidden1) # Make similar to feature??
+    x = Dropout(0.5)(hidden2)
+    output = Dense(3, activation = "softmax")(x)
+    model = Model(inputs = [input, imageFtrs], output = output)
+    model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
+#    visualiseModel(model, "decision_model2.png") ### Uncomment to visualise, requires pydot and graphviz
     print(model.summary())
     return model
 
@@ -242,18 +287,30 @@ def main():
         os.mkdir(dir)
 
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
-    fModel = featureModel()
-    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
-    saveHistory("feature_model_history", fModelHistory)
-    saveModel("feature_model", fModel)
-    # print(results)
 
-    dModel = decisionModel()
-    dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
-    saveHistory("decision_model_history", dModelHistory)
-    saveModel("decision_model", dModel)
+    # fModel = featureModel()
+    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
+    # saveHistory("feature_model_history", fModelHistory)
+    # saveModel("feature_model", fModel)
+    #
+    # dModel = decisionModel()
+    # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
+    # dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
+    # saveHistory("decision_model_history", dModelHistory)
+    # saveModel("decision_model", dModel)
+
+    tModel = textModel()
+    tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
+    tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [tLogger, earlyStoppage])
+    saveHistory("text_model_history", tModelHistory)
+    saveModel("text_model", tModel)
+
+    d2Model = decisionModel2()
+    d2Logger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
+    d2ModelHistory = d2Model.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [d2Logger, earlyStoppage])
+    saveHistory("decision_model_2_history", d2ModelHistory)
+    saveModel("decision_model_2", d2Model)
 
 if __name__ == "__main__":
     main()
