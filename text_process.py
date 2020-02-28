@@ -8,7 +8,7 @@ from os import path
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras.models import Model, Sequential
 from keras.preprocessing.image import load_img, img_to_array
-from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
+from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout, RepeatVector
 from keras.layers.merge import add, concatenate
 from keras.applications.vgg19 import VGG19
 from keras.utils import to_categorical, plot_model
@@ -128,6 +128,7 @@ def decisionModel():
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(textFtrs)
     imageFtrs = Input(shape=(embedDim,)) # embedDim
     concat = concatenate([lstm, imageFtrs], axis = -1)
+    #hidden1 = Dense(1024, activation = "relu")(concat) # Make similar to feature??
     hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
     hidden2 = Dense(256, activation = "relu")(hidden1) # Make similar to feature??
     x = Dropout(0.5)(hidden2)
@@ -147,42 +148,19 @@ def featureModel():
     embedDim = 512
     input = Input(shape=(seqLength,))
     textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
-    #print(textFtrs.output)
     imageFtrs = Input(shape=(embedDim,))
-    added = add([textFtrs, imageFtrs])
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(added)
-    #hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
-    hidden = Dense(256, activation = "relu")(lstm)
-    x = Dropout(0.5)(hidden)
-    output = Dense(3, activation = "softmax")(x)
+    repeated = RepeatVector(seqLength)(imageFtrs)
+    #print(textFtrs.output)
+    concat = concatenate([textFtrs, repeated], axis = -1)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(concat)
+    hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
+    x1 = Dropout(0.5)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1)
+    x2 = Dropout(0.5)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     # visualiseModel(model, "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
-    print(model.summary())
-    return model
-
-def decisionModel2():
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
-        readFile.close()
-    seqLength = 30
-    embedDim = 512
-    input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
-    #print(textFtrs.output)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(textFtrs)
-    imageFtrs = Input(shape=(embedDim,)) # embedDim
-    concat = concatenate([lstm, imageFtrs], axis = -1)
-    hidden1 = Dense(512)(concat) # Make similar to feature??
-    hidden2 = Dense(256, activation = "relu")(hidden1) # Make similar to feature??
-    x = Dropout(0.5)(hidden2)
-    output = Dense(3, activation = "softmax")(x)
-    model = Model(inputs = [input, imageFtrs], output = output)
-    model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
-#    visualiseModel(model, "decision_model2.png") ### Uncomment to visualise, requires pydot and graphviz
     print(model.summary())
     return model
 
@@ -221,7 +199,7 @@ def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
 def batchPredict(df, model, noPartitions):
-    #df = df.sample(n = 20)
+    df = df.sample(n = 20)
     updatedPartitions = np.empty((0, 512))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
@@ -235,8 +213,10 @@ def predictAndSave(df, model, noPartitions, saveName):
     print("Saved to " + saveName + ".csv")
 
 def getInputArray(fname):
-    input = pd.read_csv(fname, header = None)
-    return input.to_numpy()
+    inputArr = pd.read_csv(fname, header = None)
+    inputArr = inputArr.sample(n = 20) #####################
+    inputArr = inputArr.to_numpy()
+    return inputArr
 
 def main():
     trainFile = "./b-t4sa/model_input_training_subset.csv"
@@ -270,7 +250,6 @@ def main():
     trainImgFeatures = getInputArray(dir + "/image_features_training50.csv")
     valImgFeatures = getInputArray(dir + "/image_features_validation.csv")
     testImgFeatures = getInputArray(dir + "/image_features_testing.csv")
-
     dir = "./b-t4sa/image classifications"
     if not path.exists(dir): # Currently set to
         os.mkdir(dir)
@@ -280,7 +259,8 @@ def main():
         input("Predicting and saving classification data completed")
     trainImgClass = getInputArray(dir + "/image_classifications_training50.csv")
     valImgClass = getInputArray(dir + "/image_classifications_validation.csv")
-    testImgClass = getInputArray(dir + "/image_classifications_testing.csv")
+    trainImgClass = getInputArray(dir + "/image_classifications_testing.csv")
+    #input(testImgClass.shape)
 
     dir = "./logs"
     if not path.exists(dir):
@@ -288,11 +268,11 @@ def main():
 
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
 
-    # fModel = featureModel()
-    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
-    # saveHistory("feature_model_history", fModelHistory)
-    # saveModel("feature_model", fModel)
+    fModel = featureModel()
+    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
+    saveHistory("feature_model_history", fModelHistory)
+    saveModel("feature_model", fModel)
 
     dModel = decisionModel()
     dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
