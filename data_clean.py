@@ -114,7 +114,7 @@ def lowerCase(text):
     return " ".join(normalisedTweet)
 
 def saveData(df, train, test, val):
-    with open("existing_text_shuffled.csv", "w") as writeShuff, open("existing_text_train.csv", "w") as writeTrain, open("existing_text_test.csv", "w") as writeTest, open("existing_text_val.csv", "w") as writeVal, open("training_counter.pickle", "wb") as writeCounter:
+    with open("./b-t4sa/existing_text_shuffled.csv", "w") as writeShuff, open("./b-t4sa/existing_text_train.csv", "w") as writeTrain, open("./b-t4sa/existing_text_test.csv", "w") as writeTest, open("./b-t4sa/existing_text_val.csv", "w") as writeVal, open("training_counter.pickle", "wb") as writeCounter:
         df.to_csv(writeShuff, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
         train.to_csv(writeTrain, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
         test.to_csv(writeTest, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
@@ -151,25 +151,49 @@ def cleanData(df):
     avgWordCount(df, 0)
     return df
 
-def tokenise(df, isTest):
+def tokenise(df, isTrain):
     tweets = list(df["NEW_TEXT"].values)
     for tweet in tweets:
         counter.update(tweet.split())
-    if (isTest is True):
+    if (isTrain is True):
         tokeniser.fit_on_texts(tweets)
     df["TOKENISED"] = tokeniser.texts_to_sequences(tweets)#train["NEW_TEXT"].apply(tokeniseText)
     df["TOKENISED"] = pad_sequences(df["TOKENISED"], maxlen = 30, padding = "pre", value = 0).tolist() # Converts numpy array to list
     return df
 
+def randomSplit(df):
+    train, test, val = np.split(df, [int(.7 * len(df)), int(.9 * len(df))])
+    test = test.reset_index(drop = True)
+    val = val.reset_index(drop = True)
+    return train, test, val
+
+def getIDList(fname):
+    idList = []
+    with open(fname + ".txt", "r") as readFile:
+        for line in readFile: # Image sentiments
+            idList.append(re.search(r"(?<=/)\w+(?=-)", line).group(0))
+        readFile.close()
+    return idList
+
+def bt4saExistSplits(df):
+    idList = getIDList("./b-t4sa/b-t4sa_train")
+    train = df[df["TWID"].isin(idList)]
+    idList = getIDList("./b-t4sa/b-t4sa_test")
+    test = df[df["TWID"].isin(idList)]
+    idList = getIDList("./b-t4sa/b-t4sa_val")
+    val = df[df["TWID"].isin(idList)]
+    return train, test, val
+
 def main():
     file = "./existing_text.csv"
+    #file = "./existing_text_shuffled.csv"
     pd.set_option('display.max_colwidth', -1)
     df = pd.read_csv(file, header = 0)
     df = cleanData(df)
     df = df.sample(frac = 1).reset_index(drop = True) # Shuffles data
-    train, test, val = np.split(df, [int(.7 * len(df)), int(.9 * len(df))])
-    test = test.reset_index(drop = True)
-    val = val.reset_index(drop = True)
+    ## FUNCTION THAT READS B-T4SA TEST SET
+    #train, test, val = randomSplit(df)
+    train, test, val = bt4saExistSplits(df)
     train = tokenise(train, True)
     test = tokenise(test, False)
     val = tokenise(val, False)

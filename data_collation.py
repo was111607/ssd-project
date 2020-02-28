@@ -62,7 +62,7 @@ def existenceCheck(api, idList):
     existingIdsTexts = []
     tweets = api.statuses_lookup(idList)
     for tweet in tweets:
-        txtRmvUrl = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet.text, flags=re.MULTILINE).rstrip() # mline in case tweet text encompasses multiple lines
+        txtRmvUrl = re.sub(r"https?:\/\/[^\s]*[\r\n]*", "", tweet.text, flags=re.MULTILINE).rstrip() # multiline in case tweet text encompasses multiple lines
         existingIdsTexts.extend([[tweet.id_str, txtRmvUrl]])
     return existingIdsTexts
 

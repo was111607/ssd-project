@@ -80,7 +80,7 @@ def matchSntmts(txt, img):
     if int(txt) == int(img):
         return "YES"
     else:
-        return "NO" # WORK ON THIS
+        return "NO"
 
 def saveData(df, fname):
     with open (fname, "w") as writeFile:
@@ -101,18 +101,18 @@ def addInputs(df, allDf, fname):
     saveData(df, fname)
 
 def main():
-    trainFile = "./existing_text_train.csv"
-    valFile = "./existing_text_val.csv"
-    testFile = "./existing_text_test.csv"
+    trainFile = "./b-t4sa/existing_text_train.csv"
+    valFile = "./b-t4sa/existing_text_val.csv"
+    testFile = "./b-t4sa/existing_text_test.csv"
     allFile = "./existing_all.csv"
     allDf = pd.read_csv(allFile, header = 0, lineterminator = "\n")
     trainDf = pd.read_csv(trainFile, header = 0, lineterminator = "\n")
     valDf = pd.read_csv(valFile, header = 0, lineterminator = "\n")
     testDf = pd.read_csv(testFile, header = 0, lineterminator = "\n")
     pd.set_option('display.max_colwidth', -1)
-    addInputs(trainDf, allDf, "model_input_training.csv")
-    addInputs(valDf, allDf, "model_input_validation.csv")
-    addInputs(testDf, allDf, "model_input_testing.csv")
+    addInputs(trainDf, allDf, "./b-t4sa/model_input_training.csv")
+    addInputs(valDf, allDf, "./b-t4sa/model_input_validation.csv")
+    addInputs(testDf, allDf, "./b-t4sa/model_input_testing.csv")
     # dfTok = pd.read_csv(trainFile, header = 0, lineterminator = "\n")
     # dfAll = pd.read_csv(allFile, header = 0, lineterminator = "\n")
     # totalRows = dfAll.shape[0]
