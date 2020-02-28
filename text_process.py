@@ -170,6 +170,7 @@ def saveData(list, fname):
         for i in list:
             writer.writerow(i)
         writeFile.close()
+    print(fname + " saved")
 
 def saveHistory(fname, history):
     dir = "./model histories/"
@@ -199,11 +200,13 @@ def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
 def batchPredict(df, model, noPartitions):
-    df = df.sample(n = 20)
+    # df = df.sample(n = 20)
+    global counter
     updatedPartitions = np.empty((0, 512))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
+        saveData(updatedPartitions.tolist(), "backupData.csv")
     return updatedPartitions
 
 def predictAndSave(df, model, noPartitions, saveName):
@@ -214,7 +217,7 @@ def predictAndSave(df, model, noPartitions, saveName):
 
 def getInputArray(fname):
     inputArr = pd.read_csv(fname, header = None)
-    inputArr = inputArr.sample(n = 20) #####################
+    #inputArr = inputArr.sample(n = 20) #####################
     inputArr = inputArr.to_numpy()
     return inputArr
 
@@ -253,9 +256,9 @@ def main():
     dir = "./b-t4sa/image classifications"
     if not path.exists(dir): # Currently set to
         os.mkdir(dir)
+        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training50")
         predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
         predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
-        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training50")
         input("Predicting and saving classification data completed")
     trainImgClass = getInputArray(dir + "/image_classifications_training50.csv")
     valImgClass = getInputArray(dir + "/image_classifications_validation.csv")
