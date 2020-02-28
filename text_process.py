@@ -266,22 +266,22 @@ def main():
     #input(testImgClass.shape)
 
     dir = "./logs"
-    if not path.exists(dir):
-        os.mkdir(dir)
-
-    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
-
-    fModel = featureModel()
-    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
-    saveHistory("feature_model_history", fModelHistory)
-    saveModel("feature_model", fModel)
-
-    dModel = decisionModel()
-    dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
-    saveHistory("decision_model_history", dModelHistory)
-    saveModel("decision_model", dModel)
+    # if not path.exists(dir):
+    #     os.mkdir(dir)
+    #
+    # earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
+    #
+    # fModel = featureModel()
+    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
+    # saveHistory("feature_model_history", fModelHistory)
+    # saveModel("feature_model", fModel)
+    #
+    # dModel = decisionModel()
+    # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
+    # dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
+    # saveHistory("decision_model_history", dModelHistory)
+    # saveModel("decision_model", dModel)
 
     # tModel = textModel()
     # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
