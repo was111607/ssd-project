@@ -253,9 +253,9 @@ def main():
     dir = "./b-t4sa/image classifications"
     if not path.exists(dir): # Currently set to
         os.mkdir(dir)
-        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training50")
         predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
         predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
+        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training50")
         input("Predicting and saving classification data completed")
     trainImgClass = getInputArray(dir + "/image_classifications_training50.csv")
     valImgClass = getInputArray(dir + "/image_classifications_validation.csv")
