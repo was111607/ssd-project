@@ -225,6 +225,7 @@ def recoverPredictAndSave(df, model, noPartitions, saveName, backupName):
     backupLen = backup.shape[0]
     counter = backupLen
     print(f"The backup length is {counter}")
+    print("backup_data.npy will only back up the data remainder")
     predictions = batchPredict(df.tail(-backupLen), model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImageReps(trainPaths) #batchPredict
     totalData = np.concatenate((backup, predictions), axis = 0)
     np.save(saveName, totalData)
