@@ -286,7 +286,7 @@ def main():
     if not path.exists(dir):
         os.mkdir(dir)
 
-    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 10, verbose = 1)
+    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
 
     dModel = decisionModel()
     dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
