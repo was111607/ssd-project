@@ -206,14 +206,17 @@ def batchPredict(df, model, noPartitions):
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
-        saveData(updatedPartitions.tolist(), "backupData.csv")
+        np.save("backup_data", updatedPartitions)
+        print("Saved backup")
+        #saveData(updatedPartitions.tolist(), "backupData.csv")
     return updatedPartitions
 
 def predictAndSave(df, model, noPartitions, saveName):
     print("Predicting for " + saveName)
     predictions = batchPredict(df, model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImageReps(trainPaths) #batchPredict
-    saveData(predictions.tolist(), saveName + ".csv") # MODIFY VECTOR INTO LENGTHS OF 30??? TES ARRAY LENGTH IN OTEST
-    print("Saved to " + saveName + ".csv")
+    np.save(saveName, predictions)
+    #saveData(predictions.tolist(), saveName + ".csv")
+    print("Saved to " + saveName + ".npy")
 
 def getInputArray(fname):
     inputArr = pd.read_csv(fname, header = None)
@@ -243,26 +246,26 @@ def main():
     featureVGG = initFeatureVGG()
     decisionVGG = initDecisionVGG()
 
-    dir = "./b-t4sa/image features"
-    if not path.exists(dir): # Currently set to
-        os.mkdir(dir)
-        predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training50")
-        predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
-        predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
-        input("Predicting and saving feature data completed")
-    trainImgFeatures = getInputArray(dir + "/image_features_training50.csv")
-    valImgFeatures = getInputArray(dir + "/image_features_validation.csv")
-    testImgFeatures = getInputArray(dir + "/image_features_testing.csv")
+    # dir = "./b-t4sa/image features"
+    # if not path.exists(dir): # Currently set to
+    #     os.mkdir(dir)
+    #     predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training50")
+    #     predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
+    #     predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
+    #     input("Predicting and saving feature data completed")
+    # trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
+    # valImgFeatures = np.load(dir + "/image_features_validation.npy")
+    # testImgFeatures = np.load(dir + "/image_features_testing.npy")
     dir = "./b-t4sa/image classifications"
     if not path.exists(dir): # Currently set to
         os.mkdir(dir)
-        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training50")
         predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
         predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
+        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training50")
         input("Predicting and saving classification data completed")
-    trainImgClass = getInputArray(dir + "/image_classifications_training50.csv")
-    valImgClass = getInputArray(dir + "/image_classifications_validation.csv")
-    trainImgClass = getInputArray(dir + "/image_classifications_testing.csv")
+    trainImgClass = np.load(dir + "/image_classifications_training50.npy")
+    valImgClass = np.load(dir + "/image_classifications_validation.npy")
+    trainImgClass = np.load(dir + "/image_classifications_testing.npy")
     #input(testImgClass.shape)
 
     dir = "./logs"
