@@ -279,7 +279,7 @@ def main():
         input("Predicting and saving classification data completed")
     trainImgClass = np.load(dir + "/image_classifications_training50.npy")
     valImgClass = np.load(dir + "/image_classifications_validation.npy")
-    trainImgClass = np.load(dir + "/image_classifications_testing.npy")
+    testImgClass = np.load(dir + "/image_classifications_testing.npy")
     #input(testImgClass.shape)
 
     dir = "./logs"
