@@ -276,7 +276,7 @@ def main():
         predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training50") # Remove recover, change 10 to 20, remove backupName
         predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
         predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
-    input("Predicting and saving classification data completed")
+        input("Predicting and saving classification data completed")
     trainImgClass = np.load(dir + "/image_classifications_training50.npy")
     valImgClass = np.load(dir + "/image_classifications_validation.npy")
     trainImgClass = np.load(dir + "/image_classifications_testing.npy")
@@ -299,7 +299,7 @@ def main():
     fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
     saveHistory("feature_model_history", fModelHistory)
     saveModel("feature_model", fModel)
-    
+
     # tModel = textModel()
     # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
     # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [tLogger, earlyStoppage])
