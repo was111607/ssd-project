@@ -218,6 +218,19 @@ def predictAndSave(df, model, noPartitions, saveName):
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
 
+def recoverPredictAndSave(df, model, noPartitions, saveName, backupName):
+    global counter
+    print("Predicting for " + saveName)
+    backup = np.load(backupName + ".npy")
+    backupLen = backup.shape[0]
+    counter = backupLen
+    print(f"The backup length is {counter}")
+    predictions = batchPredict(df.tail(-backupLen), model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImageReps(trainPaths) #batchPredict
+    totalData = np.concatenate((backup, predictions), axis = 0)
+    np.save(saveName, totalData)
+    #saveData(predictions.tolist(), saveName + ".csv")
+    print("Saved to " + saveName + ".npy")
+
 def getInputArray(fname):
     inputArr = pd.read_csv(fname, header = None)
     #inputArr = inputArr.sample(n = 20) #####################
@@ -257,12 +270,12 @@ def main():
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
     # testImgFeatures = np.load(dir + "/image_features_testing.npy")
     dir = "./b-t4sa/image classifications"
-    if not path.exists(dir): # Currently set to
-        os.mkdir(dir)
-        predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
-        predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
-        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training50")
-        input("Predicting and saving classification data completed")
+    # if not path.exists(dir): # Currently set to
+    #     os.mkdir(dir)
+    #     predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
+    #     predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
+    recoverPredictAndSave(trainPaths, decisionVGG, 10, dir + "/image_classifications_training50", "./b-t4sa/class_training50_BACKUP") # Remove recover, change 10 to 20, remove backupName
+    input("Predicting and saving classification data completed")
     trainImgClass = np.load(dir + "/image_classifications_training50.npy")
     valImgClass = np.load(dir + "/image_classifications_validation.npy")
     trainImgClass = np.load(dir + "/image_classifications_testing.npy")
