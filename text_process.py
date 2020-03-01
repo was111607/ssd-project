@@ -288,25 +288,25 @@ def main():
         os.mkdir(dir)
 
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
-    #
+    
+    tModel = textModel()
+    tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
+    tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [tLogger, earlyStoppage])
+    saveHistory("text_model_history", tModelHistory)
+    saveModel("text_model", tModel)
+
     dModel = decisionModel()
     dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
     dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
     saveHistory("decision_model_history", dModelHistory)
     saveModel("decision_model", dModel)
-    #
+
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
     # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
     # saveHistory("feature_model_history", fModelHistory)
     # saveModel("feature_model", fModel)
 
-    tModel = textModel()
-    tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
-    tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [tLogger, earlyStoppage])
-    saveHistory("text_model_history", tModelHistory)
-    saveModel("text_model", tModel)
-    #
     # d2Model = decisionModel2()
     # d2Logger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
     # d2ModelHistory = d2Model.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [d2Logger, earlyStoppage])
