@@ -77,7 +77,7 @@ def initDecisionVGG():
     for layer in vgg19.layers: # Output of FC2 layer
         model.add(layer)
     model.add(Dense(512, activation = "relu"))
-    visualiseModel(model, "decision_vgg.png")
+#    visualiseModel(model, "decision_vgg.png")
     return model
 
 def initFeatureVGG():
@@ -86,7 +86,7 @@ def initFeatureVGG():
     for layer in vgg19.layers[:-1]: # Output of FC2 layer
         model.add(layer)
     model.add(Dense(512, activation = "relu"))
-    visualiseModel(model, "feature_vgg.png")
+#    visualiseModel(model, "feature_vgg.png")
     return model
 
 # Features accounted for separately
