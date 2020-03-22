@@ -113,7 +113,7 @@ def textModel():
     model = Model(input = input, output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
-    print(model.summary())
+#    print(model.summary())
     return model
 
 def decisionModel():
@@ -139,7 +139,7 @@ def decisionModel():
     model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
 #    visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
-    print(model.summary())
+    # print(model.summary())
     return model
 
 def featureModel():
@@ -164,7 +164,7 @@ def featureModel():
     model = Model(inputs = [input, imageFtrs], output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     # visualiseModel(model, "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
-    print(model.summary())
+    # print(model.summary())
     return model
 
 def saveData(list, fname):
