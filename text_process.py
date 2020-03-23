@@ -264,8 +264,8 @@ def main():
     decisionVGG = initDecisionVGG()
 
     dir = "./b-t4sa/image features"
-    recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
-    input("Predicting and saving feature data completed")
+    #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
+    #input("Predicting and saving feature data completed")
     # if not path.exists(dir): # Currently set to
     #     os.mkdir(dir)
     #     predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training50")
@@ -276,7 +276,7 @@ def main():
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
     # testImgFeatures = np.load(dir + "/image_features_testing.npy")
     dir = "./b-t4sa/image classifications"
-    predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training")
+    recoverPredictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     input("Predicting and saving classification data completed")
     # if not path.exists(dir): # Currently set to
     #     os.mkdir(dir)
