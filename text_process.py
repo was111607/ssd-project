@@ -266,27 +266,27 @@ def main():
     dir = "./b-t4sa/image features"
     #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #input("Predicting and saving feature data completed")
-    # if not path.exists(dir): # Currently set to
-    #     os.mkdir(dir)
-    #     predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training50")
-    #     predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
-    #     predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
-    #     input("Predicting and saving feature data completed")
-    # trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
-    # valImgFeatures = np.load(dir + "/image_features_validation.npy")
-    # testImgFeatures = np.load(dir + "/image_features_testing.npy")
+    if not path.exists(dir): # Currently set to
+        os.mkdir(dir)
+        predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training")
+        predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
+        predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
+        input("Predicting and saving feature data completed")
+    trainImgFeatures = np.load(dir + "/image_features_training.npy") # getInputArray
+    valImgFeatures = np.load(dir + "/image_features_validation.npy")
+    testImgFeatures = np.load(dir + "/image_features_testing.npy")
     dir = "./b-t4sa/image classifications"
-    recoverPredictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
-    input("Predicting and saving classification data completed")
-    # if not path.exists(dir): # Currently set to
-    #     os.mkdir(dir)
-    #     predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training") # Remove recover, change 10 to 20, remove backupName
-    #     predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
-    #     predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
-    #     input("Predicting and saving classification data completed")
-    # trainImgClass = np.load(dir + "/image_classifications_training50.npy")
-    # valImgClass = np.load(dir + "/image_classifications_validation.npy")
-    # testImgClass = np.load(dir + "/image_classifications_testing.npy")
+    #recoverPredictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
+    #input("Predicting and saving classification data completed")
+    if not path.exists(dir): # Currently set to
+        os.mkdir(dir)
+        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training") # Remove recover, change 10 to 20, remove backupName
+        predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
+        predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
+        input("Predicting and saving classification data completed")
+    trainImgClass = np.load(dir + "/image_classifications_training.npy")
+    valImgClass = np.load(dir + "/image_classifications_validation.npy")
+    testImgClass = np.load(dir + "/image_classifications_testing.npy")
     #input(testImgClass.shape)
 
     dir = "./logs"
@@ -302,10 +302,10 @@ def main():
     # saveModel("text_model", tModel)
 
     dModel = decisionModel()
-    # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    # dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
-    # saveHistory("decision_model_history", dModelHistory)
-    # saveModel("decision_model", dModel)
+    dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
+    dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
+    saveHistory("decision_model_history", dModelHistory)
+    saveModel("decision_model", dModel)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
