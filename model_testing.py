@@ -36,8 +36,8 @@ def main():
     testImgClass = np.load("./b-t4sa/image classifications/image_classifications_testing.npy")
 
     #fModel = loadModel("feature_model")
-    dModel = loadModel("decision_model")
-    #tModel = loadModel("text_model")
+    #dModel = loadModel("decision_model")
+    tModel = loadModel("text_model")
 
     #fModelScore = fModel.evaluate([XTest, testImgFeatures], to_categorical(YTest))
     #dModelScore = dModel.evaluate([XTest, testImgClass], to_categorical(YTest))
