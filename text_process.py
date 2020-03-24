@@ -295,11 +295,11 @@ def main():
 
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
 
-    tModel = textModel()
-    tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
-    tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [tLogger, earlyStoppage])
-    saveHistory("text_model_history", tModelHistory)
-    saveModel("text_model", tModel)
+    # tModel = textModel()
+    # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
+    # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [tLogger, earlyStoppage])
+    # saveHistory("text_model_history", tModelHistory)
+    # saveModel("text_model", tModel)
 
     # dModel = decisionModel()
     # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
@@ -307,11 +307,11 @@ def main():
     # saveHistory("decision_model_history", dModelHistory)
     # saveModel("decision_model", dModel)
 
-    # fModel = featureModel()
-    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
-    # saveHistory("feature_model_history", fModelHistory)
-    # saveModel("feature_model", fModel)
+    fModel = featureModel()
+    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
+    saveHistory("feature_model_history", fModelHistory)
+    saveModel("feature_model", fModel)
 
     # d2Model = decisionModel2()
     # d2Logger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
