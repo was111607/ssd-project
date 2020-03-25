@@ -35,21 +35,21 @@ def main():
     testImgFeatures = np.load("./b-t4sa/image features/image_features_testing.npy")
     testImgClass = np.load("./b-t4sa/image classifications/image_classifications_testing.npy")
 
-    #fModel = loadModel("feature_model")
+    fModel = loadModel("feature_model")
     #dModel = loadModel("decision_model")
-    tModel = loadModel("text_model")
+    #tModel = loadModel("text_model")
 
-    #fModelScore = fModel.evaluate([XTest, testImgFeatures], to_categorical(YTest))
+    fModelScore = fModel.evaluate([XTest, testImgFeatures], to_categorical(YTest))
     #dModelScore = dModel.evaluate([XTest, testImgClass], to_categorical(YTest))
-    tModelScore = tModel.evaluate(XTest, to_categorical(YTest))
+    #tModelScore = tModel.evaluate(XTest, to_categorical(YTest))
 
-    #print(f"The loss and accuracy for feature-level fusion is: {fModelScore}")
+    print(f"The loss and accuracy for feature-level fusion is: {fModelScore}")
     #print(f"The loss and accuracy for decision-level fusion is: {dModelScore}")
-    print(f"The loss and accuracy for no fusion (text only) is: {tModelScore}")
+    #print(f"The loss and accuracy for no fusion (text only) is: {tModelScore}")
 
-    #saveScore(fModelScore, "feature_model_score")
+    saveScore(fModelScore, "feature_model_score")
     #saveScore(dModelScore, "decision_model_score")
-    saveScore(tModelScore, "text_model_score")
+    #saveScore(tModelScore, "text_model_score")
 
 if __name__ == "__main__":
     main()
