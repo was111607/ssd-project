@@ -308,11 +308,11 @@ def main():
 
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
 
-    tModel = textModel()
-    tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
-    tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
-    saveHistory("text_model_history", tModelHistory)
-    saveModel("text_model", tModel)
+    # tModel = textModel()
+    # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
+    # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
+    # saveHistory("text_model_history", tModelHistory)
+    # saveModel("text_model", tModel)
 
     # dModel = decisionModel()
     # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
