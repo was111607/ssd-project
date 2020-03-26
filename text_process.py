@@ -87,7 +87,8 @@ def monkeyPatchFit():
         x0 = np.array(x[i][0] for i in range(x.shape[0]))
         x1 = np.array(x[i][1] for i in range(x.shape[0]))
         #history = self.model.fit(x, y, **fit_args)
-
+        print(x0)
+        print(x1)
         history = self.model.fit([x0, x1], y, **fit_args)
         return history
     sl.BaseWrapper.fit = fit
@@ -366,9 +367,17 @@ def main():
     paramGrid = dict(batch_size = batchSizes)
     monkeyPatchFit()
     dModel = sl.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 3)
-    dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
-    results = grid.fit((XTrain, trainImgClass), to_categorical(YTrain))
+    # print(YTrain.shape)
+    # print(XTrain.shape)
+    # print(trainImgClass.shape)
+    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # print(XTrain[0])
+    # print(trainImgClass[0])
+    # print(yes[0][0])
+    # print(yes[0][1])
+    # print(np.array(yes).shape)
+    results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
     saveResults("batch_sizes", results)
 
