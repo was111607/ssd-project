@@ -20,6 +20,8 @@ import keras.wrappers.scikit_learn as sl
 from sklearn.model_selection import GridSearchCV
 import types
 import copy
+from keras import losses
+from keras.utis.generic_utils import has_arg
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -80,7 +82,7 @@ def monkeyPatchFit():
 
         if (losses.is_categorical_crossentropy(self.model.loss) and
                 len(y.shape) != 2):
-            y = to_categorical(y)
+            y = keras.utils.np_utils.to_categorical(y)
 
         fit_args = copy.deepcopy(self.filter_sk_params(Sequential.fit))
         fit_args.update(kwargs)
