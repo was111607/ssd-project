@@ -369,7 +369,7 @@ def main():
     dModel = sl.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 3)
     dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
-    results = grid.fit([XTrain, trainImgClass], to_categorical(YTrain))
+    results = grid.fit((XTrain, trainImgClass), to_categorical(YTrain))
     summariseResults(results)
     saveResults("batch_sizes", results)
 
