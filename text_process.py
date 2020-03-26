@@ -90,8 +90,7 @@ def monkeyPatchFit():
 
         history = self.model.fit([x0, x1], y, **fit_args)
         return history
-    #sl.KerasClassifier.__dict__["fit"] = fit
-    setattr(sl.KerasClassifier, "fit", fit)
+    sl.KerasClassifier.__dict__["fit"] = fit
 
 def loadImage(path):
     with urlopen(path) as url:
