@@ -67,30 +67,31 @@ def monkeyPatchFit():
             history : object
                 details about the training history at each epoch.
         """
-        print("yes")
-        if self.build_fn is None:
-            self.model = self.__call__(**self.filter_sk_params(self.__call__))
-        elif (not isinstance(self.build_fn, types.FunctionType) and
-              not isinstance(self.build_fn, types.MethodType)):
-            self.model = self.build_fn(
-                **self.filter_sk_params(self.build_fn.__call__))
-        else:
-            self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
-
-        if (losses.is_categorical_crossentropy(self.model.loss) and
-                len(y.shape) != 2):
-            y = to_categorical(y)
-
-        fit_args = copy.deepcopy(self.filter_sk_params(Sequential.fit))
-        fit_args.update(kwargs)
-
-        x0 = np.array(x[i][0] for i in range(x.shape[0]))
-        x1 = np.array(x[i][1] for i in range(x.shape[0]))
-        #history = self.model.fit(x, y, **fit_args)
-        print(x0)
-        print(x1)
-        history = self.model.fit([x0, x1], y, **fit_args)
-        return history
+        # if self.build_fn is None:
+        #     self.model = self.__call__(**self.filter_sk_params(self.__call__))
+        # elif (not isinstance(self.build_fn, types.FunctionType) and
+        #       not isinstance(self.build_fn, types.MethodType)):
+        #     self.model = self.build_fn(
+        #         **self.filter_sk_params(self.build_fn.__call__))
+        # else:
+        #     self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
+        #
+        # if (losses.is_categorical_crossentropy(self.model.loss) and
+        #         len(y.shape) != 2):
+        #     y = to_categorical(y)
+        #
+        # fit_args = copy.deepcopy(self.filter_sk_params(Sequential.fit))
+        # fit_args.update(kwargs)
+        #
+        # x0 = np.array(x[i][0] for i in range(x.shape[0]))
+        # x1 = np.array(x[i][1] for i in range(x.shape[0]))
+        # #history = self.model.fit(x, y, **fit_args)
+        # print(x0)
+        # print(x1)
+        # history = self.model.fit([x0, x1], y, **fit_args)
+        # return history
+        input("Hello CHief")
+        return None
     sl.BaseWrapper.fit = fit
 
 def loadImage(path):
@@ -372,8 +373,9 @@ def main():
     # print(XTrain.shape)
     # print(trainImgClass.shape)
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    print(np.array(XCombined[i][0] for i in range(XCombined.shape[0])))
-    input()
+    # print(XCombined[0][0])
+    # print(XCombined[0][1])
+    # input()
     # print(XTrain[0])
     # print(trainImgClass[0])
     # print(yes[0][0])
