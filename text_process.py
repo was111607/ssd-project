@@ -15,7 +15,8 @@ from keras.utils import to_categorical, plot_model
 from ast import literal_eval
 from io import BytesIO
 from urllib.request import urlopen
-from keras.wrappers.scikit_learn import KerasClassifier # for grid search
+#from keras.wrappers.scikit_learn import KerasClassifier # for grid search
+import keras.wrappers.scikit_learn as sl
 from sklearn.model_selection import GridSearchCV
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
@@ -50,6 +51,47 @@ from sklearn.model_selection import GridSearchCV
 # Skimage to retrieve and resize from tweet links
 # Maybe have to run all programs in succession to be able to run?
 counter = 1
+
+def monkeyPatch():
+    def fit(self, x, y, **kwargs):
+        """Constructs a new model with `build_fn` & fit the model to `(x, y)`.
+        # Arguments
+            x : array-like, shape `(n_samples, n_features)`
+                Training samples where `n_samples` is the number of samples
+                and `n_features` is the number of features.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+                True labels for `x`.
+            **kwargs: dictionary arguments
+                Legal arguments are the arguments of `Sequential.fit`
+        # Returns
+            history : object
+                details about the training history at each epoch.
+        """
+        if self.build_fn is None:
+            self.model = self.__call__(**self.filter_sk_params(self.__call__))
+        elif (not isinstance(self.build_fn, types.FunctionType) and
+              not isinstance(self.build_fn, types.MethodType)):
+            self.model = self.build_fn(
+                **self.filter_sk_params(self.build_fn.__call__))
+        else:
+            self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
+
+        if (losses.is_categorical_crossentropy(self.model.loss) and
+                len(y.shape) != 2):
+            y = to_categorical(y)
+
+        fit_args = copy.deepcopy(self.filter_sk_params(Sequential.fit))
+        fit_args.update(kwargs)
+
+        x0 = np.array(x[i][0] for i in range(x.shape[0]))
+        x1 = np.array(x[i][1] for i in range(x.shape[0]))
+        #history = self.model.fit(x, y, **fit_args)
+
+        history = self.model.fit([x0, x1], y, **fit_args)
+
+        return history
+
+    sl.__dict__["fit"] = fit
 
 def loadImage(path):
     with urlopen(path) as url:
@@ -323,7 +365,7 @@ def main():
 
     batchSizes = [16, 32, 64, 128, 256]
     paramGrid = dict(batch_size = batchSizes)
-    dModel = KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 3)
+    dModel = sl.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 3)
     dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
     results = grid.fit([XTrain, trainImgClass], to_categorical(YTrain))
