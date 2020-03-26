@@ -67,6 +67,7 @@ def monkeyPatchFit():
             history : object
                 details about the training history at each epoch.
         """
+        print("yes")
         if self.build_fn is None:
             self.model = self.__call__(**self.filter_sk_params(self.__call__))
         elif (not isinstance(self.build_fn, types.FunctionType) and
@@ -88,7 +89,6 @@ def monkeyPatchFit():
         #history = self.model.fit(x, y, **fit_args)
 
         history = self.model.fit([x0, x1], y, **fit_args)
-
         return history
 
     sl.__dict__["fit"] = fit
