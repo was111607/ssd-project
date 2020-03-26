@@ -52,7 +52,7 @@ from sklearn.model_selection import GridSearchCV
 # Maybe have to run all programs in succession to be able to run?
 counter = 1
 
-def monkeyPatch():
+def monkeyPatchFit():
     def fit(self, x, y, **kwargs):
         """Constructs a new model with `build_fn` & fit the model to `(x, y)`.
         # Arguments
@@ -368,6 +368,7 @@ def main():
     dModel = sl.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 3)
     dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
+    monkeyPatchFit()
     results = grid.fit([XTrain, trainImgClass], to_categorical(YTrain))
     summariseResults(results)
     saveResults("batch_sizes", results)
