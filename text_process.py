@@ -16,6 +16,7 @@ from ast import literal_eval
 from io import BytesIO
 from urllib.request import urlopen
 from keras.wrappers.scikit_learn import KerasClassifier # for grid search
+from sklearn.model_selection import GridSearchCV
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
