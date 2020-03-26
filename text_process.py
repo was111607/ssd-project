@@ -15,6 +15,7 @@ from keras.utils import to_categorical, plot_model
 from ast import literal_eval
 from io import BytesIO
 from urllib.request import urlopen
+from keras.wrappers.scikit_learn import KerasClassifier # for grid search
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -184,16 +185,20 @@ def saveHistory(fname, history):
         writeFile.close()
     print("Saved history for " + fname)
 
+def saveResults(fname, results):
+    dir = "./grid search results/"
+    if not path.exists(dir):
+        os.mkdir(dir)
+    with open(dir + fname + ".pickle", "wb") as writeFile:
+        pickle.dump(results, writeFile)
+        writeFile.close()
+    print("Saved grid search results for " + fname)
+
 def saveModel(fname, model):
-        # serialize model to JSON
     dir = "./models/"
     if not path.exists(dir):
         os.mkdir(dir)
     model.save(dir + fname + ".h5")
-    # with open(dir + fname + ".csv", "w") as writeFile:
-    #     writeFile.write(model.to_json())
-    #     writeFile.close()
-    # model.save_weights(dir + fname + "_weights" + ".h5")
     print("Saved model for " + fname)
 
 def toArray(list):
@@ -240,6 +245,14 @@ def getInputArray(fname):
     #inputArr = inputArr.sample(n = 20) #####################
     inputArr = inputArr.to_numpy()
     return inputArr
+
+def summariseResults(results):
+    means = results.cv_results_["mean_test_score"]
+    stds = results.cv_results_["std_test_score"]
+    parameters = results.cv_results_["params"]
+    print("Best score of %f with parameters %r" % (results.best_score_, results.best_params_))
+    for mean, std, parameter in zip(means, stds, parameters):
+        print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
 def main():
     trainFile = "./b-t4sa/model_input_training.csv"
@@ -301,23 +314,26 @@ def main():
     # saveHistory("text_model_history", tModelHistory)
     # saveModel("text_model", tModel)
 
-    # dModel = decisionModel()
+    dModel = decisionModel()
+    dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
+    dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [dLogger])#, earlyStoppage])
+    saveHistory("decision_model_history", dModelHistory)
+    saveModel("decision_model", dModel)
+
+    # batchSizes = [16, 32, 64, 128, 256]
+    # paramGrid = dict(batch_size = batchSizes)
+    # dModel = KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5)
     # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    # dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [dLogger, earlyStoppage])
-    # saveHistory("decision_model_history", dModelHistory)
-    # saveModel("decision_model", dModel)
+    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
+    # results = grid.fit([XTrain, trainImgClass], to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("batch_sizes", results)
 
-    fModel = featureModel()
-    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
-    saveHistory("feature_model_history", fModelHistory)
-    saveModel("feature_model", fModel)
-
-    # d2Model = decisionModel2()
-    # d2Logger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    # d2ModelHistory = d2Model.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [d2Logger, earlyStoppage])
-    # saveHistory("decision_model_2_history", d2ModelHistory)
-    # saveModel("decision_model_2", d2Model)
+    # fModel = featureModel()
+    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
+    # saveHistory("feature_model_history", fModelHistory)
+    # saveModel("feature_model", fModel)
 
 if __name__ == "__main__":
     main()
