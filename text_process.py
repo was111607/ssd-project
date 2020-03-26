@@ -90,7 +90,7 @@ def monkeyPatchFit():
 
         history = self.model.fit([x0, x1], y, **fit_args)
         return history
-    sl.BaseWrapper.__dict__["fit"] = fit
+    sl.BaseWrapper.fit = fit
 
 def loadImage(path):
     with urlopen(path) as url:
