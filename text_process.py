@@ -255,7 +255,7 @@ def summariseResults(results):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
 def main():
-    trainFile = "./b-t4sa/model_input_training.csv"
+    trainFile = "./b-t4sa/model_input_training_subset.csv"
     valFile = "./b-t4sa/model_input_validation.csv"
     testFile = "./b-t4sa/model_input_testing.csv"
     pd.set_option('display.max_colwidth', -1)
@@ -285,7 +285,7 @@ def main():
         predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
         predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
         input("Predicting and saving feature data completed")
-    trainImgFeatures = np.load(dir + "/image_features_training.npy") # getInputArray
+    trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
     valImgFeatures = np.load(dir + "/image_features_validation.npy")
     testImgFeatures = np.load(dir + "/image_features_testing.npy")
     dir = "./b-t4sa/image classifications"
@@ -297,7 +297,7 @@ def main():
         predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
         predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
         input("Predicting and saving classification data completed")
-    trainImgClass = np.load(dir + "/image_classifications_training.npy")
+    trainImgClass = np.load(dir + "/image_classifications_training50.npy")
     valImgClass = np.load(dir + "/image_classifications_validation.npy")
     testImgClass = np.load(dir + "/image_classifications_testing.npy")
     #input(testImgClass.shape)
@@ -316,24 +316,24 @@ def main():
 
     # dModel = decisionModel()
     # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    # dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [dLogger])#, earlyStoppage])
+    # dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 50, batch_size = 64, callbacks = [dLogger])#, earlyStoppage])
     # saveHistory("decision_model_history", dModelHistory)
     # saveModel("decision_model", dModel)
 
-    # batchSizes = [16, 32, 64, 128, 256]
-    # paramGrid = dict(batch_size = batchSizes)
-    # dModel = KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5)
-    # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
-    # results = grid.fit([XTrain, trainImgClass], to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("batch_sizes", results)
+    batchSizes = [16, 32, 64, 128, 256]
+    paramGrid = dict(batch_size = batchSizes)
+    dModel = KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 3)
+    dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
+    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
+    results = grid.fit([XTrain, trainImgClass], to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("batch_sizes", results)
 
-    fModel = featureModel()
-    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [fLogger])#, earlyStoppage])
-    saveHistory("feature_model_history", fModelHistory)
-    saveModel("feature_model", fModel)
+    # fModel = featureModel()
+    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [fLogger])#, earlyStoppage])
+    # saveHistory("feature_model_history", fModelHistory)
+    # saveModel("feature_model", fModel)
 
 if __name__ == "__main__":
     main()
