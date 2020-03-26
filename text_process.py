@@ -329,11 +329,11 @@ def main():
     # summariseResults(results)
     # saveResults("batch_sizes", results)
 
-    # fModel = featureModel()
-    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 500, batch_size = 64, callbacks = [fLogger, earlyStoppage])
-    # saveHistory("feature_model_history", fModelHistory)
-    # saveModel("feature_model", fModel)
+    fModel = featureModel()
+    fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
+    fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [fLogger])#, earlyStoppage])
+    saveHistory("feature_model_history", fModelHistory)
+    saveModel("feature_model", fModel)
 
 if __name__ == "__main__":
     main()
