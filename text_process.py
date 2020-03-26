@@ -17,7 +17,6 @@ from io import BytesIO
 from urllib.request import urlopen
 #from keras.wrappers.scikit_learn import KerasClassifier # for grid search
 import keras.wrappers.scikit_learn as sl
-from sklearn.model_selection import GridSearchCV
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -366,6 +365,7 @@ def main():
     batchSizes = [16, 32, 64, 128, 256]
     paramGrid = dict(batch_size = batchSizes)
     monkeyPatchFit()
+    from sklearn.model_selection import GridSearchCV
     dModel = sl.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 3)
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
     # print(YTrain.shape)
