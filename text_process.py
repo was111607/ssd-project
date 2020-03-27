@@ -255,7 +255,7 @@ def patchFitAndScore():
         if return_estimator:
             ret.append(estimator)
         return ret
-    ms._fit_and_score = _fit_and_score
+    ms._validation._fit_and_score = _fit_and_score
 
 def loadImage(path):
     with urlopen(path) as url:
