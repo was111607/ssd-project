@@ -17,6 +17,7 @@ from io import BytesIO
 from urllib.request import urlopen
 #from keras.wrappers.scikit_learn import KerasClassifier # for grid search
 import keras.wrappers.scikit_learn as sl
+import sklearn.model_selection as ms
 from sklearn.model_selection import GridSearchCV
 import types
 import copy
@@ -56,43 +57,205 @@ from keras.utils.generic_utils import has_arg
 # Maybe have to run all programs in succession to be able to run?
 counter = 1
 
-#def monkeyPatchFit():
-def fit(self, x, y, **kwargs):
-    """Constructs a new model with `build_fn` & fit the model to `(x, y)`.
-    # Arguments
-        x : array-like, shape `(n_samples, n_features)`
-            Training samples where `n_samples` is the number of samples
-            and `n_features` is the number of features.
-        y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-            True labels for `x`.
-        **kwargs: dictionary arguments
-            Legal arguments are the arguments of `Sequential.fit`
-    # Returns
-        history : object
-            details about the training history at each epoch.
-    """
-    if self.build_fn is None:
-        self.model = self.__call__(**self.filter_sk_params(self.__call__))
-    elif (not isinstance(self.build_fn, types.FunctionType) and
-          not isinstance(self.build_fn, types.MethodType)):
-        self.model = self.build_fn(
-            **self.filter_sk_params(self.build_fn.__call__))
-    else:
-        self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
+def patchFit():
+    def fit(self, x, y, **kwargs):
+        """Constructs a new model with `build_fn` & fit the model to `(x, y)`.
+        # Arguments
+            x : array-like, shape `(n_samples, n_features)`
+                Training samples where `n_samples` is the number of samples
+                and `n_features` is the number of features.
+            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+                True labels for `x`.
+            **kwargs: dictionary arguments
+                Legal arguments are the arguments of `Sequential.fit`
+        # Returns
+            history : object
+                details about the training history at each epoch.
+        """
+        if self.build_fn is None:
+            self.model = self.__call__(**self.filter_sk_params(self.__call__))
+        elif (not isinstance(self.build_fn, types.FunctionType) and
+              not isinstance(self.build_fn, types.MethodType)):
+            self.model = self.build_fn(
+                **self.filter_sk_params(self.build_fn.__call__))
+        else:
+            self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
 
-    if (losses.is_categorical_crossentropy(self.model.loss) and
-            len(y.shape) != 2):
-        y = keras.utils.np_utils.to_categorical(y)
+        if (losses.is_categorical_crossentropy(self.model.loss) and
+                len(y.shape) != 2):
+            y = keras.utils.np_utils.to_categorical(y)
 
-    fit_args = copy.deepcopy(self.filter_sk_params(Sequential.fit))
-    fit_args.update(kwargs)
+        fit_args = copy.deepcopy(self.filter_sk_params(Sequential.fit))
+        fit_args.update(kwargs)
 
-    x0 = np.array([x[i][0] for i in range(x.shape[0])])
-    x1 = np.array([x[i][1] for i in range(x.shape[0])])
-    #history = self.model.fit(x, y, **fit_args)
-    history = self.model.fit([x0, x1], y, **fit_args)
-    return history
-    # sl.BaseWrapper.fit = fit
+        x0 = np.array([x[i][0] for i in range(x.shape[0])])
+        x1 = np.array([x[i][1] for i in range(x.shape[0])])
+        #history = self.model.fit(x, y, **fit_args)
+        history = self.model.fit([x0, x1], y, **fit_args)
+        return history
+    sl.BaseWrapper.fit = fit
+
+def patchFitAndScore():
+    def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
+                       parameters, fit_params, return_train_score=False,
+                       return_parameters=False, return_n_test_samples=False,
+                       return_times=False, return_estimator=False,
+                       error_score=np.nan):
+        """Fit estimator and compute scores for a given dataset split.
+        Parameters
+        ----------
+        estimator : estimator object implementing 'fit'
+            The object to use to fit the data.
+        X : array-like of shape at least 2D
+            The data to fit.
+        y : array-like, optional, default: None
+            The target variable to try to predict in the case of
+            supervised learning.
+        scorer : A single callable or dict mapping scorer name to the callable
+            If it is a single callable, the return value for ``train_scores`` and
+            ``test_scores`` is a single float.
+            For a dict, it should be one mapping the scorer name to the scorer
+            callable object / function.
+            The callable object / fn should have signature
+            ``scorer(estimator, X, y)``.
+        train : array-like, shape (n_train_samples,)
+            Indices of training samples.
+        test : array-like, shape (n_test_samples,)
+            Indices of test samples.
+        verbose : integer
+            The verbosity level.
+        error_score : 'raise' or numeric
+            Value to assign to the score if an error occurs in estimator fitting.
+            If set to 'raise', the error is raised.
+            If a numeric value is given, FitFailedWarning is raised. This parameter
+            does not affect the refit step, which will always raise the error.
+        parameters : dict or None
+            Parameters to be set on the estimator.
+        fit_params : dict or None
+            Parameters that will be passed to ``estimator.fit``.
+        return_train_score : boolean, optional, default: False
+            Compute and return score on training set.
+        return_parameters : boolean, optional, default: False
+            Return parameters that has been used for the estimator.
+        return_n_test_samples : boolean, optional, default: False
+            Whether to return the ``n_test_samples``
+        return_times : boolean, optional, default: False
+            Whether to return the fit/score times.
+        return_estimator : boolean, optional, default: False
+            Whether to return the fitted estimator.
+        Returns
+        -------
+        train_scores : dict of scorer name -> float, optional
+            Score on training set (for all the scorers),
+            returned only if `return_train_score` is `True`.
+        test_scores : dict of scorer name -> float, optional
+            Score on testing set (for all the scorers).
+        n_test_samples : int
+            Number of test samples.
+        fit_time : float
+            Time spent for fitting in seconds.
+        score_time : float
+            Time spent for scoring in seconds.
+        parameters : dict or None, optional
+            The parameters that have been evaluated.
+        estimator : estimator object
+            The fitted estimator
+        """
+        if verbose > 1:
+            if parameters is None:
+                msg = ''
+            else:
+                msg = '%s' % (', '.join('%s=%s' % (k, v)
+                              for k, v in parameters.items()))
+            print("[CV] %s %s" % (msg, (64 - len(msg)) * '.'))
+
+        # Adjust length of sample weights
+        fit_params = fit_params if fit_params is not None else {}
+        fit_params = _check_fit_params(X, fit_params, train)
+
+        train_scores = {}
+        if parameters is not None:
+            # clone after setting parameters in case any parameters
+            # are estimators (like pipeline steps)
+            # because pipeline doesn't clone steps in fit
+            cloned_parameters = {}
+            for k, v in parameters.items():
+                cloned_parameters[k] = clone(v, safe=False)
+
+            estimator = estimator.set_params(**cloned_parameters)
+
+        start_time = time.time()
+
+        X_train, y_train = _safe_split(estimator, X, y, train)
+        X_test, y_test = _safe_split(estimator, X, y, test, train)
+
+        try:
+            if y_train is None:
+                estimator.fit(X_train, **fit_params)
+            else:
+                estimator.fit([X_train[0], X_train[1]], y_train, **fit_params)
+
+        except Exception as e:
+            # Note fit time as time until error
+            fit_time = time.time() - start_time
+            score_time = 0.0
+            if error_score == 'raise':
+                raise
+            elif isinstance(error_score, numbers.Number):
+                if isinstance(scorer, dict):
+                    test_scores = {name: error_score for name in scorer}
+                    if return_train_score:
+                        train_scores = test_scores.copy()
+                else:
+                    test_scores = error_score
+                    if return_train_score:
+                        train_scores = error_score
+                warnings.warn("Estimator fit failed. The score on this train-test"
+                              " partition for these parameters will be set to %f. "
+                              "Details: \n%s" %
+                              (error_score, format_exception_only(type(e), e)[0]),
+                              FitFailedWarning)
+            else:
+                raise ValueError("error_score must be the string 'raise' or a"
+                                 " numeric value. (Hint: if using 'raise', please"
+                                 " make sure that it has been spelled correctly.)")
+
+        else:
+            fit_time = time.time() - start_time
+            test_scores = _score(estimator, X_test, y_test, scorer)
+            score_time = time.time() - start_time - fit_time
+            if return_train_score:
+                train_scores = _score(estimator, X_train, y_train, scorer)
+        if verbose > 2:
+            if isinstance(test_scores, dict):
+                for scorer_name in sorted(test_scores):
+                    msg += ", %s=" % scorer_name
+                    if return_train_score:
+                        msg += "(train=%.3f," % train_scores[scorer_name]
+                        msg += " test=%.3f)" % test_scores[scorer_name]
+                    else:
+                        msg += "%.3f" % test_scores[scorer_name]
+            else:
+                msg += ", score="
+                msg += ("%.3f" % test_scores if not return_train_score else
+                        "(train=%.3f, test=%.3f)" % (train_scores, test_scores))
+
+        if verbose > 1:
+            total_time = score_time + fit_time
+            print(_message_with_time('CV', msg, total_time))
+
+        ret = [train_scores, test_scores] if return_train_score else [test_scores]
+
+        if return_n_test_samples:
+            ret.append(_num_samples(X_test))
+        if return_times:
+            ret.extend([fit_time, score_time])
+        if return_parameters:
+            ret.append(parameters)
+        if return_estimator:
+            ret.append(estimator)
+        return ret
+    ms._fit_and_score = _fit_and_score
 
 def loadImage(path):
     with urlopen(path) as url:
@@ -366,14 +529,15 @@ def main():
 
     batchSizes = [16, 32, 64, 128, 256]
     paramGrid = dict(batch_size = batchSizes)
-    sl.BaseWrapper.fit = fit
+    patchFit()
+    patchFitAndScore()
     dModel = sl.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 3)
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
     # print(YTrain.shape)
     # print(XTrain.shape)
     # print(trainImgClass.shape)
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    print(XCombined)
+#    print(XCombined)
     # print(XCombined[0][1])
     # input()
     # print(XTrain[0])
