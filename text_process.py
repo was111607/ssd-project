@@ -87,8 +87,8 @@ def monkeyPatchFit():
         fit_args = copy.deepcopy(self.filter_sk_params(Sequential.fit))
         fit_args.update(kwargs)
 
-        x0 = np.array(x[i][0] for i in range(x.shape[0]))
-        x1 = np.array(x[i][1] for i in range(x.shape[0]))
+        x0 = np.array([x[i][0] for i in range(x.shape[0])])
+        x1 = np.array([x[i][1] for i in range(x.shape[0])])
         #history = self.model.fit(x, y, **fit_args)
         print(x0)
         print(x1)
