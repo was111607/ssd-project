@@ -2,17 +2,23 @@ import warnings
 import numbers
 import time
 from traceback import format_exception_only
+from contextlib import suppress
 
 import numpy as np
 import scipy.sparse as sp
 from joblib import Parallel, delayed
 
-from sklearn.base import clone
-from sklearn.utils import _message_with_time
+from sklearn.base import is_classifier, clone
+from sklearn.utils import (indexable, check_random_state, _safe_indexing,
+                     _message_with_time)
 from sklearn.utils.validation import _check_fit_params
-from sklearn.utils.validation import _num_samples
+from sklearn.utils.validation import _is_arraylike, _num_samples
 from sklearn.utils.metaestimators import _safe_split
+from sklearn.metrics import check_scoring
+from sklearn.metrics._scorer import _check_multimetric_scoring, _MultimetricScorer
 from sklearn.exceptions import FitFailedWarning
+from sklearn.model_selection._split import check_cv
+from sklearn.preprocessing import LabelEncoder
 
 def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
                    parameters, fit_params, return_train_score=False,
@@ -107,14 +113,20 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
     X_train, y_train = _safe_split(estimator, X, y, train)
     X_test, y_test = _safe_split(estimator, X, y, test, train)
 
+    x0_tr = np.array([X_train[i][0] for i in range(X_train.shape[0])])
+    x1_tr = np.array([X_train[i][1] for i in range(X_train.shape[0])])
+    X_train = [x0_tr, x1_tr]
+
+    x0_te = np.array([X_test[i][0] for i in range(X_test.shape[0])])
+    x1_te = np.array([X_test[i][1] for i in range(X_test.shape[0])])
+    X_test = [x0_te, x1_te]
+
     try:
         if y_train is None:
             estimator.fit(X_train, **fit_params)
         else:
-            x0 = np.array([X_train[i][0] for i in range(X_train.shape[0])])
-            x1 = np.array([X_train[i][1] for i in range(X_train.shape[0])])
-            estimator.fit([x0, x1], y_train, **fit_params)
-            #estimator.fit(X_train, y_train, **fit_params)
+        #    estimator.fit([x0_tr, x1_tr], y_train, **fit_params)
+            estimator.fit(X_train, y_train, **fit_params)
 
     except Exception as e:
         # Note fit time as time until error
@@ -131,7 +143,7 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
                 test_scores = error_score
                 if return_train_score:
                     train_scores = error_score
-            warnings.warn("Estimator fit failed.6969696969696 The score on this train-test"
+            warnings.warn("Estimator fit failed. The score on this train-test"
                           " partition for these parameters will be set to %f. "
                           "Details: \n%s" %
                           (error_score, format_exception_only(type(e), e)[0]),
@@ -176,3 +188,36 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
     if return_estimator:
         ret.append(estimator)
     return ret
+
+def _score(estimator, X_test, y_test, scorer):
+    """Compute the score(s) of an estimator on a given test set.
+    Will return a dict of floats if `scorer` is a dict, otherwise a single
+    float is returned.
+    """
+    if isinstance(scorer, dict):
+        # will cache method calls if needed. scorer() returns a dict
+        scorer = _MultimetricScorer(**scorer)
+    if y_test is None:
+        scores = scorer(estimator, X_test)
+    else:
+        scores = scorer(estimator, X_test, y_test)
+
+    error_msg = ("scoring must return a number, got %s (%s) "
+                 "instead. (scorer=%s)")
+    if isinstance(scores, dict):
+        for name, score in scores.items():
+            if hasattr(score, 'item'):
+                with suppress(ValueError):
+                    # e.g. unwrap memmapped scalars
+                    score = score.item()
+            if not isinstance(score, numbers.Number):
+                raise ValueError(error_msg % (score, type(score), name))
+            scores[name] = score
+    else:  # scalar
+        if hasattr(scores, 'item'):
+            with suppress(ValueError):
+                # e.g. unwrap memmapped scalars
+                scores = scores.item()
+        if not isinstance(scores, numbers.Number):
+            raise ValueError(error_msg % (scores, type(scores), scorer))
+    return scores
