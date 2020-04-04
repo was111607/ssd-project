@@ -319,7 +319,7 @@ def main():
     trainFile = "/b-t4sa/model_input_training_subset.csv"
     valFile = "/b-t4sa/model_input_validation.csv"
     testFile = "/b-t4sa/model_input_testing.csv"
-    isAws = True
+    isAws = False
     if isAws is True:
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
