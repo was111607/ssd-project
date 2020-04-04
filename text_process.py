@@ -22,11 +22,11 @@ from keras.utils import to_categorical, plot_model
 from ast import literal_eval
 from io import BytesIO
 from urllib.request import urlopen
-#from keras.wrappers.scikit_learn import KerasClassifier # for grid search
+#from keras.wrappers.scikit_learn import KerasClassifier # for grid search for multi-input models
 import keras.wrappers.scikit_learn
 #import sklearn.model_selection
-#from slms_search import GridSearchCV
-from sklearn.model_selection import GridSearchCV
+from slms_search import GridSearchCV
+#from sklearn.model_selection import GridSearchCV
 import types
 import copy
 from keras import losses
@@ -404,13 +404,13 @@ def main():
     # summariseResults(results)
     # saveResults("dropouts", results)
 
-    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    # paramGrid = dict(dRate = dropout)
-    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # results = grid.fit(XTrain, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("dropouts", results)
+    dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    paramGrid = dict(dRate = dropout)
+    tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    results = grid.fit(XTrain, to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("dropouts", results)
 
 #     batchSizes = [16, 32, 64, 128, 256]
 #     paramGrid = dict(batch_size = batchSizes)
