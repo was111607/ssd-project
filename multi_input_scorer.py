@@ -121,6 +121,7 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
     # print("X TEST^ ")
     # print(y_test[0])
     # print("Y TEST^ ")
+    print(X_train.shape)
     x0_tr = np.array([X_train[i][0] for i in range(X_train.shape[0])])
     x1_tr = np.array([X_train[i][1] for i in range(X_train.shape[0])])
     X_train = [x0_tr, x1_tr]
