@@ -4,6 +4,13 @@ import pandas as pd
 import pickle
 import numpy as np
 import os
+#import tensorflow as tf
+# from tensorflow.compat.v1 import ConfigProto
+# from tensorflow.compat.v1 import InteractiveSession
+# config = ConfigProto()
+# config.gpu_options.per_process_gpu_memory_fraction = 0.2
+# config.gpu_options.allow_growth = True
+# session = InteractiveSession(config=config)
 from os import path
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras.models import Model, Sequential
@@ -18,8 +25,8 @@ from urllib.request import urlopen
 #from keras.wrappers.scikit_learn import KerasClassifier # for grid search
 import keras.wrappers.scikit_learn
 #import sklearn.model_selection
-from slms_search import GridSearchCV
-#from sklearn.model_selection import GridSearchCV
+#from slms_search import GridSearchCV
+from sklearn.model_selection import GridSearchCV
 import types
 import copy
 from keras import losses
@@ -141,7 +148,7 @@ def visualiseModel(model, fname):
     if not path.exists(fname):
         plot_model(model, to_file=fname)
 
-def textModel():
+def textModel(): # (drate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -153,10 +160,11 @@ def textModel():
     #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
     #print(textFtrs.output)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(textFtrs)
-    #hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
-    hidden = Dense(256, activation = "relu")(lstm) # Make similar to feature??
-    x = Dropout(0.5)(hidden)
-    output = Dense(3, activation = "softmax")(x)
+    hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
+    x1 = Dropout(0.6)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    x2 = Dropout(0.3)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
     model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
@@ -231,13 +239,18 @@ def saveHistory(fname, history):
         writeFile.close()
     print("Saved history for " + fname)
 
-def saveResults(fname, results):
+def saveResults(dname, results):
     dir = "./grid search results/"
-    if not path.exists(dir):
-        os.mkdir(dir)
-    with open(dir + fname + ".pickle", "wb") as writeFile:
-        pickle.dump(results, writeFile)
-        writeFile.close()
+    os.makdirs(path.join(dir, dname))
+    with open(dir + dname + "results.pickle", "wb") as writeResult, open(dir + dname + "dict.pickle", "wb") as writeDict, open(dir + dname + "best_score.pickle", "wb") as writeScore, open(dir + dname + "best_params.pickle", "wb") as writeParams:
+        pickle.dump(results, writeResult)
+        pickle.dump(results.cv_results_, writeDict)
+        pickle.dump(results.best_score_, writeScore)
+        pickle.dump(results.best_params_, writeParams)
+        writeResult.close()
+        writeDict.close()
+        writeScore.close()
+        writeParams.close()
     print("Saved grid search results for " + fname)
 
 def saveModel(fname, model):
@@ -301,9 +314,20 @@ def summariseResults(results):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
 def main():
-    trainFile = "./b-t4sa/model_input_training_subset.csv"
-    valFile = "./b-t4sa/model_input_validation.csv"
-    testFile = "./b-t4sa/model_input_testing.csv"
+    awsDir = "/media/Data3/Sewell"
+    otherDir = "."
+    trainFile = "/b-t4sa/model_input_training_subset.csv"
+    valFile = "/b-t4sa/model_input_validation.csv"
+    testFile = "/b-t4sa/model_input_testing.csv"
+    isAws = True
+    if isAws is True:
+        trainFile = awsDir + trainFile
+        valFile = awsDir + valFile
+        testFile = awsDir + testFile
+    else:
+        trainFile = otherDir + trainFile
+        valFile = otherDir + valFile
+        testFile = otherDir + testFile
     pd.set_option('display.max_colwidth', -1)
     dfTrain = pd.read_csv(trainFile, header = 0)
     dfVal = pd.read_csv(valFile, header = 0)
@@ -319,40 +343,38 @@ def main():
     valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
-    featureVGG = initFeatureVGG()
-    decisionVGG = initDecisionVGG()
-
-    dir = "./b-t4sa/image features"
-    #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
-    #input("Predicting and saving feature data completed")
-    if not path.exists(dir): # Currently set to
-        os.mkdir(dir)
-        predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training")
-        predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
-        predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
-        input("Predicting and saving feature data completed")
-    trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
-    valImgFeatures = np.load(dir + "/image_features_validation.npy")
-    testImgFeatures = np.load(dir + "/image_features_testing.npy")
-    dir = "./b-t4sa/image classifications"
-    #recoverPredictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
-    #input("Predicting and saving classification data completed")
-    if not path.exists(dir): # Currently set to
-        os.mkdir(dir)
-        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training") # Remove recover, change 10 to 20, remove backupName
-        predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
-        predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
-        input("Predicting and saving classification data completed")
-    trainImgClass = np.load(dir + "/image_classifications_training50.npy")
-    valImgClass = np.load(dir + "/image_classifications_validation.npy")
-    testImgClass = np.load(dir + "/image_classifications_testing.npy")
-    #input(testImgClass.shape)
-
-    dir = "./logs"
-    if not path.exists(dir):
-        os.mkdir(dir)
-
-    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
+    # dir = "./b-t4sa/image features"
+    #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
+    #         #input("Predicting and saving feature data completed")
+    # if not path.exists(dir): # Currently set to
+    #     os.mkdir(dir)
+    #     featureVGG = initFeatureVGG()
+    #     predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training")
+    #     predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
+    #     predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
+    #     input("Predicting and saving feature data completed")
+    # trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
+    # valImgFeatures = np.load(dir + "/image_features_validation.npy")
+    # testImgFeatures = np.load(dir + "/image_features_testing.npy")
+    # dir = "./b-t4sa/image classifications"
+    #         #recoverPredictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
+    #         #input("Predicting and saving classification data completed")
+    # if not path.exists(dir): # Currently set to
+    #     os.mkdir(dir)
+    #     decisionVGG = initDecisionVGG()
+    #     predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training") # Remove recover, change 10 to 20, remove backupName
+    #     predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
+    #     predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
+    #     input("Predicting and saving classification data completed")
+    # trainImgClass = np.load(dir + "/image_classifications_training50.npy")
+    # valImgClass = np.load(dir + "/image_classifications_validation.npy")
+    # testImgClass = np.load(dir + "/image_classifications_testing.npy")
+    #
+    # dir = "./logs"
+    # if not path.exists(dir):
+    #     os.mkdir(dir)
+    #
+    # earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
 
     # tModel = textModel()
     # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
@@ -366,27 +388,51 @@ def main():
     # saveHistory("decision_model_history", dModelHistory)
     # saveModel("decision_model", dModel)
 
-    batchSizes = [16, 32, 64, 128, 256]
-    paramGrid = dict(batch_size = batchSizes)
-    patchFit()
-    #print(sklearn.model_selection._validation.__dict__)
-    dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 3)
-    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
-    # print(YTrain.shape)
-    # print(XTrain.shape)
-    # print(trainImgClass.shape)
-    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-#    print(XCombined)
-    # print(XCombined[0][1])
-    # input()
-    # print(XTrain[0])
-    # print(trainImgClass[0])
-    # print(yes[0][0])
-    # print(yes[0][1])
-    # print(np.array(yes).shape)
-    results = grid.fit(XCombined, to_categorical(YTrain))
-    summariseResults(results)
-    saveResults("batch_sizes", results)
+    # batchSizes = [16, 32, 64, 128, 256]
+    # paramGrid = dict(batch_size = batchSizes)
+    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
+    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # results = grid.fit(XTrain, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("batch_sizes/", results)
+
+    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    # paramGrid = dict(dRate = dropout)
+    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # results = grid.fit(XTrain, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("dropouts", results)
+
+    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    # paramGrid = dict(dRate = dropout)
+    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # results = grid.fit(XTrain, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("dropouts", results)
+
+#     batchSizes = [16, 32, 64, 128, 256]
+#     paramGrid = dict(batch_size = batchSizes)
+#     patchFit()
+#     #print(sklearn.model_selection._validation.__dict__)
+#     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 3, epochs = 3)
+#     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
+#     # print(YTrain.shape)
+#     # print(XTrain.shape)
+#     # print(trainImgClass.shape)
+#     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+# #    print(XCombined)
+#     # print(XCombined[0][1])
+#     # input()
+#     # print(XTrain[0])
+#     # print(trainImgClass[0])
+#     # print(yes[0][0])
+#     # print(yes[0][1])
+#     # print(np.array(yes).shape)
+#     results = grid.fit(XCombined, to_categorical(YTrain))
+#     summariseResults(results)
+#     saveResults("batch_sizes", results.cv_results_, results.best_score_, results.best_params_)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
