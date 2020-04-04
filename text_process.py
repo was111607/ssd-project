@@ -356,7 +356,7 @@ def main():
     # trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
     # testImgFeatures = np.load(dir + "/image_features_testing.npy")
-     dir = "./b-t4sa/image classifications"
+    dir = "./b-t4sa/image classifications"
     #         #recoverPredictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
     # if not path.exists(dir): # Currently set to
@@ -366,7 +366,7 @@ def main():
     #     predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
     #     predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
     #     input("Predicting and saving classification data completed")
-     trainImgClass = np.load(dir + "/image_classifications_training50.npy")[0]
+    trainImgClass = np.load(dir + "/image_classifications_training50.npy")[0]
     # valImgClass = np.load(dir + "/image_classifications_validation.npy")
     # testImgClass = np.load(dir + "/image_classifications_testing.npy")
     #
