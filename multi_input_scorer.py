@@ -113,25 +113,25 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
     X_train, y_train = _safe_split(estimator, X, y, train)
     X_test, y_test = _safe_split(estimator, X, y, test, train)
 
-    print(X_train[0])
-    print("X TRAIN^ ")
-    print(y_train[0])
-    print("Y TRAIN^ ")
-    print(X_test[0])
-    print("X TEST^ ")
-    print(y_test[0])
-    print("Y TEST^ ")
+    # print(X_train[0])
+    # print("X TRAIN^ ")
+    # print(y_train[0])
+    # print("Y TRAIN^ ")
+    # print(X_test[0])
+    # print("X TEST^ ")
+    # print(y_test[0])
+    # print("Y TEST^ ")
     x0_tr = np.array([X_train[i][0] for i in range(X_train.shape[0])])
     x1_tr = np.array([X_train[i][1] for i in range(X_train.shape[0])])
     X_train = [x0_tr, x1_tr]
-    print(X_train[0])
-    print("COMBINED X TRAIN^ ")
+    # print(X_train[0])
+    # print("COMBINED X TRAIN^ ")
 
     x0_te = np.array([X_test[i][0] for i in range(X_test.shape[0])])
     x1_te = np.array([X_test[i][1] for i in range(X_test.shape[0])])
     X_test = [x0_te, x1_te]
-    print(X_test[0])
-    print("COMBINED X TEST^ ")
+    # print(X_test[0])
+    # print("COMBINED X TEST^ ")
 
     try:
         if y_train is None:
@@ -206,6 +206,7 @@ def _score(estimator, X_test, y_test, scorer):
     Will return a dict of floats if `scorer` is a dict, otherwise a single
     float is returned.
     """
+    print(scorer)
     if isinstance(scorer, dict):
         # will cache method calls if needed. scorer() returns a dict
         scorer = _MultimetricScorer(**scorer)
