@@ -332,10 +332,10 @@ def main():
     dfTrain = pd.read_csv(trainFile, header = 0)
     dfVal = pd.read_csv(valFile, header = 0)
     dfTest = pd.read_csv(testFile, header = 0)
-    XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray))[0] # CONVERT THIS TO NUMPY ARRAY OF LISTS
+    XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray)) # CONVERT THIS TO NUMPY ARRAY OF LISTS
     XVal = np.stack(dfVal["TOKENISED"].apply(toArray))
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
-    YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")[0]
+    YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
     YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
 
@@ -366,7 +366,7 @@ def main():
     #     predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
     #     predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
     #     input("Predicting and saving classification data completed")
-    trainImgClass = np.load(dir + "/image_classifications_training50.npy")[0]
+    trainImgClass = np.load(dir + "/image_classifications_training50.npy")
     # valImgClass = np.load(dir + "/image_classifications_validation.npy")
     # testImgClass = np.load(dir + "/image_classifications_testing.npy")
     #
@@ -417,7 +417,7 @@ def main():
     patchFit()
     #print(sklearn.model_selection._validation.__dict__)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 3, epochs = 3)
-    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = -1, cv = 3)
+    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # print(YTrain.shape)
     # print(XTrain.shape)
     # print(trainImgClass.shape)
