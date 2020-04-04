@@ -114,18 +114,24 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
     X_test, y_test = _safe_split(estimator, X, y, test, train)
 
     print(X_train[0])
+    input("\n")
     print(y_train[0])
+    input("\n")
     print(X_test[0])
+    input("\n")
     print(y_test[0])
+    input("\n")
     x0_tr = np.array([X_train[i][0] for i in range(X_train.shape[0])])
     x1_tr = np.array([X_train[i][1] for i in range(X_train.shape[0])])
     X_train = [x0_tr, x1_tr]
     print(X_train[0])
+    input("\n")
 
     x0_te = np.array([X_test[i][0] for i in range(X_test.shape[0])])
     x1_te = np.array([X_test[i][1] for i in range(X_test.shape[0])])
     X_test = [x0_te, x1_te]
     print(X_test[0])
+    input("\n")
 
     try:
         if y_train is None:
