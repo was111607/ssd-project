@@ -4,13 +4,6 @@ import pandas as pd
 import pickle
 import numpy as np
 import os
-#import tensorflow as tf
-# from tensorflow.compat.v1 import ConfigProto
-# from tensorflow.compat.v1 import InteractiveSession
-# config = ConfigProto()
-# config.gpu_options.per_process_gpu_memory_fraction = 0.2
-# config.gpu_options.allow_growth = True
-# session = InteractiveSession(config=config)
 from os import path
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras.models import Model, Sequential
@@ -65,43 +58,43 @@ from keras.utils.generic_utils import has_arg
 # Maybe have to run all programs in succession to be able to run?
 counter = 1
 
-def patchFit():
-    def fit(self, x, y, **kwargs):
-        """Constructs a new model with `build_fn` & fit the model to `(x, y)`.
-        # Arguments
-            x : array-like, shape `(n_samples, n_features)`
-                Training samples where `n_samples` is the number of samples
-                and `n_features` is the number of features.
-            y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
-                True labels for `x`.
-            **kwargs: dictionary arguments
-                Legal arguments are the arguments of `Sequential.fit`
-        # Returns
-            history : object
-                details about the training history at each epoch.
-        """
-        if self.build_fn is None:
-            self.model = self.__call__(**self.filter_sk_params(self.__call__))
-        elif (not isinstance(self.build_fn, types.FunctionType) and
-              not isinstance(self.build_fn, types.MethodType)):
-            self.model = self.build_fn(
-                **self.filter_sk_params(self.build_fn.__call__))
-        else:
-            self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
-
-        if (losses.is_categorical_crossentropy(self.model.loss) and
-                len(y.shape) != 2):
-            y = keras.utils.np_utils.to_categorical(y)
-
-        fit_args = copy.deepcopy(self.filter_sk_params(Sequential.fit))
-        fit_args.update(kwargs)
-
-        x0 = np.array([x[i][0] for i in range(x.shape[0])])
-        x1 = np.array([x[i][1] for i in range(x.shape[0])])
-        #history = self.model.fit(x, y, **fit_args)
-        history = self.model.fit([x0, x1], y, **fit_args)
-        return history
-    keras.wrappers.scikit_learn.BaseWrapper.fit = fit
+# def patchFit():
+#     def fit(self, x, y, **kwargs):
+#         """Constructs a new model with `build_fn` & fit the model to `(x, y)`.
+#         # Arguments
+#             x : array-like, shape `(n_samples, n_features)`
+#                 Training samples where `n_samples` is the number of samples
+#                 and `n_features` is the number of features.
+#             y : array-like, shape `(n_samples,)` or `(n_samples, n_outputs)`
+#                 True labels for `x`.
+#             **kwargs: dictionary arguments
+#                 Legal arguments are the arguments of `Sequential.fit`
+#         # Returns
+#             history : object
+#                 details about the training history at each epoch.
+#         """
+#         if self.build_fn is None:
+#             self.model = self.__call__(**self.filter_sk_params(self.__call__))
+#         elif (not isinstance(self.build_fn, types.FunctionType) and
+#               not isinstance(self.build_fn, types.MethodType)):
+#             self.model = self.build_fn(
+#                 **self.filter_sk_params(self.build_fn.__call__))
+#         else:
+#             self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
+#
+#         if (losses.is_categorical_crossentropy(self.model.loss) and
+#                 len(y.shape) != 2):
+#             y = keras.utils.np_utils.to_categorical(y)
+#
+#         fit_args = copy.deepcopy(self.filter_sk_params(Sequential.fit))
+#         fit_args.update(kwargs)
+#
+#         x0 = np.array([x[i][0] for i in range(x.shape[0])])
+#         x1 = np.array([x[i][1] for i in range(x.shape[0])])
+#         #history = self.model.fit(x, y, **fit_args)
+#         history = self.model.fit([x0, x1], y, **fit_args)
+#         return history
+#     keras.wrappers.scikit_learn.BaseWrapper.fit = fit
 
 def loadImage(path):
     with urlopen(path) as url:
@@ -315,19 +308,20 @@ def summariseResults(results):
 
 def main():
     awsDir = "/media/Data3/Sewell"
-    otherDir = "."
+    curDir = "."
     trainFile = "/b-t4sa/model_input_training_subset.csv"
     valFile = "/b-t4sa/model_input_validation.csv"
     testFile = "/b-t4sa/model_input_testing.csv"
-    isAws = False
+    isAws = True
     if isAws is True:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "3" # Set according to CPU to use
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
         testFile = awsDir + testFile
     else:
-        trainFile = otherDir + trainFile
-        valFile = otherDir + valFile
-        testFile = otherDir + testFile
+        trainFile = curDir + trainFile
+        valFile = curDir + valFile
+        testFile = curDir + testFile
     pd.set_option('display.max_colwidth', -1)
     dfTrain = pd.read_csv(trainFile, header = 0)
     dfVal = pd.read_csv(valFile, header = 0)
@@ -343,11 +337,14 @@ def main():
     valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
-    # dir = "./b-t4sa/image features"
+    if isAws is True:
+        dir = awsDir + "/b-t4sa/image features"
+    else:
+        dir = curDir + "/b-t4sa/image features"
     #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #         #input("Predicting and saving feature data completed")
     # if not path.exists(dir): # Currently set to
-    #     os.mkdir(dir)
+    #     os.makedirs(dir)
     #     featureVGG = initFeatureVGG()
     #     predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training")
     #     predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
@@ -356,11 +353,14 @@ def main():
     # trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
     # testImgFeatures = np.load(dir + "/image_features_testing.npy")
-    dir = "./b-t4sa/image classifications"
+    if isAws is True:
+        dir = awsDir + "/b-t4sa/image classifications"
+    else:
+        dir = curDir + "/b-t4sa/image classifications"
     #         #recoverPredictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
     # if not path.exists(dir): # Currently set to
-    #     os.mkdir(dir)
+    #     os.makedirs(dir)
     #     decisionVGG = initDecisionVGG()
     #     predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training") # Remove recover, change 10 to 20, remove backupName
     #     predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
@@ -414,22 +414,9 @@ def main():
 
     batchSizes = [16, 32, 64, 128, 256]
     paramGrid = dict(batch_size = batchSizes)
-    patchFit()
-    #print(sklearn.model_selection._validation.__dict__)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 3, epochs = 3)
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # print(YTrain.shape)
-    # print(XTrain.shape)
-    # print(trainImgClass.shape)
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-#    print(XCombined)
-    # print(XCombined[0][1])
-    # input()
-    # print(XTrain[0])
-    # print(trainImgClass[0])
-    # print(yes[0][0])
-    # print(yes[0][1])
-    # print(np.array(yes).shape)
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
     saveResults("batch_sizes", results.cv_results_, results.best_score_, results.best_params_)
