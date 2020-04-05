@@ -343,13 +343,13 @@ def main():
         dir = curDir + "/b-t4sa/image features"
     #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #         #input("Predicting and saving feature data completed")
-    # if not path.exists(dir): # Currently set to
-    #     os.makedirs(dir)
-    #     featureVGG = initFeatureVGG()
-    #     predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training")
-    #     predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
-    #     predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
-    #     input("Predicting and saving feature data completed")
+    if not path.exists(dir):
+        os.makedirs(dir)
+        featureVGG = initFeatureVGG()
+        predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training")
+        predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
+        predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
+        input("Predicting and saving feature data completed")
     # trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
     # testImgFeatures = np.load(dir + "/image_features_testing.npy")
@@ -359,13 +359,13 @@ def main():
         dir = curDir + "/b-t4sa/image classifications"
     #         #recoverPredictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
-    # if not path.exists(dir): # Currently set to
-    #     os.makedirs(dir)
-    #     decisionVGG = initDecisionVGG()
-    #     predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training") # Remove recover, change 10 to 20, remove backupName
-    #     predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
-    #     predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
-    #     input("Predicting and saving classification data completed")
+    if not path.exists(dir):
+        os.makedirs(dir)
+        decisionVGG = initDecisionVGG()
+        predictAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training") # Remove recover, change 10 to 20, remove backupName
+        predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
+        predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
+        input("Predicting and saving classification data completed")
     trainImgClass = np.load(dir + "/image_classifications_training50.npy")
     # valImgClass = np.load(dir + "/image_classifications_validation.npy")
     # testImgClass = np.load(dir + "/image_classifications_testing.npy")
