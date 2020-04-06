@@ -12,6 +12,7 @@ from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout, 
 from keras.layers.merge import add, concatenate
 from keras.applications.vgg19 import VGG19
 from keras.utils import to_categorical, plot_model
+from keras.optimizers import SGD
 from ast import literal_eval
 from io import BytesIO
 from urllib.request import urlopen
@@ -141,7 +142,7 @@ def visualiseModel(model, fname):
     if not path.exists(fname):
         plot_model(model, to_file=fname)
 
-def textModel(): # (drate = 0.0)
+def textModel(lr = 0.0, mom = 0.0): # (drate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -159,7 +160,8 @@ def textModel(): # (drate = 0.0)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-    model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
+    optimiser = SGD(lr = lr, momentum = mom)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
 #    print(model.summary())
     return model
@@ -314,7 +316,7 @@ def main():
     testFile = "/b-t4sa/model_input_testing.csv"
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "3" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
         testFile = awsDir + testFile
@@ -366,7 +368,7 @@ def main():
         predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
         predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
         input("Predicting and saving classification data completed")
-    trainImgClass = np.load(dir + "/image_classifications_training50.npy")
+    # trainImgClass = np.load(dir + "/image_classifications_training50.npy")
     # valImgClass = np.load(dir + "/image_classifications_validation.npy")
     # testImgClass = np.load(dir + "/image_classifications_testing.npy")
     #
@@ -412,14 +414,23 @@ def main():
     # summariseResults(results)
     # saveResults("dropouts", results)
 
-    batchSizes = [16, 32, 64, 128, 256]
-    paramGrid = dict(batch_size = batchSizes)
-    dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 3, epochs = 3)
-    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    results = grid.fit(XCombined, to_categorical(YTrain))
+    lrs = [0.0001, 0.001, 0.01, 0.1, 0.5]
+    moms = [0.0, 0.2, 0.4, 0.6, 0.8]
+    paramGrid = dict(lr = lrs, mom = moms)
+    tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    results = grid.fit(XTrain, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("batch_sizes", results.cv_results_, results.best_score_, results.best_params_)
+    saveResults("dropouts", results)
+
+    # batchSizes = [16, 32, 64, 128, 256]
+    # paramGrid = dict(batch_size = batchSizes)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 3, epochs = 3)
+    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # results = grid.fit(XCombined, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("batch_sizes", results.cv_results_, results.best_score_, results.best_params_)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
