@@ -309,7 +309,7 @@ def summariseResults(results):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
 def main():
-    awsDir = "/media/Data3/Sewell"
+    awsDir = "/media/Data3/sewell"
     curDir = "."
     trainFile = "/b-t4sa/model_input_training_subset.csv"
     valFile = "/b-t4sa/model_input_validation.csv"
