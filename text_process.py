@@ -19,8 +19,8 @@ from urllib.request import urlopen
 #from keras.wrappers.scikit_learn import KerasClassifier # for grid search for multi-input models
 import keras.wrappers.scikit_learn
 #import sklearn.model_selection
-from slms_search import GridSearchCV
-#from sklearn.model_selection import GridSearchCV
+#from slms_search import GridSearchCV
+from sklearn.model_selection import GridSearchCV
 import types
 import copy
 from keras import losses
