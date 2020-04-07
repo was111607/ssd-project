@@ -247,7 +247,7 @@ def saveResults(dname, results):
         writeDict.close()
         writeScore.close()
         writeParams.close()
-    print("Saved grid search results for " + fname)
+    print("Saved grid search results for " + dname)
 
 def saveModel(fname, model):
     dir = "./models/"
@@ -415,14 +415,14 @@ def main():
     # summariseResults(results)
     # saveResults("dropouts", results)
 
-    lrs = [0.1]
+    lrs = [0.05]
     moms = [0.0, 0.2, 0.4, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     results = grid.fit(XTrain, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("dropouts_01", results)
+    saveResults("dropouts_005", results)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
