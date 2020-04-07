@@ -59,7 +59,8 @@ from keras import backend as K
 # Skimage to retrieve and resize from tweet links
 # Maybe have to run all programs in succession to be able to run?
 counter = 1
-
+awsDir = "/media/Data3/sewell"
+curDir = "."
 # def patchFit():
 #     def fit(self, x, y, **kwargs):
 #         """Constructs a new model with `build_fn` & fit the model to `(x, y)`.
@@ -143,7 +144,7 @@ def visualiseModel(model, fname):
     if not path.exists(fname):
         plot_model(model, to_file=fname)
 
-def textModel(lr = 0.0, mom = 0.0): # (drate = 0.0)
+def textModel(dRate = 0.0) # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -154,7 +155,7 @@ def textModel(lr = 0.0, mom = 0.0): # (drate = 0.0)
     textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
     #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
     #print(textFtrs.output)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(textFtrs)
+    lstm = Bidirectional(LSTM(embedDim, dropout = dRate, recurrent_dropout = 0.2))(textFtrs)
     hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
     x1 = Dropout(0.6)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
@@ -235,10 +236,15 @@ def saveHistory(fname, history):
         writeFile.close()
     print("Saved history for " + fname)
 
-def saveResults(dname, results):
-    dir = "./grid search results/"
-    os.makedirs(path.join(dir, dname))
-    with open(dir + dname + "results.pickle", "wb") as writeResult, open(dir + dname + "dict.pickle", "wb") as writeDict, open(dir + dname + "best_score.pickle", "wb") as writeScore, open(dir + dname + "best_params.pickle", "wb") as writeParams:
+def saveResults(dname, results, isAws):
+    global awsDir
+    global curDir
+    if isAws is True:
+        dir = path.join(awsDir, "grid search results", dname)
+    else:
+        dir = path.join(curDir, "grid search results", dname)
+    os.makedirs(dir)
+    with open(path.join(dir, "results.pickle"), "wb") as writeResult, open(path.join(dir, "dict.pickle"), "wb") as writeDict, open(path.join(dir, "best_score.pickle"), "wb") as writeScore, open(path.join(dir, "best_params.pickle"), "wb") as writeParams:
         pickle.dump(results, writeResult)
         pickle.dump(results.cv_results_, writeDict)
         pickle.dump(results.best_score_, writeScore)
@@ -310,8 +316,8 @@ def summariseResults(results):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
 def main():
-    awsDir = "/media/Data3/sewell"
-    curDir = "."
+    global awsDir
+    global curDir
     trainFile = "/b-t4sa/model_input_training_subset.csv"
     valFile = "/b-t4sa/model_input_validation.csv"
     testFile = "/b-t4sa/model_input_testing.csv"
@@ -415,14 +421,22 @@ def main():
     # summariseResults(results)
     # saveResults("dropouts", results)
 
-    lrs = [0.05]
-    moms = [0.0, 0.2, 0.4, 0.6, 0.8]
-    paramGrid = dict(lr = lrs, mom = moms)
+    # lrs = [0.05]
+    # moms = [0.0, 0.2, 0.4, 0.6, 0.8]
+    # paramGrid = dict(lr = lrs, mom = moms)
+    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # results = grid.fit(XTrain, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("dropouts_005", results)
+
+    dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    paramGrid = dict(dRate = dropout)
     tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     results = grid.fit(XTrain, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("dropouts_005", results)
+    saveResults("lstm_dropouts", results, isAws)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
