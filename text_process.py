@@ -317,7 +317,7 @@ def main():
     testFile = "/b-t4sa/model_input_testing.csv"
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
         testFile = awsDir + testFile
@@ -415,14 +415,14 @@ def main():
     # summariseResults(results)
     # saveResults("dropouts", results)
 
-    lrs = [0.01]
+    lrs = [0.1]
     moms = [0.0, 0.2, 0.4, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     results = grid.fit(XTrain, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("dropouts_001", results)
+    saveResults("dropouts_01", results)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
