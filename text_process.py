@@ -375,7 +375,7 @@ def main():
         predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
         predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
         input("Predicting and saving classification data completed")
-    # trainImgClass = np.load(dir + "/image_classifications_training50.npy")
+    trainImgClass = np.load(dir + "/image_classifications_training50.npy")
     # valImgClass = np.load(dir + "/image_classifications_validation.npy")
     # testImgClass = np.load(dir + "/image_classifications_testing.npy")
     #
