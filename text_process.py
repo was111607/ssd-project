@@ -162,8 +162,8 @@ def textModel(dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-#    optimiser = SGD(lr = lr, momentum = mom)
-    model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
+    optimiser = SGD(lr = 0.05, momentum = 0.8)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
 #    print(model.summary())
     return model
@@ -323,7 +323,7 @@ def main():
     testFile = "/b-t4sa/model_input_testing.csv"
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
         testFile = awsDir + testFile
