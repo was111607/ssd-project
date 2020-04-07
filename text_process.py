@@ -144,7 +144,7 @@ def visualiseModel(model, fname):
     if not path.exists(fname):
         plot_model(model, to_file=fname)
 
-def textModel(dRate = 0.0) # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+def textModel(dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -162,8 +162,8 @@ def textModel(dRate = 0.0) # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = lr, momentum = mom)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
+#    optimiser = SGD(lr = lr, momentum = mom)
+    model.compile(optimizer = "adam", loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
 #    print(model.summary())
     return model
