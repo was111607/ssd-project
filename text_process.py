@@ -436,7 +436,7 @@ def main():
     grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     results = grid.fit(XTrain, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("lstm_dropout", results, isAws)
+    saveResults("lstm_dropouts", results, isAws)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
