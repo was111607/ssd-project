@@ -25,6 +25,7 @@ import types
 import copy
 from keras import losses
 from keras.utils.generic_utils import has_arg
+from keras import backend as K
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -236,7 +237,7 @@ def saveHistory(fname, history):
 
 def saveResults(dname, results):
     dir = "./grid search results/"
-    os.makdirs(path.join(dir, dname))
+    os.makedirs(path.join(dir, dname))
     with open(dir + dname + "results.pickle", "wb") as writeResult, open(dir + dname + "dict.pickle", "wb") as writeDict, open(dir + dname + "best_score.pickle", "wb") as writeScore, open(dir + dname + "best_params.pickle", "wb") as writeParams:
         pickle.dump(results, writeResult)
         pickle.dump(results.cv_results_, writeDict)
@@ -414,14 +415,14 @@ def main():
     # summariseResults(results)
     # saveResults("dropouts", results)
 
-    lrs = [0.0001, 0.001, 0.01, 0.1, 0.5]
+    lrs = [0.01]
     moms = [0.0, 0.2, 0.4, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     results = grid.fit(XTrain, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("dropouts", results)
+    saveResults("dropouts_001", results)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
