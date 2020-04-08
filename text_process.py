@@ -19,8 +19,8 @@ from urllib.request import urlopen
 #from keras.wrappers.scikit_learn import KerasClassifier # for grid search for multi-input models
 import keras.wrappers.scikit_learn
 #import sklearn.model_selection
-#from slms_search import GridSearchCV
-from sklearn.model_selection import GridSearchCV
+from slms_search import GridSearchCV
+# from sklearn.model_selection import GridSearchCV
 import types
 import copy
 from keras import losses
@@ -323,7 +323,7 @@ def main():
     testFile = "/b-t4sa/model_input_testing.csv"
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
         testFile = awsDir + testFile
@@ -463,7 +463,7 @@ def main():
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("d_lr_01", results.cv_results_, results.best_score_, results.best_params_)
+    saveResults("d_lr_o1", results.cv_results_, results.best_score_, results.best_params_)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
