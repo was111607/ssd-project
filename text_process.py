@@ -19,8 +19,8 @@ from urllib.request import urlopen
 #from keras.wrappers.scikit_learn import KerasClassifier # for grid search for multi-input models
 import keras.wrappers.scikit_learn
 #import sklearn.model_selection
-from slms_search import GridSearchCV
-# from sklearn.model_selection import GridSearchCV
+# from slms_search import GridSearchCV
+from sklearn.model_selection import GridSearchCV
 import types
 import copy
 from keras import losses
@@ -323,7 +323,7 @@ def main():
     testFile = "/b-t4sa/model_input_testing.csv"
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
         testFile = awsDir + testFile
@@ -438,13 +438,13 @@ def main():
     # summariseResults(results)
     # saveResults("lstm_dropouts", results, isAws)
 
-    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    # paramGrid = dict(dRate = dropout)
-    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # results = grid.fit(XTrain, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("lstm_rec_dropouts", results, isAws)
+    dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    paramGrid = dict(dRate = dropout)
+    tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    results = grid.fit(XTrain, to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("lstm_rec_dropouts", results, isAws)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
@@ -455,15 +455,15 @@ def main():
     # summariseResults(results)
     # saveResults("batch_sizes", results.cv_results_, results.best_score_, results.best_params_)
 
-    lrs = [0.1]
-    moms = [0.0, 0.2, 0.4, 0.6, 0.8]
-    paramGrid = dict(lr = lrs, mom = moms)
-    dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
-    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    results = grid.fit(XCombined, to_categorical(YTrain))
-    summariseResults(results)
-    saveResults("d_lr_o1", results.cv_results_, results.best_score_, results.best_params_)
+    # lrs = [0.1]
+    # moms = [0.0, 0.2, 0.4, 0.6, 0.8]
+    # paramGrid = dict(lr = lrs, mom = moms)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # results = grid.fit(XCombined, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("d_lr_o1", results.cv_results_, results.best_score_, results.best_params_)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")

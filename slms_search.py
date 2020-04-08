@@ -733,6 +733,9 @@ class BaseSearchCV(MetaEstimatorMixin, BaseEstimator, metaclass=ABCMeta):
         if self.refit:
             # we clone again after setting params in case some
             # of the params are estimators as well.
+            x0 = np.array([X[i][0] for i in range(X.shape[0])])
+            x1 = np.array([X[i][1] for i in range(X.shape[0])])
+            X = [x0, x1]
             self.best_estimator_ = clone(clone(base_estimator).set_params(
                 **self.best_params_))
             refit_start_time = time.time()
