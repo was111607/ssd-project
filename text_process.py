@@ -144,7 +144,7 @@ def visualiseModel(model, fname):
     if not path.exists(fname):
         plot_model(model, to_file=fname)
 
-def textModel(dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -155,7 +155,7 @@ def textModel(dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
     #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
     #print(textFtrs.output)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = dRate))(textFtrs)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
     hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
     x1 = Dropout(0.6)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
@@ -455,15 +455,15 @@ def main():
     # summariseResults(results)
     # saveResults("batch_sizes", results.cv_results_, results.best_score_, results.best_params_)
 
-    lrs = [0.1]
-    moms = [0.0, 0.2, 0.4, 0.6, 0.8]
+    lrs = [0.01]
+    moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("d_lr_01", results.cv_results_, results.best_score_, results.best_params_)
+    saveResults("d_lr_001", results, isAws)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
