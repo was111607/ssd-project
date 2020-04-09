@@ -455,7 +455,7 @@ def main():
     # summariseResults(results)
     # saveResults("batch_sizes", results.cv_results_, results.best_score_, results.best_params_)
 
-    lrs = [0.01]
+    lrs = [0.05]
     moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
