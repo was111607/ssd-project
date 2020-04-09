@@ -455,7 +455,7 @@ def main():
     # summariseResults(results)
     # saveResults("batch_sizes", results.cv_results_, results.best_score_, results.best_params_)
 
-    lrs = [0.05]
+    lrs = [0.075]
     moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
@@ -463,7 +463,7 @@ def main():
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("d_lr_001", results, isAws)
+    saveResults("d_lr_0075", results, isAws)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
