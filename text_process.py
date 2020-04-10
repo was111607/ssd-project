@@ -168,7 +168,7 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
 #    print(model.summary())
     return model
 
-def decisionModel(dRate = 0.0): #(lr = 0.0, mom = 0.0):
+def decisionModel(dRate): #(lr = 0.0, mom = 0.0):
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -465,14 +465,14 @@ def main():
     # summariseResults(results)
     # saveResults("d_lr_0075", results, isAws)
 
-    dropout = [0.0, 0.1, 0.2, 0.3, 0.4] #, 0.5, 0.6, 0.7, 0.8, 0.9]
+    dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
     paramGrid = dict(dRate = dropout)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("d_h1_dropout", results, isAws)
+    saveResults("d_h1_dropout_2h", results, isAws)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
