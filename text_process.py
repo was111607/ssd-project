@@ -179,11 +179,11 @@ def decisionModel(dRate = 0.0): #(lr = 0.0, mom = 0.0):
     textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
     #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
     #print(textFtrs.output)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = dRate))(textFtrs)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.4))(textFtrs)
     imageFtrs = Input(shape=(embedDim,)) # embedDim
     concat = concatenate([lstm, imageFtrs], axis = -1)
     hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
-    x1 = Dropout(0.5)(hidden1)
+    x1 = Dropout(dRate)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
     x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
@@ -465,14 +465,14 @@ def main():
     # summariseResults(results)
     # saveResults("d_lr_0075", results, isAws)
 
-    dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     paramGrid = dict(dRate = dropout)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("d_lstm_rec_dropout", results, isAws)
+    saveResults("d_h1_dropout", results, isAws)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
