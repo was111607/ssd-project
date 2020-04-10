@@ -179,7 +179,7 @@ def decisionModel(dRate = 0.0): #(lr = 0.0, mom = 0.0):
     textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
     #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
     #print(textFtrs.output)
-    lstm = Bidirectional(LSTM(embedDim, dropout = dRate, recurrent_dropout = 0.2))(textFtrs)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = dRate))(textFtrs)
     imageFtrs = Input(shape=(embedDim,)) # embedDim
     concat = concatenate([lstm, imageFtrs], axis = -1)
     hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
@@ -472,7 +472,7 @@ def main():
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("d_lstm_dropout", results, isAws)
+    saveResults("d_lstm_rec_dropout", results, isAws)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
