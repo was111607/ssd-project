@@ -185,7 +185,7 @@ def decisionModel(dRate): #(lr = 0.0, mom = 0.0):
     hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
     x1 = Dropout(0.2)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
-    x2 = Dropout(dRate)(hidden2)
+    x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
     optimiser = SGD(lr = 0.075, momentum = 0.6)
@@ -446,14 +446,14 @@ def main():
     # summariseResults(results)
     # saveResults("lstm_rec_dropouts", results, isAws)
 
-    # batchSizes = [16, 32, 64, 128, 256]
-    # paramGrid = dict(batch_size = batchSizes)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 3, epochs = 3)
-    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("batch_sizes", results.cv_results_, results.best_score_, results.best_params_)
+    batchSizes = [16, 32, 64, 128, 256]
+    paramGrid = dict(batch_size = batchSizes)
+    dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 3, epochs = 3)
+    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    results = grid.fit(XCombined, to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("d_batch_sizes", results, isAws)
 
     # lrs = [0.075]
     # moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
@@ -465,14 +465,14 @@ def main():
     # summariseResults(results)
     # saveResults("d_lr_0075", results, isAws)
 
-    dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
-    paramGrid = dict(dRate = dropout)
-    dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
-    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    results = grid.fit(XCombined, to_categorical(YTrain))
-    summariseResults(results)
-    saveResults("d_h2_dropout_2h", results, isAws)
+    # dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
+    # paramGrid = dict(dRate = dropout)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # results = grid.fit(XCombined, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("d_h2_dropout_2h", results, isAws)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
