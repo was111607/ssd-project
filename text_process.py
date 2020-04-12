@@ -197,7 +197,7 @@ def decisionModel(extraHLayers = 0): #(lr = 0.0, mom = 0.0): # (dRate):
     # print(model.summary())
     return model
 
-def featureModel():
+def featureModel(dRate):
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -210,7 +210,7 @@ def featureModel():
     repeated = RepeatVector(seqLength)(imageFtrs)
     #print(textFtrs.output)
     concat = concatenate([textFtrs, repeated], axis = -1)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(concat)
+    lstm = Bidirectional(LSTM(embedDim, dropout = dRate, recurrent_dropout = 0.2))(concat)
     hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
     x1 = Dropout(0.5)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1)
@@ -326,7 +326,7 @@ def main():
     testFile = "/b-t4sa/model_input_testing.csv"
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
         testFile = awsDir + testFile
@@ -362,7 +362,7 @@ def main():
         predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
         predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
         input("Predicting and saving feature data completed")
-    # trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
+    trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
     # testImgFeatures = np.load(dir + "/image_features_testing.npy")
     if isAws is True:
@@ -378,7 +378,7 @@ def main():
         predictAndSave(valPaths, decisionVGG, 6, dir + "/image_classifications_validation")
         predictAndSave(testPaths, decisionVGG, 6, dir + "/image_classifications_testing")
         input("Predicting and saving classification data completed")
-    trainImgClass = np.load(dir + "/image_classifications_training50.npy")
+    # trainImgClass = np.load(dir + "/image_classifications_training50.npy")
     # valImgClass = np.load(dir + "/image_classifications_validation.npy")
     # testImgClass = np.load(dir + "/image_classifications_testing.npy")
     #
@@ -458,14 +458,14 @@ def main():
     # summariseResults(results)
     # saveResults("d_batch_sizes", results, isAws)
 
-    hiddenLayers = [0, 1]
-    paramGrid = dict(extraHLayers = hiddenLayers)
-    dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
-    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    results = grid.fit(XCombined, to_categorical(YTrain))
-    summariseResults(results)
-    saveResults("d_extra_hidden_layers", results, isAws)
+    # hiddenLayers = [0, 1]
+    # paramGrid = dict(extraHLayers = hiddenLayers)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # results = grid.fit(XCombined, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("d_extra_hidden_layers", results, isAws)
 
     # lrs = [0.075]
     # moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
@@ -491,6 +491,15 @@ def main():
     # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [fLogger])#, earlyStoppage])
     # saveHistory("feature_model_history", fModelHistory)
     # saveModel("feature_model", fModel)
+
+    dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    paramGrid = dict(dRate = dropout)
+    tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
+    grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
+    results = grid.fit(XCombined, to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("f_lstm_dropouts", results, isAws)
 
 if __name__ == "__main__":
     main()
