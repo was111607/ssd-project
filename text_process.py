@@ -189,7 +189,7 @@ def decisionModel(dRate): #(lr = 0.0, mom = 0.0): # (dRate):
     #for i in range(extraHLayers):
     hidden3 = Dense(128, activation = "relu")(x2)
     x3 = Dropout(dRate)(hidden3)
-    output = Dense(3, activation = "softmax")(x2)
+    output = Dense(3, activation = "softmax")(x3)
     model = Model(inputs = [input, imageFtrs], output = output)
     optimiser = SGD(lr = 0.075, momentum = 0.6)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
@@ -441,13 +441,13 @@ def main():
     # summariseResults(results)
     # saveResults("lstm_dropouts", results, isAws)
 
-    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    # paramGrid = dict(dRate = dropout)
-    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # results = grid.fit(XTrain, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("lstm_rec_dropouts", results, isAws)
+    dropout = [0.6, 0.7, 0.8, 0.9]# [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    paramGrid = dict(dRate = dropout)
+    tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    results = grid.fit(XTrain, to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("lstm_rec_dropouts_2h", results, isAws)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
@@ -477,14 +477,14 @@ def main():
     # summariseResults(results)
     # saveResults("d_lr_0075", results, isAws)
 
-    dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
+    dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5] #[0.5, 0.6, 0.7, 0.8, 0.9]
     paramGrid = dict(dRate = dropout)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("d_h3_dropout_2h", results, isAws)
+    saveResults("d_h3_dropout", results, isAws)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
