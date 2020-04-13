@@ -168,7 +168,7 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
 #    print(model.summary())
     return model
 
-def decisionModel(dRate): #(lr = 0.0, mom = 0.0): # (dRate):
+def decisionModel(extraHLayers): #(lr = 0.0, mom = 0.0): # (dRate):
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -186,10 +186,10 @@ def decisionModel(dRate): #(lr = 0.0, mom = 0.0): # (dRate):
     x1 = Dropout(0.2)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
     x2 = Dropout(0.3)(hidden2)
-    #for i in range(extraHLayers):
-    hidden3 = Dense(128, activation = "relu")(x2)
-    x3 = Dropout(dRate)(hidden3)
-    output = Dense(3, activation = "softmax")(x3)
+    for i in range(extraHLayers):
+        hidden3 = Dense(128, activation = "relu")(x2)
+        x2 = Dropout(0.3)(hidden3)
+    output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
     optimiser = SGD(lr = 0.075, momentum = 0.6)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
@@ -458,14 +458,14 @@ def main():
     # summariseResults(results)
     # saveResults("d_batch_sizes", results, isAws)
 
-    # hiddenLayers = [0, 1]
-    # paramGrid = dict(extraHLayers = hiddenLayers)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("d_extra_hidden_layers", results, isAws)
+    hiddenLayers = [0, 1]
+    paramGrid = dict(extraHLayers = hiddenLayers)
+    dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
+    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    results = grid.fit(XCombined, to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("d_extra_hidden_layers_opt", results, isAws)
 
     # lrs = [0.075]
     # moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
@@ -477,14 +477,14 @@ def main():
     # summariseResults(results)
     # saveResults("d_lr_0075", results, isAws)
 
-    dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
-    paramGrid = dict(dRate = dropout)
-    dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
-    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    results = grid.fit(XCombined, to_categorical(YTrain))
-    summariseResults(results)
-    saveResults("d_h3_dropout_2h", results, isAws)
+    # dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
+    # paramGrid = dict(dRate = dropout)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # results = grid.fit(XCombined, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("d_h3_dropout_2h", results, isAws)
 
     # fModel = featureModel()
     # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
