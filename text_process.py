@@ -186,9 +186,14 @@ def decisionModel(extraHLayers): #(lr = 0.0, mom = 0.0): # (dRate):
     x1 = Dropout(0.2)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
     x2 = Dropout(0.3)(hidden2)
-    for i in range(extraHLayers):
+    if extraHLayers == 1:
         hidden3 = Dense(128, activation = "relu")(x2)
         x2 = Dropout(0.3)(hidden3)
+    elif extraHLayers == 2:
+        hidden3 = Dense(128, activation = "relu")(x2)
+        x3 = Dropout(0.3)(hidden3)
+        hidden4 = Dense(64, activation = "relu")(x3)
+        x2 = Dropout(0.3)(hidden4)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
     optimiser = SGD(lr = 0.075, momentum = 0.6)
@@ -458,14 +463,14 @@ def main():
     # summariseResults(results)
     # saveResults("d_batch_sizes", results, isAws)
 
-    hiddenLayers = [0, 1]
+    hiddenLayers = [0, 1, 2]
     paramGrid = dict(extraHLayers = hiddenLayers)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("d_extra_hidden_layers_opt", results, isAws)
+    saveResults("d_extra_hidden_layers_opt2", results, isAws)
 
     # lrs = [0.075]
     # moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
