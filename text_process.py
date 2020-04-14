@@ -471,7 +471,7 @@ def main():
     XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("d_extra_hidden_layers_opt3", results, isAws)
+    saveResults("d_extra_hidden_layers_opt4", results, isAws)
 
     # lrs = [0.075]
     # moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
