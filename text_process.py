@@ -203,7 +203,7 @@ def decisionModel(extraHLayers): #(lr = 0.0, mom = 0.0): # (dRate):
     # print(model.summary())
     return model
 
-def featureModel(): # (dRate):
+def featureModel(dRate): # (dRate):
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -216,7 +216,7 @@ def featureModel(): # (dRate):
     repeated = RepeatVector(seqLength)(imageFtrs)
     #print(textFtrs.output)
     concat = concatenate([textFtrs, repeated], axis = -1)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(concat)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.8, recurrent_dropout = dRate))(concat)
     hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
     x1 = Dropout(0.5)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1)
@@ -498,14 +498,14 @@ def main():
     # saveHistory("feature_model_history", fModelHistory)
     # saveModel("feature_model", fModel)
 
-    batchSizes = [16, 32, 64, 128, 256]
-    paramGrid = dict(batch_size = batchSizes)
-    fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5)
-    grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    results = grid.fit(XCombined, to_categorical(YTrain))
-    summariseResults(results)
-    saveResults("f_batch_sizes", results, isAws)
+    # batchSizes = [16, 32, 64, 128, 256]
+    # paramGrid = dict(batch_size = batchSizes)
+    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5)
+    # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # results = grid.fit(XCombined, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("f_batch_sizes", results, isAws)
 
     # dropout = [0.6, 0.7, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
@@ -517,14 +517,14 @@ def main():
     # saveResults("f_lstm_dropouts_2h", results, isAws)
 
 
-    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    # paramGrid = dict(dRate = dropout)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("f_lstm_rec_dropouts", results, isAws)
+    dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    paramGrid = dict(dRate = dropout)
+    fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
+    grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
+    results = grid.fit(XCombined, to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("f_lstm_rec_dropouts", results, isAws)
 
 if __name__ == "__main__":
     main()
