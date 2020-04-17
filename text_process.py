@@ -216,7 +216,7 @@ def featureModel(dRate): # (dRate):
     repeated = RepeatVector(seqLength)(imageFtrs)
     #print(textFtrs.output)
     concat = concatenate([textFtrs, repeated], axis = -1)
-    lstm = Bidirectional(LSTM(embedDim, dropout = dRate, recurrent_dropout = 0.2))(concat)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.8, recurrent_dropout = dRate))(concat)
     hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
     x1 = Dropout(0.5)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1)
@@ -517,14 +517,14 @@ def main():
     # saveResults("f_lstm_dropouts_2h", results, isAws)
 
 
-    dropout = [0.6, 0.7, 0.8, 0.9] #[0.0, 0.1, 0.2, 0.3, 0.4, 0.5] #
+    dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
     paramGrid = dict(dRate = dropout)
     fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
     grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("f_lstm_dropouts_2h_2", results, isAws)
+    saveResults("f_lstm_rec_dropouts_2", results, isAws)
 
 if __name__ == "__main__":
     main()
