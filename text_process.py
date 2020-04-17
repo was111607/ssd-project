@@ -535,7 +535,7 @@ def main():
     XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("f_lr_0.01", results, isAws)
+    saveResults("f_lr_001", results, isAws)
 
 if __name__ == "__main__":
     main()
