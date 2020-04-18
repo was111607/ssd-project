@@ -124,7 +124,7 @@ def getImgPredict(df, model): # pathList old arg
 def initDecisionVGG():
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
-    for layer in vgg19.layers: # Output of FC2 layer
+    for layer in vgg19.layers:
         model.add(layer)
     model.add(Dense(512, activation = "relu"))
 #    visualiseModel(model, "decision_vgg.png")
@@ -527,7 +527,7 @@ def main():
     # summariseResults(results)
     # saveResults("f_lstm_rec_dropouts_2", results, isAws)
 
-    lrs = [0.01]
+    lrs = [0.1]
     moms = [0.0, 0.2, 0.4, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
@@ -535,7 +535,7 @@ def main():
     XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("f_lr_001", results, isAws)
+    saveResults("f_lr_01", results, isAws)
 
 if __name__ == "__main__":
     main()
