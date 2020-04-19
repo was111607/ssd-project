@@ -484,7 +484,7 @@ def main():
     # summariseResults(results)
     # saveResults("d_extra_hidden_layers_opt4", results, isAws)
 
-    lrs = [0.08]
+    lrs = [0.09]
     moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
