@@ -216,7 +216,7 @@ def featureModel(lr, mom): #(dRate): # (dRate):
     repeated = RepeatVector(seqLength)(imageFtrs)
     #print(textFtrs.output)
     concat = concatenate([textFtrs, repeated], axis = -1)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.2, recurrent_dropout = 0.2))(concat) # 0.8, 0.0
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.8))(concat) # 0.8, 0.0
     hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
     x1 = Dropout(0.5)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1)
