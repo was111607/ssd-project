@@ -413,7 +413,7 @@ def main():
 
     dModel = decisionModel()
     dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 50, batch_size = 64, callbacks = [dLogger])#, earlyStoppage])
+    dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [dLogger])#, earlyStoppage])
     saveHistory("decision_model_history", dModelHistory)
     saveModel("decision_model", dModel)
 
