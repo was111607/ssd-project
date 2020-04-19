@@ -203,7 +203,7 @@ def decisionModel(extraHLayers): #(lr = 0.0, mom = 0.0): # (dRate):
     # print(model.summary())
     return model
 
-def featureModel(lr = 0.0, mom = 0.0): #(dRate): # (dRate):
+def featureModel(lr, mom): #(dRate): # (dRate):
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
