@@ -333,7 +333,7 @@ def main():
     testFile = "/b-t4sa/model_input_testing.csv"
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
         testFile = awsDir + testFile
@@ -527,7 +527,7 @@ def main():
     # summariseResults(results)
     # saveResults("f_lstm_rec_dropouts_2", results, isAws)
 
-    lrs = [0.1]
+    lrs = [0.5]
     moms = [0.0, 0.2, 0.4, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
