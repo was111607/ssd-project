@@ -168,7 +168,7 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
 #    print(model.summary())
     return model
 
-def decisionModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+def decisionModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -197,7 +197,7 @@ def decisionModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     #     x2 = Dropout(0.3)(hidden4)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = 0.075, momentum = 0.6)
+    optimiser = SGD(lr = lr, momentum = mom) #(lr = 0.075, momentum = 0.6)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
 #    visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
     # print(model.summary())
