@@ -527,7 +527,7 @@ def main():
     # summariseResults(results)
     # saveResults("f_lstm_rec_dropouts_2", results, isAws)
 
-    lrs = [0.5]
+    lrs = [0.05]
     moms = [0.0, 0.2, 0.4, 0.6, 0.8]
     paramGrid = dict(lr = lrs, mom = moms)
     fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
@@ -535,7 +535,7 @@ def main():
     XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
     results = grid.fit(XCombined, to_categorical(YTrain))
     summariseResults(results)
-    saveResults("f_lr_05", results, isAws)
+    saveResults("f_lr_005", results, isAws)
 
 if __name__ == "__main__":
     main()
