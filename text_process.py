@@ -343,7 +343,7 @@ def main():
     testFile = "/b-t4sa/model_input_testing.csv"
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
         trainFile = awsDir + trainFile
         valFile = awsDir + valFile
         testFile = awsDir + testFile
@@ -484,15 +484,15 @@ def main():
     # summariseResults(results)
     # saveResults("d_extra_hidden_layers_opt4", results, isAws)
 
-    lrs = [0.09]
-    moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
-    paramGrid = dict(lr = lrs, mom = moms)
-    dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
-    grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
-    results = grid.fit(XCombined, to_categorical(YTrain))
-    summariseResults(results)
-    saveResults("d_lr_008", results, isAws)
+    # lrs = [0.09]
+    # moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
+    # paramGrid = dict(lr = lrs, mom = moms)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # results = grid.fit(XCombined, to_categorical(YTrain))
+    # summariseResults(results)
+    # saveResults("d_lr_008", results, isAws)
 
     # dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
@@ -537,15 +537,15 @@ def main():
     # summariseResults(results)
     # saveResults("f_lstm_rec_dropouts_2", results, isAws)
 
-    # lrs = [0.05]
-    # moms = [0.0, 0.2, 0.4, 0.6, 0.8]
-    # paramGrid = dict(lr = lrs, mom = moms)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("f_lr_005", results, isAws)
+    lrs = [0.075]
+    moms = [0.0, 0.2, 0.4, 0.6, 0.8]
+    paramGrid = dict(lr = lrs, mom = moms)
+    fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
+    grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
+    results = grid.fit(XCombined, to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("f_lr_0075", results, isAws)
 
 if __name__ == "__main__":
     main()
