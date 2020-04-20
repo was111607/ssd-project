@@ -425,7 +425,7 @@ def main():
         dir = path.join(curDir, "b-t4sa", "image sentiment classifications")
     if not path.exists(dir):
         os.makedirs(dir)
-        vggSentModel = vggSentiment()
+        vggSentModel = sentimentVGG()
         earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
         tLogger = CSVLogger(dir + "/image_sentiment_log.csv", append = False, separator = ",")
         vggSentHistory = vggSentModel.fit(getImgReps(trainPaths), to_categorical(YTrain), validation_data = (getImgReps(valPaths), to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [tLogger, earlyStoppage])
