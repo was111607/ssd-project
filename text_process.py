@@ -297,8 +297,9 @@ def batchImgReps(df, noPartitions):
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgReps(partition)), axis = 0)
-        np.save("backup_data", updatedPartitions)
-        print("Saved backup")
+        if (counter % 1000 == 0):
+            np.save("backup_data", updatedPartitions)
+            print("Saved backup")
         #saveData(updatedPartitions.tolist(), "backupData.csv")
     return updatedPartitions
 
