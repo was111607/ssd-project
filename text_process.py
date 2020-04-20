@@ -8,7 +8,7 @@ from os import path
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras.models import Model, Sequential, load_model
 from keras.preprocessing.image import load_img, img_to_array
-from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout, RepeatVector
+from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Dropout, RepeatVector
 from keras.layers.merge import add, concatenate
 from keras.applications.vgg19 import VGG19
 from keras.utils import to_categorical, plot_model
@@ -115,9 +115,15 @@ def initFeatureVGG():
 #    visualiseModel(model, "feature_vgg.png")
     return model
 
-def loadModel(fname, modelType):
+def loadModel(fname):
     try:
-        model = load_model(path.join("models", modelType, fname + ".h5"))
+        global awsDir
+        global curDir
+        if isAws is True:
+            dir = path.join(awsDir, "models")
+        else:
+            dir = path.join(curDir, "models")
+        model = load_model(path.join("models", fname + ".h5"))
         return model
     except OSError:
         print("Cannot find model by " + fname + " to load.")
@@ -153,19 +159,25 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     return model
 
 def dFusionModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
-#     vgg19 = VGG19(weights = "imagenet")
-#     model = Sequential()
-#     for layer in vgg19.layers:
-#         model.add(layer)
-#     model.add(Dense(512, activation = "relu"))
-# #    visualiseModel(model, "decision_vgg.png")
-    global awsDir
-    global curDir
-    if isAws is True:
-        dir = path.join(awsDir, "model histories")
-    else:
-        dir = path.join(curDir, "model histories")
-    model = Model(input = input, output = output)
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
+    hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
+    x1 = Dropout(0.6)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    x2 = Dropout(0.3)(hidden2)
+    textClass = Dense(3, activation = "softmax")(x2)
+    imageSntmts = Input(shape=(3,))
+    output = Lambda(lambda inputs: (textClass[0] / 2) + (inputs[1] / 2))([textClass, imageSntmts])
+    model = Model(input = [input, imageSntmts], output = output)
     optimiser = SGD(lr = 0.05, momentum = 0.8)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
@@ -184,6 +196,7 @@ def decisionModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
     #print(textFtrs.output)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.4))(textFtrs)
+    imageFtrs = Input(shape=(embedDim,))
     concat = concatenate([lstm, imageFtrs], axis = -1)
     hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
     x1 = Dropout(0.2)(hidden1)
@@ -292,15 +305,16 @@ def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
 def batchImgReps(df, noPartitions):
-    global counter
+    pCounter = 0
     updatedPartitions = np.empty((0, 224, 224, 3))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgReps(partition)), axis = 0)
-        if (counter % 1000 == 0):
+        if (pCounter % 200 == 0):
             np.save("backup_data", updatedPartitions)
             print("Saved backup")
         #saveData(updatedPartitions.tolist(), "backupData.csv")
+        pCounter += 1
     return updatedPartitions
 
 def batchPredict(df, model, noPartitions):
