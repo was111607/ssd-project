@@ -316,20 +316,14 @@ def batchPredict(df, model, noPartitions):
 
 def imgRepsAndSave(df, noPartitions, saveName):
     print("Predicting for " + saveName)
-    if isPredict is True:
-        predictions = batchPredict(df, model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
-    else:
-        predictions = batchImgReps(df, model, noPartitions)
+    predictions = batchImgReps(df, noPartitions)
     np.save(saveName, predictions)
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
 
 def predictAndSave(df, model, noPartitions, saveName):
     print("Predicting for " + saveName)
-    if isPredict is True:
-        predictions = batchPredict(df, model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
-    else:
-        predictions = batchImgReps(df, model, noPartitions)
+    predictions = batchPredict(df, model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
     np.save(saveName, predictions)
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
