@@ -291,12 +291,12 @@ def toArray(list):
 def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
-def batchImgReps(df, model, noPartitions):
+def batchImgReps(df, noPartitions):
     global counter
     updatedPartitions = np.empty((0, 224, 224, 3))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
-        updatedPartitions = np.concatenate((updatedPartitions, getImgReps(partition, model)), axis = 0)
+        updatedPartitions = np.concatenate((updatedPartitions, getImgReps(partition)), axis = 0)
         np.save("backup_data", updatedPartitions)
         print("Saved backup")
         #saveData(updatedPartitions.tolist(), "backupData.csv")
@@ -314,7 +314,7 @@ def batchPredict(df, model, noPartitions):
         #saveData(updatedPartitions.tolist(), "backupData.csv")
     return updatedPartitions
 
-def predictOrBatchAndSave(df, model, noPartitions, saveName, isPredict):
+def imgRepsAndSave(df, noPartitions, saveName):
     print("Predicting for " + saveName)
     if isPredict is True:
         predictions = batchPredict(df, model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
@@ -324,7 +324,31 @@ def predictOrBatchAndSave(df, model, noPartitions, saveName, isPredict):
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
 
-def recoverPredictOrBatchAndSave(df, model, noPartitions, saveName, isPredict, backupName):
+def predictAndSave(df, model, noPartitions, saveName):
+    print("Predicting for " + saveName)
+    if isPredict is True:
+        predictions = batchPredict(df, model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
+    else:
+        predictions = batchImgReps(df, model, noPartitions)
+    np.save(saveName, predictions)
+    #saveData(predictions.tolist(), saveName + ".csv")
+    print("Saved to " + saveName + ".npy")
+
+def recoverImgRepsAndSave(df, noPartitions, saveName, backupName):
+    global counter
+    print("Predicting for " + saveName)
+    backup = np.load(backupName + ".npy")
+    backupLen = backup.shape[0]
+    counter = backupLen
+    print(f"The backup length is {counter}")
+    print("backup_data.npy will only back up the data remainder")
+    predictions = batchImgReps(df.tail(-backupLen), noPartitions)
+    totalData = np.concatenate((backup, predictions), axis = 0)
+    np.save(saveName, totalData)
+    #saveData(predictions.tolist(), saveName + ".csv")
+    print("Saved to " + saveName + ".npy")
+
+def recoverPredictAndSave(df, model, noPartitions, saveName, backupName):
     global counter
     print("Predicting for " + saveName)
     backup = np.load(backupName + ".npy")
@@ -333,10 +357,7 @@ def recoverPredictOrBatchAndSave(df, model, noPartitions, saveName, isPredict, b
     print(f"The backup length is {counter}")
     print("backup_data.npy will only back up the data remainder")
 #    predictions = batchPredict(df.tail(-backupLen), model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
-    if isPredict is True:
-        predictions = batchPredict(df.tail(-backupLen), model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
-    else:
-        predictions = batchImgReps(df.tail(-backupLen), model, noPartitions)
+    predictions = batchPredict(df.tail(-backupLen), model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
     totalData = np.concatenate((backup, predictions), axis = 0)
     np.save(saveName, totalData)
     #saveData(predictions.tolist(), saveName + ".csv")
@@ -393,10 +414,10 @@ def main():
         dir = path.join(curDir, "b-t4sa", "image representations")
     if not path.exists(dir):
         os.makedirs(dir)
-        predictOrBatchAndSave(trainPaths, featureVGG, 6000, dir + "/image_representations_training", False)
-        predictOrBatchAndSave(valPaths, featureVGG, 1800, dir + "/image_representations_validation", False)
-        predictOrBatchAndSave(testPaths, featureVGG, 1800, dir + "/image_representations_testing", False)
-        input("Predicting and saving feature data completed")
+        imgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training")
+        imgRepsAndSave(valPaths, 1800, dir + "/image_representations_validation")
+        imgRepsAndSave(testPaths, 1800, dir + "/image_representations_testing")
+        input("Predicting and saving image representations completed")
 
     if isAws is True:
         dir = path.join(awsDir, "b-t4sa", "image sentiment classifications")
@@ -415,14 +436,14 @@ def main():
         dir = path.join(awsDir, "b-t4sa", "image features")
     else:
         dir = path.join(curDir, "b-t4sa", "image features")
-    #         #recoverpredictOrBatchAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
+    #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #         #input("Predicting and saving feature data completed")
     if not path.exists(dir):
         os.makedirs(dir)
         featureVGG = initFeatureVGG()
-        predictOrBatchAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", True)
-        predictOrBatchAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation", True)
-        predictOrBatchAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing", True)
+        predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training")
+        predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
+        predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
         input("Predicting and saving feature data completed")
     trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray # 50 FOR TUNING
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
@@ -436,9 +457,9 @@ def main():
     if not path.exists(dir):
         os.makedirs(dir)
         classifyVGG = initClassifyVGG()
-        predictOrBatchAndSave(trainPaths, classifyVGG, 20, dir + "/image_classifications_training", True) # Remove recover, change 10 to 20, remove backupName
-        predictOrBatchAndSave(valPaths, classifyVGG, 6, dir + "/image_classifications_validation", True)
-        predictOrBatchAndSave(testPaths, classifyVGG, 6, dir + "/image_classifications_testing", True)
+        predictAndSave(trainPaths, classifyVGG, 20, dir + "/image_classifications_training") # Remove recover, change 10 to 20, remove backupName
+        predictAndSave(valPaths, classifyVGG, 6, dir + "/image_classifications_validation")
+        predictAndSave(testPaths, classifyVGG, 6, dir + "/image_classifications_testing")
         input("Predicting and saving classification data completed")
     trainImgClass = np.load(dir + "/image_classifications_training50.npy") # 50 FOR TUNING
     # valImgClass = np.load(dir + "/image_classifications_validation.npy")
