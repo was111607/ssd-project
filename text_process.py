@@ -407,7 +407,7 @@ def main():
         vggSentModel = vggSentiment()
         earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
         tLogger = CSVLogger(dir + "/image_sentiment_log.csv", append = False, separator = ",")
-        vggSentHistory = vggSentModel.fit(getImgReps(trainPaths), to_categorical(YTrain), validation_data = (getImgReps(valPaths), to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [tLogger], earlyStoppage])
+        vggSentHistory = vggSentModel.fit(getImgReps(trainPaths), to_categorical(YTrain), validation_data = (getImgReps(valPaths), to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [tLogger, earlyStoppage])
         saveHistory("vgg_sentiment_model_history", tModelHistory)
         saveModel("vgg_sentiment_model_model", tModel)
 
