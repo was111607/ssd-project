@@ -390,7 +390,7 @@ def main():
     if isAws is True:
         dir = path.join(awsDir, "b-t4sa", "image representations")
     else:
-        dir = path.join(curDir, "b-t4sa", "image representationss")
+        dir = path.join(curDir, "b-t4sa", "image representations")
     if not path.exists(dir):
         os.makedirs(dir)
         predictOrBatchAndSave(trainPaths, featureVGG, 6000, dir + "/image_representations_training", False)
@@ -430,7 +430,7 @@ def main():
     if isAws is True:
         dir = path.join(awsDir, "b-t4sa", "image classifications")
     else:
-        dir = path.join(curDir, "b-t4sa", "image classifications"")
+        dir = path.join(curDir, "b-t4sa", "image classifications")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
     if not path.exists(dir):
