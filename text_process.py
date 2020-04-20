@@ -408,6 +408,7 @@ def main():
     valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
+    print(path.exists(dir))
     if isAws is True:
         dir = path.join(awsDir, "b-t4sa", "image representations")
     else:
