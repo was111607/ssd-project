@@ -176,7 +176,7 @@ def dFusionModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     x2 = Dropout(0.3)(hidden2)
     textClass = Dense(3, activation = "softmax")(x2)
     imageSntmts = Input(shape=(3,))
-    output = Lambda(lambda inputs: (textClass[0] / 2) + (inputs[1] / 2))([textClass, imageSntmts])
+    output = Lambda(lambda inputs: (inputs[0] / 2) + (inputs[1] / 2))([textClass, imageSntmts])
     model = Model(input = [input, imageSntmts], output = output)
     optimiser = SGD(lr = 0.05, momentum = 0.8)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
@@ -305,13 +305,18 @@ def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
 def batchImgReps(df, noPartitions):
+    global awsDir
+    global curDir
     pCounter = 0
     updatedPartitions = np.empty((0, 224, 224, 3))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgReps(partition)), axis = 0)
-        if (pCounter % 200 == 0):
-            np.save("backup_data", updatedPartitions)
+        if (pCounter % 150 == 0):
+            if isAws is True:
+                dir = np.save(path.join(awsDir, "backup_data"), updatedPartitions)
+            else:
+                dir = np.save(path.join(curDir, "backup_data"), updatedPartitions)
             print("Saved backup")
         #saveData(updatedPartitions.tolist(), "backupData.csv")
         pCounter += 1
@@ -324,7 +329,7 @@ def batchPredict(df, model, noPartitions):
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
-        np.save("image_reps_backup_data", updatedPartitions)
+        np.save("backup_data", updatedPartitions)
         print("Saved backup")
         #saveData(updatedPartitions.tolist(), "backupData.csv")
     return updatedPartitions
@@ -421,6 +426,10 @@ def main():
         dir = path.join(awsDir, "b-t4sa", "image representations")
     else:
         dir = path.join(curDir, "b-t4sa", "image representations")
+    recoverImgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training", "backup_data")
+    imgRepsAndSave(valPaths, 1800, dir + "/image_representations_validation")
+    imgRepsAndSave(testPaths, 1800, dir + "/image_representations_testing")
+    input("Predicting and saving image representations completed")
     if not path.exists(dir):
         os.makedirs(dir)
         imgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training")
