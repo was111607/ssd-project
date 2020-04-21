@@ -304,7 +304,7 @@ def toArray(list):
 def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
-def batchImgReps(df, noPartitions):
+def batchImgReps(df, noPartitions, isAws):
     global awsDir
     global curDir
     pCounter = 0
@@ -334,9 +334,9 @@ def batchPredict(df, model, noPartitions):
         #saveData(updatedPartitions.tolist(), "backupData.csv")
     return updatedPartitions
 
-def imgRepsAndSave(df, noPartitions, saveName):
+def imgRepsAndSave(df, noPartitions, saveName, isAws):
     print("Predicting for " + saveName)
-    predictions = batchImgReps(df, noPartitions)
+    predictions = batchImgReps(df, noPartitions, isAws)
     np.save(saveName, predictions)
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
@@ -348,7 +348,7 @@ def predictAndSave(df, model, noPartitions, saveName):
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
 
-def recoverImgRepsAndSave(df, noPartitions, saveName, backupName):
+def recoverImgRepsAndSave(df, noPartitions, saveName, backupName, isAws):
     global counter
     print("Predicting for " + saveName)
     backup = np.load(backupName + ".npy")
@@ -356,7 +356,7 @@ def recoverImgRepsAndSave(df, noPartitions, saveName, backupName):
     counter = backupLen
     print(f"The backup length is {counter}")
     print("backup_data.npy will only back up the data remainder")
-    predictions = batchImgReps(df.tail(-backupLen), noPartitions)
+    predictions = batchImgReps(df.tail(-backupLen), noPartitions, isAws)
     totalData = np.concatenate((backup, predictions), axis = 0)
     np.save(saveName, totalData)
     #saveData(predictions.tolist(), saveName + ".csv")
@@ -426,15 +426,15 @@ def main():
         dir = path.join(awsDir, "b-t4sa", "image representations")
     else:
         dir = path.join(curDir, "b-t4sa", "image representations")
-    recoverImgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training", "backup_data")
-    imgRepsAndSave(valPaths, 1800, dir + "/image_representations_validation")
-    imgRepsAndSave(testPaths, 1800, dir + "/image_representations_testing")
+    recoverImgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training", "backup_data", isAws)
+    imgRepsAndSave(valPaths, 1800, dir + "/image_representations_validation", isAws)
+    imgRepsAndSave(testPaths, 1800, dir + "/image_representations_testing", isAws)
     input("Predicting and saving image representations completed")
     if not path.exists(dir):
         os.makedirs(dir)
-        imgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training")
-        imgRepsAndSave(valPaths, 1800, dir + "/image_representations_validation")
-        imgRepsAndSave(testPaths, 1800, dir + "/image_representations_testing")
+        imgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training", isAws)
+        imgRepsAndSave(valPaths, 1800, dir + "/image_representations_validation", isAws)
+        imgRepsAndSave(testPaths, 1800, dir + "/image_representations_testing", isAws)
         input("Predicting and saving image representations completed")
 
     if isAws is True:
