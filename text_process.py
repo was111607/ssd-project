@@ -404,7 +404,7 @@ def summariseResults(results):
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
-def imageSntmtTrainValTest():
+#def imageSntmtTrainValTest():
     # train_datagen =  ImageDataGenerator(
     #   preprocessing_function = preprocessing_function,
     #   rotation_range=args.rotation,
