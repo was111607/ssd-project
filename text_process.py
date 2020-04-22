@@ -7,10 +7,10 @@ import os
 from os import path
 from keras.callbacks import CSVLogger, EarlyStopping
 from keras.models import Model, Sequential, load_model
-from keras.preprocessing.image import load_img, img_to_array
+from keras.preprocessing.image import load_img, img_to_array, ImageDataGenerator
 from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Dropout, RepeatVector
 from keras.layers.merge import add, concatenate
-from keras.applications.vgg19 import VGG19
+from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.utils import to_categorical, plot_model
 from keras.optimizers import SGD
 from ast import literal_eval
@@ -74,6 +74,7 @@ def getImageRep(path):
     img = loadImage(path)
     img = img_to_array(img)
     img = np.expand_dims(img, axis = 0)
+    img = preprocess_input(img)
     counter += 1
     return img
 
@@ -90,14 +91,18 @@ def sentimentVGG():
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers[:-1]:
+        layer.trainable = False
         model.add(layer)
     model.add(Dense(1024, activation = "relu"))
     model.add(Dense(512, activation = "relu"))
     model.add(Dense(3, activation = "softmax"))
+    for l in model.layers:
+        print(l.trainable)
 #    visualiseModel(model, "decision_vgg.png")
+    model.compile(optimizer = "Adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-def initDecisionVGG():
+def initClassifyVGG():
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers:
@@ -304,65 +309,71 @@ def toArray(list):
 def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
-def batchImgReps(df, noPartitions, isAws):
+# def batchImgReps(df, noPartitions, isAws):
+#     global awsDir
+#     global curDir
+#     pCounter = 0
+#     updatedPartitions = np.empty((0, 224, 224, 3))
+#     partitions = np.array_split(df, noPartitions)
+#     for partition in partitions:
+#         updatedPartitions = np.concatenate((updatedPartitions, getImgReps(partition)), axis = 0)
+#         if (pCounter % 150 == 0):
+#             if isAws is True:
+#                 dir = np.save(path.join(awsDir, "backup_data"), updatedPartitions)
+#             else:
+#                 dir = np.save(path.join(curDir, "backup_data"), updatedPartitions)
+#             print("Saved backup")
+#         #saveData(updatedPartitions.tolist(), "backupData.csv")
+#         pCounter += 1
+#     return updatedPartitions
+
+def batchPredict(df, model, noPartitions, isAws):
+    # df = df.sample(n = 20)
     global awsDir
     global curDir
-    pCounter = 0
-    updatedPartitions = np.empty((0, 224, 224, 3))
-    partitions = np.array_split(df, noPartitions)
-    for partition in partitions:
-        updatedPartitions = np.concatenate((updatedPartitions, getImgReps(partition)), axis = 0)
-        if (pCounter % 150 == 0):
-            if isAws is True:
-                dir = np.save(path.join(awsDir, "backup_data_p3"), updatedPartitions)
-            else:
-                dir = np.save(path.join(curDir, "backup_data_p3"), updatedPartitions)
-            print("Saved backup")
-        #saveData(updatedPartitions.tolist(), "backupData.csv")
-        pCounter += 1
-    return updatedPartitions
-
-def batchPredict(df, model, noPartitions):
-    # df = df.sample(n = 20)
     global counter
     updatedPartitions = np.empty((0, 512))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
-        np.save("backup_data", updatedPartitions)
+        if isAws is True:
+            dir = np.save(path.join(awsDir, "backup_data"), updatedPartitions)
+        else:
+            dir = np.save(path.join(curDir, "backup_data"), updatedPartitions)
+        # np.save("backup_data", updatedPartitions)
         print("Saved backup")
         #saveData(updatedPartitions.tolist(), "backupData.csv")
     return updatedPartitions
 
-def imgRepsAndSave(df, noPartitions, saveName, isAws):
+# def imgRepsAndSave(df, noPartitions, saveName, isAws):
+#     print("Predicting for " + saveName)
+#     predictions = batchImgReps(df, noPartitions, isAws)
+#     np.save(saveName, predictions)
+#     #saveData(predictions.tolist(), saveName + ".csv")
+#     print("Saved to " + saveName + ".npy")
+
+def predictAndSave(df, model, noPartitions, saveName, isAws):
     print("Predicting for " + saveName)
-    predictions = batchImgReps(df, noPartitions, isAws)
+    predictions = batchPredict(df, model, noPartitions, isAws)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
     np.save(saveName, predictions)
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
 
-def predictAndSave(df, model, noPartitions, saveName):
-    print("Predicting for " + saveName)
-    predictions = batchPredict(df, model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
-    np.save(saveName, predictions)
-    #saveData(predictions.tolist(), saveName + ".csv")
-    print("Saved to " + saveName + ".npy")
-
-def recoverImgRepsAndSave(df, noPartitions, saveName, backupName, backupName2, isAws):
-    global counter
-    print("Predicting for " + saveName)
-    backup = np.load(backupName + ".npy")
-    backup2 = np.load(backupName2 + ".npy")
-    backupLen = backup.shape[0] + backup2.shape[0] ##########
-    counter = backupLen ######
-    backup = np.concatenate((backup, backup2), axis = 0)
-    print(f"The backup length is {counter}")
-    print("backup will only store the data remainder")
-    predictions = batchImgReps(df.tail(-backupLen), noPartitions, isAws)
-    totalData = np.concatenate((backup, predictions), axis = 0)
-    np.save(saveName, totalData)
-    #saveData(predictions.tolist(), saveName + ".csv")
-    print("Saved to " + saveName + ".npy")
+# def recoverImgRepsAndSave(df, noPartitions, saveName, backupName, backupName2, isAws):
+#     global counter
+#     print("Predicting for " + saveName)
+#     backup = np.load(backupName + ".npy")
+#     backup2 = np.load(backupName2 + ".npy")
+#     backupLen = backup.shape[0] + backup2.shape[0] ##########
+#     counter = backupLen ######
+#     backup = np.concatenate((backup, backup2), axis = 0)
+#     print(f"The backup length is {counter}")
+#     print("backup will only store the data remainder")
+#     predictions = batchImgReps(df.tail(-backupLen), noPartitions, isAws)
+#     totalData = np.concatenate((backup, predictions), axis = 0)
+#     np.save(saveName, totalData)
+#     #saveData(predictions.tolist(), saveName + ".csv")
+#     print("Saved to " + saveName + ".npy")
 
 def recoverPredictAndSave(df, model, noPartitions, saveName, backupName):
     global counter
@@ -392,6 +403,22 @@ def summariseResults(results):
     print("Best score of %f with parameters %r" % (results.best_score_, results.best_params_))
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
+
+def imageSntmtTrainValTest():
+    # train_datagen =  ImageDataGenerator(
+    #   preprocessing_function = preprocessing_function,
+    #   rotation_range=args.rotation,
+    #   shear_range=args.shear,
+    #   zoom_range=args.zoom,
+    #   horizontal_flip=args.h_flip,
+    #   vertical_flip=args.v_flip
+    # )
+    #
+    # val_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
+    #
+    # train_generator = train_datagen.flow_from_directory(TRAIN_DIR, target_size=(HEIGHT, WIDTH), batch_size=BATCH_SIZE)
+    #
+    # validation_generator = val_datagen.flow_from_directory(VAL_DIR, target_size=(HEIGHT, WIDTH), batch_size=BATCH_SIZE)
 
 def main():
     global awsDir
@@ -424,33 +451,33 @@ def main():
     valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
-    if isAws is True:
-        dir = path.join(awsDir, "b-t4sa", "image representations")
-    else:
-        dir = path.join(curDir, "b-t4sa", "image representations")
-    recoverImgRepsAndSave(trainPaths, 2000, dir + "/image_representations_training", "backup_data", "/media/Data3/sewell/backup_data", isAws)
-    imgRepsAndSave(valPaths, 2000, dir + "/image_representations_validation", isAws)
-    imgRepsAndSave(testPaths, 2000, dir + "/image_representations_testing", isAws)
-    input("Predicting and saving image representations completed")
-    if not path.exists(dir):
-        os.makedirs(dir)
-        imgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training", isAws)
-        imgRepsAndSave(valPaths, 1800, dir + "/image_representations_validation", isAws)
-        imgRepsAndSave(testPaths, 1800, dir + "/image_representations_testing", isAws)
-        input("Predicting and saving image representations completed")
+    # if isAws is True:
+    #     dir = path.join(awsDir, "b-t4sa", "image representations")
+    # else:
+    #     dir = path.join(curDir, "b-t4sa", "image representations")
+    # # recoverImgRepsAndSave(trainPaths, 2000, dir + "/image_representations_training", "backup_data", "/media/Data3/sewell/backup_data", isAws)
+    # # imgRepsAndSave(valPaths, 2000, dir + "/image_representations_validation", isAws)
+    # # imgRepsAndSave(testPaths, 2000, dir + "/image_representations_testing", isAws)
+    # # input("Predicting and saving image representations completed")
+    # if not path.exists(dir):
+    #     os.makedirs(dir)
+    #     imgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training", isAws)
+    #     imgRepsAndSave(valPaths, 1800, dir + "/image_representations_validation", isAws)
+    #     imgRepsAndSave(testPaths, 1800, dir + "/image_representations_testing", isAws)
+    #     input("Predicting and saving image representations completed")
 
-    if isAws is True:
-        dir = path.join(awsDir, "b-t4sa", "image sentiment classifications")
-    else:
-        dir = path.join(curDir, "b-t4sa", "image sentiment classifications")
-    if not path.exists(dir):
-        os.makedirs(dir)
-        vggSentModel = sentimentVGG()
-        earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
-        tLogger = CSVLogger(dir + "/image_sentiment_log.csv", append = False, separator = ",")
-        vggSentHistory = vggSentModel.fit(getImgReps(trainPaths), to_categorical(YTrain), validation_data = (getImgReps(valPaths), to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [tLogger, earlyStoppage])
-        saveHistory("vgg_sentiment_model_history", tModelHistory)
-        saveModel("vgg_sentiment_model_model", tModel)
+    # if isAws is True:
+    #     dir = path.join(awsDir, "b-t4sa", "image sentiment classifications")
+    # else:
+    #     dir = path.join(curDir, "b-t4sa", "image sentiment classifications")
+    # if not path.exists(dir):
+    #     os.makedirs(dir)
+    #     vggSentModel = sentimentVGG()
+    #     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
+    #     tLogger = CSVLogger(dir + "/image_sentiment_log.csv", append = False, separator = ",")
+    #     vggSentHistory = vggSentModel.fit(getImgReps(trainPaths), to_categorical(YTrain), validation_data = (getImgReps(valPaths), to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [tLogger, earlyStoppage])
+    #     saveHistory("vgg_sentiment_model_history", tModelHistory)
+    #     saveModel("vgg_sentiment_model_model", tModel)
 
     if isAws is True:
         dir = path.join(awsDir, "b-t4sa", "image features")
@@ -461,27 +488,27 @@ def main():
     if not path.exists(dir):
         os.makedirs(dir)
         featureVGG = initFeatureVGG()
-        predictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training")
-        predictAndSave(valPaths, featureVGG, 6, dir + "/image_features_validation")
-        predictAndSave(testPaths, featureVGG, 6, dir + "/image_features_testing")
+        predictAndSave(trainPaths, featureVGG, 30, dir + "/image_features_training", isAws)
+        predictAndSave(valPaths, featureVGG, 10, dir + "/image_features_validation", isAws)
+        predictAndSave(testPaths, featureVGG, 10, dir + "/image_features_testing", isAws)
         input("Predicting and saving feature data completed")
-    trainImgFeatures = np.load(dir + "/image_features_training50.npy") # getInputArray # 50 FOR TUNING
+    trainImgFeatures = np.load(dir + "/image_features_training.npy") # getInputArray # 50 FOR TUNING
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
     # testImgFeatures = np.load(dir + "/image_features_testing.npy")
     if isAws is True:
-        dir = path.join(awsDir, "b-t4sa", "image classifications")
+        dir = path.join(awsDir, "b-t4sa", "image categories")
     else:
-        dir = path.join(curDir, "b-t4sa", "image classifications")
+        dir = path.join(curDir, "b-t4sa", "image categories")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
     if not path.exists(dir):
         os.makedirs(dir)
-        classifyVGG = initClassifyVGG()
-        predictAndSave(trainPaths, classifyVGG, 20, dir + "/image_classifications_training") # Remove recover, change 10 to 20, remove backupName
-        predictAndSave(valPaths, classifyVGG, 6, dir + "/image_classifications_validation")
-        predictAndSave(testPaths, classifyVGG, 6, dir + "/image_classifications_testing")
-        input("Predicting and saving classification data completed")
-    trainImgClass = np.load(dir + "/image_classifications_training50.npy") # 50 FOR TUNING
+        categoryVGG = initCategoryVGG()
+        predictAndSave(trainPaths, categoryVGG, 30, dir + "/image_categories_training", isAws) # Remove recover, change 10 to 20, remove backupName
+        predictAndSave(valPaths, categoryVGG, 10, dir + "/image_categories_validation", isAws)
+        predictAndSave(testPaths, categoryVGG, 10, dir + "/image_categories_testing", isAws)
+        input("Predicting and saving categories data completed")
+    trainImgCats = np.load(dir + "/image_categories_training.npy") # 50 FOR TUNING
     # valImgClass = np.load(dir + "/image_classifications_validation.npy")
     # testImgClass = np.load(dir + "/image_classifications_testing.npy")
     #
@@ -490,6 +517,8 @@ def main():
     #     os.mkdir(dir)
     #
     # earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
+    #
+    # imageSntmtTrainEval()
 
     # tModel = textModel()
     # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
@@ -499,7 +528,7 @@ def main():
 
     # dModel = decisionModel()
     # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    # dModelHistory = dModel.fit([XTrain, trainImgClass], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [dLogger])#, earlyStoppage])
+    # dModelHistory = dModel.fit([XTrain, trainImgCats], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [dLogger])#, earlyStoppage])
     # saveHistory("decision_model_history", dModelHistory)
     # saveModel("decision_model", dModel)
 
@@ -556,7 +585,7 @@ def main():
     # paramGrid = dict(batch_size = batchSizes)
     # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5)
     # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("d_batch_sizes", results, isAws)
@@ -565,7 +594,7 @@ def main():
     # paramGrid = dict(extraHLayers = hiddenLayers)
     # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
     # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("d_extra_hidden_layers_opt4", results, isAws)
@@ -575,7 +604,7 @@ def main():
     # paramGrid = dict(lr = lrs, mom = moms)
     # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
     # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("d_lr_008", results, isAws)
@@ -584,7 +613,7 @@ def main():
     # paramGrid = dict(dRate = dropout)
     # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
     # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("d_h3_dropout_2h", results, isAws)
@@ -599,7 +628,7 @@ def main():
     # paramGrid = dict(batch_size = batchSizes)
     # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5)
     # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgClass[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("f_batch_sizes", results, isAws)
