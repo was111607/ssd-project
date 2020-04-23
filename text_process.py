@@ -98,10 +98,6 @@ def sentimentVGG():
     model.add(Dense(3, activation = "softmax"))
     for layer in model.layers[:-8]:
         layer.trainable = False
-    for layer in model.layers:
-        print(layer.name)
-        print(layer.trainable)
-#    visualiseModel(model, "decision_vgg.png")
     model.compile(optimizer = "Adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
@@ -380,7 +376,7 @@ def summariseResults(results):
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
-def trainMainModel(model, dir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath):
+def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(dir, logName + ".csv"), append = False, separator = ",")
     modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [logger, earlyStoppage])
@@ -392,10 +388,10 @@ def trainMainModel(model, dir, logName, trainInput, YTrain, valInput, YVal, hist
         # saveHistory("text_model_history", tModelHistory)
         # saveModel("text_model", tModel)
 
-def imageSntmtTrain(model, modelName, historyName, mainPath, trainLen, valLen):
+def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen):
     batchSize = 16
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
-    logger = CSVLogger(path.join("logs", "image_sentiments_log.csv"), append = False, separator = ",")
+    logger = CSVLogger(path.join(logDir, "image_sentiments_log.csv"), append = False, separator = ",")
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
     trainGen = dataGen.flow_from_directory(path.join(dir, "train"), target_size=(224, 224), batch_size = batchSize)
@@ -470,6 +466,7 @@ def main():
     imageSntmtTrain(sentimentVGG(),
         "decision_model",
         "decision_model_history",
+        logDir,
         mainPath,
         dfTrain.shape[0],
         dfVal.shape[0])
