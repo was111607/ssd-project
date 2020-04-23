@@ -421,7 +421,7 @@ def main():
         # trainFile = curDir + trainFile
         # valFile = curDir + valFile
         # testFile = curDir + testFile
-    trainFile = path.join(mainPath, "b-t4sa/model_input_training.csv")
+    trainFile = path.join(mainPath, "b-t4sa/model_input_training_subset.csv")
     valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
     pd.set_option('display.max_colwidth', -1)
@@ -474,6 +474,8 @@ def main():
     dir = path.join(mainPath, "b-t4sa", "image features")
     #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #         #input("Predicting and saving feature data completed")
+    predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_features_validation"), mainPath, "backup_data")
+    predictAndSave(trainPaths, featureVGG, 15, path.join(dir, "image_features_training50"), mainPath, "backup_data"))
     if not path.exists(dir):
         os.makedirs(dir)
         featureVGG = initFeatureVGG()
@@ -481,24 +483,23 @@ def main():
         predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_features_validation"), mainPath)
         predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_features_testing"), mainPath)
         input("Predicting and saving feature data completed")
-    trainImgFeatures = np.load(dir + "/image_features_training.npy") # getInputArray # 50 FOR TUNING
-    # valImgFeatures = np.load(dir + "/image_features_validation.npy")
-    # testImgFeatures = np.load(dir + "/image_features_testing.npy")
+    trainImgFeatures = np.load(path.join(dir, "image_features_training.npy")) # getInputArray # 50 FOR TUNING
+    # valImgFeatures = np.load(path.join(dir, "image_features_validation.npy"))
+    # testImgFeatures = np.load(path.join(dir, "image_features_testing.npy"))
     dir = path.join(mainPath, "b-t4sa", "image categories")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
     categoryVGG = initCategoryVGG()
-    predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath, "backup_data")
+    predictAndSave(trainPaths, categoryVGG, 15, path.join(dir, "image_categories_training50"), mainPath, "backup_data")) # Remove recover, change 10 to 20, remove backupName
     if not path.exists(dir):
         os.makedirs(dir)
         categoryVGG = initCategoryVGG()
-        predictAndSave(trainPaths, categoryVGG, 30, path.join(dir, "image_categories_training"), mainPath) # Remove recover, change 10 to 20, remove backupName
         predictAndSave(valPaths, categoryVGG, 10, path.join(dir, "image_categories_validation"), mainPath)
         predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath)
         input("Predicting and saving categories data completed")
-    trainImgCategories = np.load(pathdir + "/image_categories_training.npy") # 50 FOR TUNING
-    # valImgCategories = np.load(dir + "/image_classifications_validation.npy")
-    # testImgCategories = np.load(dir + "/image_classifications_testing.npy")
+    trainImgCategories = np.load(path.join(dir, "image_categories_training.npy")) # 50 FOR TUNING
+    # valImgCategories = np.load(path.join(dir, "image_categories_validation.npy"))
+    # testImgCategories = np.load(path.join(dir, "image_categories_testing.npy"))
     #
     logDir = "./logs"
     if not path.exists(dir):
