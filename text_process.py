@@ -96,7 +96,7 @@ def sentimentVGG():
     model.add(Dense(512, activation = "relu"))
     model.add(Dropout(0.5))
     model.add(Dense(3, activation = "softmax"))
-    for layer in model.layers[:-5]:
+    for layer in model.layers[:-8]:
         layer.trainable = False
     for layer in model.layers:
         print(layer.name)
@@ -405,7 +405,7 @@ def imageSntmtTrain(model, modelName, historyName, mainPath, trainLen, valLen):
         validation_data = valGen,
         validation_steps = -(-valLen // batchSize),
         epochs = 50,
-        callbacks = [Logger, earlyStoppage])
+        callbacks = [logger, earlyStoppage])
     saveHistory(historyName, modelHistory)
     saveModel(modelName, model, mainPath)
 
