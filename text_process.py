@@ -378,7 +378,7 @@ def summariseResults(results):
 
 def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
-    logger = CSVLogger(path.join(dir, logName + ".csv"), append = False, separator = ",")
+    logger = CSVLogger(path.join(logDir, logName + ".csv"), append = False, separator = ",")
     modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [logger, earlyStoppage])
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(modelName, model, mainPath)
@@ -460,8 +460,8 @@ def main():
     # testImgCategories = np.load(path.join(dir, "image_categories_testing.npy"))
     #
     logDir = "./logs"
-    if not path.exists(dir):
-        os.mkdir(dir)
+    if not path.exists(logDir):
+        os.makedirs(logDir)
     #
     imageSntmtTrain(sentimentVGG(),
         "decision_model",
