@@ -313,13 +313,13 @@ def toURL(path): # ENABLE IN PATHS DF
 #         pCounter += 1
 #     return updatedPartitions
 
-def batchPredict(df, model, noPartitions, mainPath):
+def batchPredict(df, model, noPartitions, mainPath, backupName):
     # df = df.sample(n = 20)
     updatedPartitions = np.empty((0, 512))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
-        dir = np.save(path.join(mainPath, "backup_data"), updatedPartitions)
+        dir = np.save(path.join(mainPath, backupName), updatedPartitions)
         # np.save("backup_data", updatedPartitions)
         print("Saved backup")
         #saveData(updatedPartitions.tolist(), "backupData.csv")
@@ -332,9 +332,9 @@ def batchPredict(df, model, noPartitions, mainPath):
 #     #saveData(predictions.tolist(), saveName + ".csv")
 #     print("Saved to " + saveName + ".npy")
 
-def predictAndSave(df, model, noPartitions, saveName, mainPath):
+def predictAndSave(df, model, noPartitions, saveName, mainPath, backupName):
     print("Predicting for " + saveName)
-    predictions = batchPredict(df, model, noPartitions, mainPath)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
+    predictions = batchPredict(df, model, noPartitions, mainPath, backupName)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
     np.save(saveName, predictions)
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
@@ -355,16 +355,16 @@ def predictAndSave(df, model, noPartitions, saveName, mainPath):
 #     #saveData(predictions.tolist(), saveName + ".csv")
 #     print("Saved to " + saveName + ".npy")
 
-def recoverPredictAndSave(df, model, noPartitions, saveName, mainPath, backupName):
+def recoverPredictAndSave(df, model, noPartitions, saveName, mainPath, backupLoadName, backupSaveName):
     global counter
     print("Predicting for " + saveName)
-    backup = np.load(backupName + ".npy")
+    backup = np.load(path.join(mainPath, backupLoadName + ".npy"))
     backupLen = backup.shape[0]
     counter = backupLen
     print(f"The backup length is {counter}")
-    print("backup_data.npy will only back up the data remainder")
+    print(backupSaveName + ".npy will only back up the data remainder")
 #    predictions = batchPredict(df.tail(-backupLen), model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
-    predictions = batchPredict(df.tail(-backupLen), model, noPartitions, mainPath)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
+    predictions = batchPredict(df.tail(-backupLen), model, noPartitions, mainPath, backupSaveName)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
     totalData = np.concatenate((backup, predictions), axis = 0)
     np.save(saveName, totalData)
     #saveData(predictions.tolist(), saveName + ".csv")
@@ -490,12 +490,15 @@ def main():
         dir = path.join(curDir, "b-t4sa", "image categories")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
+    recoverPredictAndSave(valPaths, categoryVGG, 1, path.join(dir, "image_categories_validation"), mainPath, "backup_data", "backup_data_2")
+    predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath, "backup_data")
+    input("Predicting and saving categories data completed")
     if not path.exists(dir):
         os.makedirs(dir)
         categoryVGG = initCategoryVGG()
         predictAndSave(trainPaths, categoryVGG, 30, path.join(dir, "image_categories_training"), mainPath) # Remove recover, change 10 to 20, remove backupName
-        predictAndSave(valPaths, categoryVGG, 10, path.join(dir, "/image_categories_validation"), mainPath)
-        predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "/image_categories_testing"), mainPath)
+        predictAndSave(valPaths, categoryVGG, 10, path.join(dir, "image_categories_validation"), mainPath)
+        predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath)
         input("Predicting and saving categories data completed")
     trainImgCategories = np.load(pathdir + "/image_categories_training.npy") # 50 FOR TUNING
     # valImgCategories = np.load(dir + "/image_classifications_validation.npy")
