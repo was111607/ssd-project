@@ -474,7 +474,6 @@ def main():
     dir = path.join(mainPath, "b-t4sa", "image features")
     #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #         #input("Predicting and saving feature data completed")
-    predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_features_validation"), mainPath, "backup_data")
     predictAndSave(trainPaths, featureVGG, 15, path.join(dir, "image_features_training50"), mainPath, "backup_data"))
     if not path.exists(dir):
         os.makedirs(dir)
