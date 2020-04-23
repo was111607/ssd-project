@@ -103,7 +103,7 @@ def sentimentVGG():
     model.compile(optimizer = "Adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-def initCategoryVGG():
+def categoryVGG():
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers:
@@ -112,7 +112,7 @@ def initCategoryVGG():
 #    visualiseModel(model, "decision_vgg.png")
     return model
 
-def initFeatureVGG():
+def featureVGG():
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers[:-1]: # Output of FC2 layer
@@ -383,28 +383,29 @@ def trainMainModel(model, dir, logName, trainInput, YTrain, valInput, YVal, hist
     logger = CSVLogger(path.join(dir, logName + ".csv"), append = False, separator = ",")
     modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [logger, earlyStoppage])
     saveHistory(historyName, modelHistory, mainPath)
-    saveModel(modelName, tModel, mainPath)
+    saveModel(modelName, model, mainPath)
         # tModel = textModel()
         # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
         # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
         # saveHistory("text_model_history", tModelHistory)
         # saveModel("text_model", tModel)
 
-def imageSntmtTrainValTest(model, mainPath, trainLen, valLen, testLen):
+def imageSntmtTrain(model, modelName, historyName, mainPath, trainLen, valLen):
     batchSize = 16
+    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
+    logger = CSVLogger(path.join("logs", "image_sentiments_log.csv"), append = False, separator = ",")
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
     trainGen = dataGen.flow_from_directory(path.join(dir, "train"), target_size=(224, 224), batch_size = batchSize)
     valGen = dataGen.flow_from_directory(path.join(dir, "val"), target_size=(224, 224), batch_size = batchSize)
-    logger = CSVLogger(path.join("logs", "image_sentiments_log.csv"), append = False, separator = ",")
     modelHistory = model.fit_generator(trainGen,
         steps_per_epoch = -(-trainLen // batchSize),
         validation_data = valGen,
         validation_steps = -(-valLen // batchSize),
         epochs = 50,
-        callbacks = [tLogger, earlyStoppage])
-    saveHistory("decision_model_history", modelHistory)
-    saveModel("decision_model", model)
+        callbacks = [Logger, earlyStoppage])
+    saveHistory(historyName, modelHistory)
+    saveModel(modelName, model, mainPath)
 
 def main():
     awsDir = "/media/Data3/sewell"
@@ -421,7 +422,7 @@ def main():
         # trainFile = curDir + trainFile
         # valFile = curDir + valFile
         # testFile = curDir + testFile
-    trainFile = path.join(mainPath, "b-t4sa/model_input_training_subset.csv")
+    trainFile = path.join(mainPath, "b-t4sa/model_input_training.csv")
     valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
     pd.set_option('display.max_colwidth', -1)
@@ -440,45 +441,15 @@ def main():
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
     # if isAws is True:
-    #     dir = path.join(awsDir, "b-t4sa", "image representations")
-    # else:
-    #     dir = path.join(curDir, "b-t4sa", "image representations")
-    # # recoverImgRepsAndSave(trainPaths, 2000, dir + "/image_representations_training", "backup_data", "/media/Data3/sewell/backup_data", isAws)
-    # # imgRepsAndSave(valPaths, 2000, dir + "/image_representations_validation", isAws)
-    # # imgRepsAndSave(testPaths, 2000, dir + "/image_representations_testing", isAws)
-    # # input("Predicting and saving image representations completed")
-    # if not path.exists(dir):
-    #     os.makedirs(dir)
-    #     imgRepsAndSave(trainPaths, 6000, dir + "/image_representations_training", isAws)
-    #     imgRepsAndSave(valPaths, 1800, dir + "/image_representations_validation", isAws)
-    #     imgRepsAndSave(testPaths, 1800, dir + "/image_representations_testing", isAws)
-    #     input("Predicting and saving image representations completed")
-
-    # if isAws is True:
-    #     dir = path.join(awsDir, "b-t4sa", "image sentiment classifications")
-    # else:
-    #     dir = path.join(curDir, "b-t4sa", "image sentiment classifications")
-    # if not path.exists(dir):
-    #     os.makedirs(dir)
-    #     vggSentModel = sentimentVGG()
-    #     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
-    #     tLogger = CSVLogger(dir + "/image_sentiment_log.csv", append = False, separator = ",")
-    #     vggSentHistory = vggSentModel.fit(getImgReps(trainPaths), to_categorical(YTrain), validation_data = (getImgReps(valPaths), to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [tLogger, earlyStoppage])
-    #     saveHistory("vgg_sentiment_model_history", tModelHistory)
-    #     saveModel("vgg_sentiment_model_model", tModel)
-
-    # if isAws is True:
     #     dir = path.join(awsDir, "b-t4sa", "image features")
     # else:
     #     dir = path.join(curDir, "b-t4sa", "image features")
     dir = path.join(mainPath, "b-t4sa", "image features")
     #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #         #input("Predicting and saving feature data completed")
-    featureVGG = initFeatureVGG()
-    predictAndSave(trainPaths, featureVGG, 15, path.join(dir, "image_features_training50"), mainPath, "backup_data")
     if not path.exists(dir):
         os.makedirs(dir)
-        featureVGG = initFeatureVGG()
+        featureVGG = featureVGG()
         predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_features_training"), mainPath, "backup_data")
         predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_features_validation"), mainPath, "backup_data")
         predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_features_testing"), mainPath, "backup_data")
@@ -489,11 +460,9 @@ def main():
     dir = path.join(mainPath, "b-t4sa", "image categories")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
-    categoryVGG = initCategoryVGG()
-    predictAndSave(trainPaths, categoryVGG, 15, path.join(dir, "image_categories_training50"), mainPath, "backup_data") # Remove recover, change 10 to 20, remove backupName
     if not path.exists(dir):
         os.makedirs(dir)
-        categoryVGG = initCategoryVGG()
+        categoryVGG = categoryVGG()
         predictAndSave(trainPaths, categoryVGG, 30, path.join(dir, "image_categories_training"), mainPath, "backup_data") # Remove recover, change 10 to 20, remove backupNam
         predictAndSave(valPaths, categoryVGG, 10, path.join(dir, "image_categories_validation"), mainPath, "backup_data")
         predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath, "backup_data")
@@ -506,9 +475,12 @@ def main():
     if not path.exists(dir):
         os.mkdir(dir)
     #
-    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
-    #
-    # imageSntmtTrainEval()
+    imageSntmtTrain(sentimentVGG(),
+        "decision_model",
+        "decision_model_history",
+        mainPath,
+        dfTrain.shape[0],
+        dfVal.shape[0])
 
     # trainMainModel(textModel(),
     #     logDir,
