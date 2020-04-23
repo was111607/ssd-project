@@ -59,8 +59,6 @@ from keras import backend as K
 # Skimage to retrieve and resize from tweet links
 # Maybe have to run all programs in succession to be able to run?
 counter = 1
-awsDir = "/media/Data3/sewell"
-curDir = "."
 
 def loadImage(path):
     with urlopen(path) as url:
@@ -91,18 +89,21 @@ def sentimentVGG():
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers[:-1]:
-        layer.trainable = False
         model.add(layer)
+    model.add(Dropout(0.5))
     model.add(Dense(1024, activation = "relu"))
+    model.add(Dropout(0.5))
     model.add(Dense(512, activation = "relu"))
+    model.add(Dropout(0.5))
     model.add(Dense(3, activation = "softmax"))
-    for l in model.layers:
-        print(l.trainable)
+    for layer in model.layers[:-5]:
+        layer.trainable = False
+        print(l.trainable
 #    visualiseModel(model, "decision_vgg.png")
     model.compile(optimizer = "Adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-def initClassifyVGG():
+def initCategoryVGG():
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers:
@@ -120,19 +121,19 @@ def initFeatureVGG():
 #    visualiseModel(model, "feature_vgg.png")
     return model
 
-def loadModel(fname):
-    try:
-        global awsDir
-        global curDir
-        if isAws is True:
-            dir = path.join(awsDir, "models")
-        else:
-            dir = path.join(curDir, "models")
-        model = load_model(path.join("models", fname + ".h5"))
-        return model
-    except OSError:
-        print("Cannot find model by " + fname + " to load.")
-        exit()
+# def loadModel(fname):
+#     try:
+#         global awsDir
+#         global curDir
+#         if isAws is True:
+#             dir = path.join(awsDir, "models")
+#         else:
+#             dir = path.join(curDir, "models")
+#         model = load_model(path.join("models", fname + ".h5"))
+#         return model
+#     except OSError:
+#         print("Cannot find model by " + fname + " to load.")
+#         exit()
 
 # Features accounted for separately
 def visualiseModel(model, fname):
@@ -189,7 +190,7 @@ def dFusionModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
 #    print(model.summary())
     return model
 
-def decisionModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+def catFtrModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -224,7 +225,7 @@ def decisionModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     # print(model.summary())
     return model
 
-def featureModel(lr, mom): #(dRate): # (dRate):
+def compFtrModel(lr, mom): #(dRate): # (dRate):
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -258,27 +259,17 @@ def saveData(list, fname):
         writeFile.close()
     print(fname + " saved")
 
-def saveHistory(fname, history):
-    global awsDir
-    global curDir
-    if isAws is True:
-        dir = path.join(awsDir, "model histories")
-    else:
-        dir = path.join(curDir, "model histories")
+def saveHistory(fname, history, mainPath):
+    dir = path.join(mainPath, "model histories")
     if not path.exists(dir):
         os.makedirs(dir)
-    with open(dir + fname + ".pickle", "wb") as writeFile:
+    with open(path.join(dir, fname + ".pickle"), "wb") as writeFile:
         pickle.dump(history.history, writeFile)
         writeFile.close()
     print("Saved history for " + fname)
 
-def saveResults(dname, results, isAws):
-    global awsDir
-    global curDir
-    if isAws is True:
-        dir = path.join(awsDir, "grid search results", dname)
-    else:
-        dir = path.join(curDir, "grid search results", dname)
+def saveResults(dname, results, mainPath):
+    dir = path.join(mainPath, "grid search results", dname)
     os.makedirs(dir)
     with open(path.join(dir, "results.pickle"), "wb") as writeResult, open(path.join(dir, "dict.pickle"), "wb") as writeDict, open(path.join(dir, "best_score.pickle"), "wb") as writeScore, open(path.join(dir, "best_params.pickle"), "wb") as writeParams:
         pickle.dump(results, writeResult)
@@ -291,16 +282,11 @@ def saveResults(dname, results, isAws):
         writeParams.close()
     print("Saved grid search results for " + dname)
 
-def saveModel(fname, model):
-    global awsDir
-    global curDir
-    if isAws is True:
-        dir = path.join(awsDir, "models")
-    else:
-        dir = path.join(curDir, "models")
+def saveModel(fname, model, mainPath):
+    dir = path.join(mainPath, "models")
     if not path.exists(dir):
         os.makedirs(dir)
-    model.save(dir + fname + ".h5")
+    model.save(path.join(dir, fname + ".h5"))
     print("Saved model for " + fname)
 
 def toArray(list):
@@ -327,19 +313,13 @@ def toURL(path): # ENABLE IN PATHS DF
 #         pCounter += 1
 #     return updatedPartitions
 
-def batchPredict(df, model, noPartitions, isAws):
+def batchPredict(df, model, noPartitions, mainPath):
     # df = df.sample(n = 20)
-    global awsDir
-    global curDir
-    global counter
     updatedPartitions = np.empty((0, 512))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
-        if isAws is True:
-            dir = np.save(path.join(awsDir, "backup_data"), updatedPartitions)
-        else:
-            dir = np.save(path.join(curDir, "backup_data"), updatedPartitions)
+        dir = np.save(path.join(mainPath, "backup_data"), updatedPartitions)
         # np.save("backup_data", updatedPartitions)
         print("Saved backup")
         #saveData(updatedPartitions.tolist(), "backupData.csv")
@@ -352,9 +332,9 @@ def batchPredict(df, model, noPartitions, isAws):
 #     #saveData(predictions.tolist(), saveName + ".csv")
 #     print("Saved to " + saveName + ".npy")
 
-def predictAndSave(df, model, noPartitions, saveName, isAws):
+def predictAndSave(df, model, noPartitions, saveName, mainPath):
     print("Predicting for " + saveName)
-    predictions = batchPredict(df, model, noPartitions, isAws)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
+    predictions = batchPredict(df, model, noPartitions, mainPath)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
     np.save(saveName, predictions)
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
@@ -375,7 +355,7 @@ def predictAndSave(df, model, noPartitions, saveName, isAws):
 #     #saveData(predictions.tolist(), saveName + ".csv")
 #     print("Saved to " + saveName + ".npy")
 
-def recoverPredictAndSave(df, model, noPartitions, saveName, backupName):
+def recoverPredictAndSave(df, model, noPartitions, saveName, mainPath, backupName):
     global counter
     print("Predicting for " + saveName)
     backup = np.load(backupName + ".npy")
@@ -384,17 +364,11 @@ def recoverPredictAndSave(df, model, noPartitions, saveName, backupName):
     print(f"The backup length is {counter}")
     print("backup_data.npy will only back up the data remainder")
 #    predictions = batchPredict(df.tail(-backupLen), model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
-    predictions = batchPredict(df.tail(-backupLen), model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
+    predictions = batchPredict(df.tail(-backupLen), model, noPartitions, mainPath)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
     totalData = np.concatenate((backup, predictions), axis = 0)
     np.save(saveName, totalData)
     #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
-
-def getInputArray(fname):
-    inputArr = pd.read_csv(fname, header = None)
-    #inputArr = inputArr.sample(n = 20) #####################
-    inputArr = inputArr.to_numpy()
-    return inputArr
 
 def summariseResults(results):
     means = results.cv_results_["mean_test_score"]
@@ -404,38 +378,52 @@ def summariseResults(results):
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
-#def imageSntmtTrainValTest():
-    # train_datagen =  ImageDataGenerator(
-    #   preprocessing_function = preprocessing_function,
-    #   rotation_range=args.rotation,
-    #   shear_range=args.shear,
-    #   zoom_range=args.zoom,
-    #   horizontal_flip=args.h_flip,
-    #   vertical_flip=args.v_flip
-    # )
-    #
-    # val_datagen = ImageDataGenerator(preprocessing_function=preprocessing_function)
-    #
-    # train_generator = train_datagen.flow_from_directory(TRAIN_DIR, target_size=(HEIGHT, WIDTH), batch_size=BATCH_SIZE)
-    #
-    # validation_generator = val_datagen.flow_from_directory(VAL_DIR, target_size=(HEIGHT, WIDTH), batch_size=BATCH_SIZE)
+def trainMainModel(model, dir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath):
+    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
+    logger = CSVLogger(path.join(dir, logName + ".csv"), append = False, separator = ",")
+    modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [logger, earlyStoppage])
+    saveHistory(historyName, modelHistory, mainPath)
+    saveModel(modelName, tModel, mainPath)
+        # tModel = textModel()
+        # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
+        # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
+        # saveHistory("text_model_history", tModelHistory)
+        # saveModel("text_model", tModel)
+
+def imageSntmtTrainValTest(model, mainPath, trainLen, valLen, testLen):
+    batchSize = 16
+    dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
+    dir = path.join(mainPath, "b-t4sa", "data")
+    trainGen = dataGen.flow_from_directory(path.join(dir, "train"), target_size=(224, 224), batch_size = batchSize)
+    valGen = dataGen.flow_from_directory(path.join(dir, "val"), target_size=(224, 224), batch_size = batchSize)
+    logger = CSVLogger(path.join("logs", "image_sentiments_log.csv"), append = False, separator = ",")
+    modelHistory = model.fit_generator(trainGen,
+        steps_per_epoch = -(-trainLen // batchSize),
+        validation_data = valGen,
+        validation_steps = -(-valLen // batchSize),
+        epochs = 50,
+        callbacks = [tLogger, earlyStoppage])
+    saveHistory("decision_model_history", modelHistory)
+    saveModel("decision_model", model)
 
 def main():
-    global awsDir
-    global curDir
-    trainFile = "/b-t4sa/model_input_training.csv" # append _subset for tuning
-    valFile = "/b-t4sa/model_input_validation.csv"
-    testFile = "/b-t4sa/model_input_testing.csv"
+    awsDir = "/media/Data3/sewell"
+    curDir = "."
     isAws = True
     if isAws is True:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
-        trainFile = awsDir + trainFile
-        valFile = awsDir + valFile
-        testFile = awsDir + testFile
+        mainPath = awsDir
+        # trainFile = awsDir + trainFile
+        # valFile = awsDir + valFile
+        # testFile = awsDir + testFile
     else:
-        trainFile = curDir + trainFile
-        valFile = curDir + valFile
-        testFile = curDir + testFile
+        mainPath = curDir
+        # trainFile = curDir + trainFile
+        # valFile = curDir + valFile
+        # testFile = curDir + testFile
+    trainFile = path.join(mainPath, "b-t4sa/model_input_training.csv")
+    valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
+    testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
     pd.set_option('display.max_colwidth', -1)
     dfTrain = pd.read_csv(trainFile, header = 0)
     dfVal = pd.read_csv(valFile, header = 0)
@@ -479,18 +467,19 @@ def main():
     #     saveHistory("vgg_sentiment_model_history", tModelHistory)
     #     saveModel("vgg_sentiment_model_model", tModel)
 
-    if isAws is True:
-        dir = path.join(awsDir, "b-t4sa", "image features")
-    else:
-        dir = path.join(curDir, "b-t4sa", "image features")
+    # if isAws is True:
+    #     dir = path.join(awsDir, "b-t4sa", "image features")
+    # else:
+    #     dir = path.join(curDir, "b-t4sa", "image features")
+    dir = path.join(mainPath, "b-t4sa", "image features")
     #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #         #input("Predicting and saving feature data completed")
     if not path.exists(dir):
         os.makedirs(dir)
         featureVGG = initFeatureVGG()
-        predictAndSave(trainPaths, featureVGG, 30, dir + "/image_features_training", isAws)
-        predictAndSave(valPaths, featureVGG, 10, dir + "/image_features_validation", isAws)
-        predictAndSave(testPaths, featureVGG, 10, dir + "/image_features_testing", isAws)
+        predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_features_training"), mainPath)
+        predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_features_validation", mainPath)
+        predictAndSave(testPaths, featureVGG, 10, dir + "/image_features_testing", mainPath)
         input("Predicting and saving feature data completed")
     trainImgFeatures = np.load(dir + "/image_features_training.npy") # getInputArray # 50 FOR TUNING
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
@@ -504,33 +493,69 @@ def main():
     if not path.exists(dir):
         os.makedirs(dir)
         categoryVGG = initCategoryVGG()
-        predictAndSave(trainPaths, categoryVGG, 30, dir + "/image_categories_training", isAws) # Remove recover, change 10 to 20, remove backupName
-        predictAndSave(valPaths, categoryVGG, 10, dir + "/image_categories_validation", isAws)
-        predictAndSave(testPaths, categoryVGG, 10, dir + "/image_categories_testing", isAws)
+        predictAndSave(trainPaths, categoryVGG, 30, dir + "/image_categories_training", mainPath) # Remove recover, change 10 to 20, remove backupName
+        predictAndSave(valPaths, categoryVGG, 10, dir + "/image_categories_validation", mainPath)
+        predictAndSave(testPaths, categoryVGG, 10, dir + "/image_categories_testing", mainPath)
         input("Predicting and saving categories data completed")
-    trainImgCats = np.load(dir + "/image_categories_training.npy") # 50 FOR TUNING
-    # valImgClass = np.load(dir + "/image_classifications_validation.npy")
-    # testImgClass = np.load(dir + "/image_classifications_testing.npy")
+    trainImgCategories = np.load(pathdir + "/image_categories_training.npy") # 50 FOR TUNING
+    # valImgCategories = np.load(dir + "/image_classifications_validation.npy")
+    # testImgCategories = np.load(dir + "/image_classifications_testing.npy")
     #
-    # dir = "./logs"
-    # if not path.exists(dir):
-    #     os.mkdir(dir)
+    logDir = "./logs"
+    if not path.exists(dir):
+        os.mkdir(dir)
     #
-    # earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
+    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     #
     # imageSntmtTrainEval()
 
-    # tModel = textModel()
-    # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
-    # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
-    # saveHistory("text_model_history", tModelHistory)
-    # saveModel("text_model", tModel)
-
-    # dModel = decisionModel()
-    # dLogger = CSVLogger(dir + "/decision_log.csv", append = False, separator = ",")
-    # dModelHistory = dModel.fit([XTrain, trainImgCats], to_categorical(YTrain), validation_data = ([XVal, valImgClass], to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [dLogger])#, earlyStoppage])
-    # saveHistory("decision_model_history", dModelHistory)
-    # saveModel("decision_model", dModel)
+    # trainMainModel(textModel(),
+    #     logDir,
+    #     "text_log",
+    #     XTrain,
+    #     YTrain,
+    #     XVal,
+    #     YVal,
+    #     "text_model_history",
+    #     "text_model",
+    #     mainPath)
+    # # tModel = textModel()
+    # # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
+    # # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
+    # # saveHistory("text_model_history", tModelHistory)
+    # # saveModel("text_model", tModel)
+    #
+    # trainMainModel(catFtrModel(),
+    #     logDir,
+    #     "cat_ftr-lvl_log",
+    #     [XTrain, trainImgCategories],
+    #     YTrain,
+    #     [XVal, valImgCategories],
+    #     YVal,
+    #     "cat_ftr-lvl_model_history",
+    #     "cat_ftr-lvl_model",
+    #     mainPath)
+    # # dModel = catFtrModel()
+    # # dLogger = CSVLogger(logDir + "/decision_log.csv", append = False, separator = ",")
+    # # dModelHistory = dModel.fit([XTrain, trainImgCategories], to_categorical(YTrain), validation_data = ([XVal, valImgCategories], to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [dLogger])#, earlyStoppage])
+    # # saveHistory("decision_model_history", dModelHistory)
+    # # saveModel("decision_model", dModel)
+    #
+    # trainMainModel(compFtrModel(),
+    #     logDir,
+    #     "cmpt_ftr-lvl_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     "cmp_ftr-lvl_model_history",
+    #     "cmp_ftr-lvl_model",
+    #     mainPath)
+    # fModel = compFtrModel()
+    # fLogger = CSVLogger(logDir + "/feature_log.csv", append = False, separator = ",")
+    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [fLogger])#, earlyStoppage])
+    # saveHistory("feature_model_history", fModelHistory)
+    # saveModel("feature_model", fModel)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
@@ -583,18 +608,18 @@ def main():
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5)
     # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("d_batch_sizes", results, isAws)
 
     # hiddenLayers = [0, 1]
     # paramGrid = dict(extraHLayers = hiddenLayers)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
     # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("d_extra_hidden_layers_opt4", results, isAws)
@@ -602,40 +627,34 @@ def main():
     # lrs = [0.09]
     # moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
     # paramGrid = dict(lr = lrs, mom = moms)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
     # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("d_lr_008", results, isAws)
 
     # dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = decisionModel, verbose = 1, epochs = 5, batch_size = 16)
+    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
     # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("d_h3_dropout_2h", results, isAws)
 
-    # fModel = featureModel()
-    # fLogger = CSVLogger(dir + "/feature_log.csv", append = False, separator = ",")
-    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [fLogger])#, earlyStoppage])
-    # saveHistory("feature_model_history", fModelHistory)
-    # saveModel("feature_model", fModel)
-
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5)
+    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = compFtrModel, verbose = 1, epochs = 5)
     # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCats[i]] for i in range(XTrain.shape[0])])
+    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("f_batch_sizes", results, isAws)
 
     # dropout = [0.6, 0.7, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
+    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = compFtrModel, verbose = 1, epochs = 5, batch_size = 16)
     # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
@@ -645,7 +664,7 @@ def main():
 
     # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
     # paramGrid = dict(dRate = dropout)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
+    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = compFtrModel, verbose = 1, epochs = 5, batch_size = 16)
     # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
@@ -655,7 +674,7 @@ def main():
     # lrs = [0.075]
     # moms = [0.0, 0.2, 0.4, 0.6, 0.8]
     # paramGrid = dict(lr = lrs, mom = moms)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = featureModel, verbose = 1, epochs = 5, batch_size = 16)
+    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = compFtrModel, verbose = 1, epochs = 5, batch_size = 16)
     # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
