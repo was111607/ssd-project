@@ -484,10 +484,7 @@ def main():
     trainImgFeatures = np.load(dir + "/image_features_training.npy") # getInputArray # 50 FOR TUNING
     # valImgFeatures = np.load(dir + "/image_features_validation.npy")
     # testImgFeatures = np.load(dir + "/image_features_testing.npy")
-    if isAws is True:
-        dir = path.join(awsDir, "b-t4sa", "image categories")
-    else:
-        dir = path.join(curDir, "b-t4sa", "image categories")
+    dir = path.join(mainPath, "b-t4sa", "image categories")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
     categoryVGG = initCategoryVGG()
