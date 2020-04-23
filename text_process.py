@@ -98,7 +98,7 @@ def sentimentVGG():
     model.add(Dense(3, activation = "softmax"))
     for layer in model.layers[:-5]:
         layer.trainable = False
-        print(l.trainable)
+        print(layer.trainable)
 #    visualiseModel(model, "decision_vgg.png")
     model.compile(optimizer = "Adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
