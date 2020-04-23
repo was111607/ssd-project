@@ -414,14 +414,8 @@ def main():
     if isAws is True:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
-        # trainFile = awsDir + trainFile
-        # valFile = awsDir + valFile
-        # testFile = awsDir + testFile
     else:
         mainPath = curDir
-        # trainFile = curDir + trainFile
-        # valFile = curDir + valFile
-        # testFile = curDir + testFile
     trainFile = path.join(mainPath, "b-t4sa/model_input_training.csv")
     valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
@@ -440,10 +434,6 @@ def main():
     valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
-    # if isAws is True:
-    #     dir = path.join(awsDir, "b-t4sa", "image features")
-    # else:
-    #     dir = path.join(curDir, "b-t4sa", "image features")
     dir = path.join(mainPath, "b-t4sa", "image features")
     #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #         #input("Predicting and saving feature data completed")
