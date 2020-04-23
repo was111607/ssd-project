@@ -490,6 +490,7 @@ def main():
         dir = path.join(curDir, "b-t4sa", "image categories")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
+    categoryVGG = initCategoryVGG()
     recoverPredictAndSave(valPaths, categoryVGG, 1, path.join(dir, "image_categories_validation"), mainPath, "backup_data", "backup_data_2")
     predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath, "backup_data")
     input("Predicting and saving categories data completed")
