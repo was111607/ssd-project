@@ -8,7 +8,7 @@ from os import path
 from keras.callbacks import CSVLogger, EarlyStopping, LearningRateScheduler
 from keras.models import Model, Sequential, load_model, model_from_json
 from keras.preprocessing.image import load_img, img_to_array, ImageDataGenerator
-from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Flatten, Dropout, RepeatVector
+from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Flatten, Dropout, RepeatVector, Conv2D, MaxPooling2D
 from keras.layers.merge import add, concatenate
 from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.utils import to_categorical, plot_model
@@ -119,131 +119,131 @@ def t4saVGG(mainPath): # evaluate gen
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
     # Block 1
-    x = layers.Conv2D(64, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv1_1",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(input)
-    x = layers.Conv2D(64, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv1_2",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block1_pool")(x)
+    x = Conv2D(64, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv1_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(input)
+    x = Conv2D(64, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv1_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block1_pool")(x)
 
     # Block 2
-    x = layers.Conv2D(128, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv2_1",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(128, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv2_2",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block2_pool")(x)
+    x = Conv2D(128, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv2_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(128, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv2_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block2_pool")(x)
 
     # Block 3
-    x = layers.Conv2D(256, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv3_1",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(256, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv3_2",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(256, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv3_3",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(256, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv3_4",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block3_pool")(x)
+    x = Conv2D(256, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv3_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(256, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv3_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(256, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv3_3",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(256, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv3_4",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block3_pool")(x)
 
     # Block 4
-    x = layers.Conv2D(512, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv4_1",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(512, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv4_2",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(512, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv4_3",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(512, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv4_4",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block4_pool")(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv4_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv4_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv4_3",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv4_4",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block4_pool")(x)
 
     # Block 5
-    x = layers.Conv2D(512, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv5_1",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(512, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv5_2",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(512, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv5_3",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.Conv2D(512, (3, 3),
-                      activation = "relu",
-                      padding = "same",
-                      name = "conv5_4",
-                      bias_regularizer = reg,
-                      kernel_regularizer = reg,
-                      trainable = False)(x)
-    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block5_pool")(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv5_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv5_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv5_3",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv5_4",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = False)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block5_pool")(x)
     flatten = Flatten(name = "flatten")(x)
     hidden1 = Dense(4096,
         activation = "relu",
