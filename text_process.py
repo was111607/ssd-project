@@ -96,7 +96,6 @@ def scheduledLr(epoch):
 def t4saVGG(mainPath): # evaluate gen
     vgg19 = VGG19(weights = None, include_top = False)
     model = Sequential()
-    model.add(Input(shape=(224, 224, 3,)))
     layerNames = ["conv1_1",
         "conv1_2",
         "conv2_1",
@@ -127,6 +126,7 @@ def t4saVGG(mainPath): # evaluate gen
     regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
     for layer in model.layers:
         if ("pool" not in layer.name) and ("dropout" not in layer.name):
+            print(layer.name + "is getting replaced")
             layer.name = layerNames[layerCounter]
             layerCounter += 1
         for attribute in ["kernel_regularizer", "bias_regularizer"]:
