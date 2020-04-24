@@ -95,7 +95,6 @@ def scheduledLr(epoch):
         return initialLr / (10 ** decayStep)
 
 def t4saVGG(mainPath): # evaluate gen
-#    vgg19 = VGG19(weights = None, include_top = False, input_tensor = input)
     layerNames = ["conv1_1",
         "conv1_2",
         "conv2_1",
@@ -113,12 +112,8 @@ def t4saVGG(mainPath): # evaluate gen
         "conv5_3",
         "conv5_4"]
     layerCounter = 0
-    # for layer in vgg19.layers:
-    #     model.add(layer)
-    # vgg19out = vgg19.output
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
-    # Block 1
     x = Conv2D(64, (3, 3),
             activation = "relu",
             padding = "same",
@@ -270,50 +265,14 @@ def t4saVGG(mainPath): # evaluate gen
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     for layer in model.layers:
         print(layer.name)
-    # for layer in model.layers:
-    #     if "conv" in layer.name:
-    #         print("set to" + layerNames[layerCounter])
-    #         layer.name = layerNames[layerCounter]
-    #         layerCounter += 1
-    #     for attribute in ["kernel_regularizer", "bias_regularizer"]:
-    #         if (hasattr(layer, attribute) is True) and (layer.trainable is True):
-    #             print("regs set")
-    #             setattr(layer, attribute, regulariser)
-    # print("before:")
-    # for layer in model.layers:
-    #     print(layer.weights)
-    #     print("\n")
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
-    print("after:")
-    for layer in model.layers:
-        print(layer.weights)
-        print("\n")
     print(model.summary())
-#    saveModel(model, mainPath, "vgg19_ft")
-    # try:
-    #     dir = path.join(mainPath, "VGG_ft_structure.json")
-    #     modelJson = model.to_json()
-    #     with open(dir, "w") as writeJson:
-    #         writeJson.write(modelJson)
-    #         writeJson.close()
-    #     # Reload json to implement change in regularizers
-    #     # model.save_weights("yes.h5")
-    #     with open(dir, "r") as readJson:
-    #         modelJson = readJson.read()
-    #         readJson.close()
-    # except Exception as e:
-    #     print(traceback.format_exc())
-    #     exit()
-    # model = model_from_json(modelJson)
-    #model = loadModel(mainPath, "vgg19_ft")
-    #model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
-    # for layer in model.layers[-2]:
-    #     layer.trainable = False
     for layer in model.layers:
         print(layer.name)
         print(layer.losses)
         print(layer.weights)
         print("\n")
+    visualiseModel(model, "vgg_ft.png")
     input()
     return model
 
@@ -671,7 +630,7 @@ def main():
     trainImgFeatures = np.load(path.join(dir, "image_features_training.npy")) # getInputArray # 50 FOR TUNING
     # valImgFeatures = np.load(path.join(dir, "image_features_validation.npy"))
     # testImgFeatures = np.load(path.join(dir, "image_features_testing.npy"))
-    dir = path.join(mainPath, "b-t4sa", "image categories")
+    dir = path.join(mainPath, "b-t4sa", "test")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
     if not path.exists(dir):
@@ -681,7 +640,7 @@ def main():
         predictAndSave(valPaths, categoryVGG, 10, path.join(dir, "image_categories_validation"), mainPath, "backup_data")
         predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath, "backup_data")
         input("Predicting and saving categories data completed")
-    trainImgCategories = np.load(path.join(dir, "image_categories_training.npy")) # 50 FOR TUNING
+    #trainImgCategories = np.load(path.join(dir, "image_categories_training.npy")) # 50 FOR TUNING
     # valImgCategories = np.load(path.join(dir, "image_categories_validation.npy"))
     # testImgCategories = np.load(path.join(dir, "image_categories_testing.npy"))
     #
