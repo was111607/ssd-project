@@ -92,8 +92,11 @@ def getImgPredict(df, model): # pathList old arg
 def scheduledLr(epoch):
     initialLr = 0.001
     if epoch % 4 == 0:
-        decayStep = epoch // 4
-        return initialLr / (10 ** decayStep)
+        decayStep = epoch / 4
+        ans = initialLr / (10.0 ** decayStep)
+        print("ans")
+        print(type(ans))
+        return ans
 
 def t4saVGG(mainPath): # evaluate gen
     # layerNames = ["conv1_1",
@@ -576,7 +579,7 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
     logger = CSVLogger(path.join(logDir, "image_sentiments_log.csv"), append = False, separator = ",")
     cb = [earlyStoppage, logger]
     if isFt is True:
-        lrScheduler = LearningRateScheduler(scheduledLr)
+        lrScheduler = LearningRateScheduler(scheduledLr, verbose = 1)
         cb.append(lrScheduler)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
