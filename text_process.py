@@ -289,7 +289,7 @@ def t4saVGG(mainPath): # evaluate gen
         print(layer.weights)
         print("\n")
     print(model.summary())
-    saveModel(model, mainPath, "vgg19_ft")
+#    saveModel(model, mainPath, "vgg19_ft")
     # try:
     #     dir = path.join(mainPath, "VGG_ft_structure.json")
     #     modelJson = model.to_json()
@@ -305,8 +305,8 @@ def t4saVGG(mainPath): # evaluate gen
     #     print(traceback.format_exc())
     #     exit()
     # model = model_from_json(modelJson)
-    model = loadModel(mainPath, "vgg19_ft")
-    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
+    #model = loadModel(mainPath, "vgg19_ft")
+    #model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     # for layer in model.layers[-2]:
     #     layer.trainable = False
     for layer in model.layers:
