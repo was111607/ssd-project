@@ -138,29 +138,41 @@ def t4saVGG(mainPath): # evaluate gen
             if (hasattr(layer, attribute) is True) and (layer.trainable is True):
                 print("regs set")
                 setattr(layer, attribute, regulariser)
+    print("before:")
+    for layer in model.layers:
+        print(layer.weights)
+        print("\n")
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
+    print("after:")
+    for layer in model.layers:
+        print(layer.weights)
+        print("\n")
     print(model.summary())
-    try:
-        dir = path.join(mainPath, "VGG_ft_structure.json")
-        modelJson = model.to_json()
-        with open(dir, "w") as writeJson:
-            writeJson.write(modelJson)
-            writeJson.close()
-        # Reload json to implement change in regularizers
-        # model.save_weights("yes.h5")
-        with open(dir, "r") as readJson:
-            modelJson = readJson.read()
-            readJson.close()
-    except Exception as e:
-        print(traceback.format_exc())
-        exit()
-    model = model_from_json(modelJson)
+    saveModel(model, mainPath, "vgg19_ft")
+    # try:
+    #     dir = path.join(mainPath, "VGG_ft_structure.json")
+    #     modelJson = model.to_json()
+    #     with open(dir, "w") as writeJson:
+    #         writeJson.write(modelJson)
+    #         writeJson.close()
+    #     # Reload json to implement change in regularizers
+    #     # model.save_weights("yes.h5")
+    #     with open(dir, "r") as readJson:
+    #         modelJson = readJson.read()
+    #         readJson.close()
+    # except Exception as e:
+    #     print(traceback.format_exc())
+    #     exit()
+    # model = model_from_json(modelJson)
+    model = loadModel(mainPath, "vgg19_ft")
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     for layer in model.layers[-2]:
         layer.trainable = False
     for layer in model.layers:
         print(layer.name)
         print(layer.losses)
+        print(layer.weights)
+        print("\n")
     input()
     return model
 
@@ -198,19 +210,14 @@ def featureVGG():
 #    visualiseModel(model, "feature_vgg.png")
     return model
 
-# def loadModel(fname):
-#     try:
-#         global awsDir
-#         global curDir
-#         if isAws is True:
-#             dir = path.join(awsDir, "models")
-#         else:
-#             dir = path.join(curDir, "models")
-#         model = load_model(path.join("models", fname + ".h5"))
-#         return model
-#     except OSError:
-#         print("Cannot find model by " + fname + " to load.")
-#         exit()
+def loadModel(mainPath, fname):
+    try:
+        dir = path.join(mainPath, "models")
+        model = load_model(path.join("models", fname + ".h5"))
+        return model
+    except OSError:
+        print("Cannot find model by " + fname + " to load.")
+        exit()
 
 # Features accounted for separately
 def visualiseModel(model, fname):
@@ -359,7 +366,7 @@ def saveResults(dname, results, mainPath):
         writeParams.close()
     print("Saved grid search results for " + dname)
 
-def saveModel(fname, model, mainPath):
+def saveModel(model, mainPath, fname):
     dir = path.join(mainPath, "models")
     if not path.exists(dir):
         os.makedirs(dir)
@@ -460,7 +467,7 @@ def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, h
     logger = CSVLogger(path.join(logDir, logName + ".csv"), append = False, separator = ",")
     modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [logger, earlyStoppage])
     saveHistory(historyName, modelHistory, mainPath)
-    saveModel(modelName, model, mainPath)
+    saveModel(model, mainPath, modelName)
 
 def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen, isFt):
     batchSize = 16
@@ -481,7 +488,7 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
         epochs = 50,
         callbacks = cb)
     # saveHistory(historyName, modelHistory)
-    # saveModel(modelName, model, mainPath)
+    # saveModel(model, mainPath, modelName)
 
 def main():
     awsDir = "/media/Data3/sewell"
@@ -564,7 +571,7 @@ def main():
     # # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
     # # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
     # # saveHistory("text_model_history", tModelHistory)
-    # # saveModel("text_model", tModel)
+    # # saveModel(tModel, mainPath, "text_model")
     #
     # trainMainModel(catFtrModel(),
     #     logDir,
@@ -580,7 +587,7 @@ def main():
     # # dLogger = CSVLogger(logDir + "/decision_log.csv", append = False, separator = ",")
     # # dModelHistory = dModel.fit([XTrain, trainImgCategories], to_categorical(YTrain), validation_data = ([XVal, valImgCategories], to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [dLogger])#, earlyStoppage])
     # # saveHistory("decision_model_history", dModelHistory)
-    # # saveModel("decision_model", dModel)
+    # # saveModel(dModel, mainPath, "decision_model")
     #
     # trainMainModel(compFtrModel(),
     #     logDir,
@@ -596,7 +603,7 @@ def main():
     # fLogger = CSVLogger(logDir + "/feature_log.csv", append = False, separator = ",")
     # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [fLogger])#, earlyStoppage])
     # saveHistory("feature_model_history", fModelHistory)
-    # saveModel("feature_model", fModel)
+    # saveModel(fModel, mainPath, "feature_model")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
