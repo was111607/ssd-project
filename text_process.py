@@ -128,7 +128,7 @@ def t4saVGG(mainPath): # evaluate gen
     for layer in model.layers:
         if "pool" not in layer.name:
             layer.name = layerNames[0]
-            counter += 1
+            layerCounter += 1
         for attribute in ["kernel_regularizer", "bias_regularizer"]:
             if (hasattr(layer, attribute) is True) and (layer.trainable is True):
                 setattr(layer, attribute, regulariser)
