@@ -125,6 +125,8 @@ def t4saVGG(mainPath): # evaluate gen
     model = Model(input = vgg19.input, output = output)
     regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
     for layer in model.layers:
+        print(layer.name)
+    for layer in model.layers:
         if "conv" in layer.name:
             print("set to" + layerNames[layerCounter])
             layer.name = layerNames[layerCounter]
