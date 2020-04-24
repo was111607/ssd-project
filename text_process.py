@@ -136,10 +136,10 @@ def t4saVGG(mainPath): # evaluate gen
     dir = path.join(mainPath, "VGG_ft_structure.json")
     # Reload json to implement change in regularizers
     with open(dir, "w") as writeJson:
-        writeJson.write(modelJSon)
-        writeJSon.close()
-    with open(dir, "r") as readJSon:
-        modelJson = readJSon.read()
+        writeJson.write(modelJson)
+        writeJson.close()
+    with open(dir, "r") as readJson:
+        modelJson = readJson.read()
         model = model_from_json(modelJson)
         readJson.close()
     for layer in model.layers:
