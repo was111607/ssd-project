@@ -127,6 +127,8 @@ def t4saVGG(mainPath): # evaluate gen
     regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
     for layer in model.layers:
         if "pool" not in layer.name:
+            print(layer.name)
+            print(layerNames[layerCounter])
             layer.name = layerNames[layerCounter]
             layerCounter += 1
         for attribute in ["kernel_regularizer", "bias_regularizer"]:
