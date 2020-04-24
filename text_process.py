@@ -247,7 +247,6 @@ def t4saVGG(mainPath): # evaluate gen
     flatten = Flatten(name = "flatten")(x)
     hidden1 = Dense(4096,
         activation = "relu",
-        padding = "same",
         name = "fc6",
         bias_regularizer = reg,
         kernel_regularizer = reg,
@@ -255,7 +254,6 @@ def t4saVGG(mainPath): # evaluate gen
     dropout1 = Dropout(0.5)(hidden1)
     hidden2 = Dense(4096,
         activation = "relu",
-        padding = "same",
         name = "fc7",
         bias_regularizer = reg,
         kernel_regularizer = reg,
