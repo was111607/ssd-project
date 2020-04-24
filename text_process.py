@@ -27,6 +27,7 @@ import copy
 from keras import losses
 from keras.utils.generic_utils import has_arg
 from keras import backend as K
+from runai import ga
 import traceback
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
@@ -262,6 +263,7 @@ def t4saVGG(mainPath): # evaluate gen
         trainable = True)(dropout2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
+    gaOptimiser = ga.keras.optimizers.Optimizer(optimiser, steps = 2)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     for layer in model.layers:
         print(layer.name)
@@ -569,8 +571,7 @@ def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, h
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName)
 
-def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen, isFt):
-    batchSize = 16
+def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen, isFt, batchSize = 16, epochs = 50):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, "image_sentiments_log.csv"), append = False, separator = ",")
     cb = [earlyStoppage, logger]
@@ -585,7 +586,7 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
         steps_per_epoch = -(-trainLen // batchSize),
         validation_data = valGen,
         validation_steps = -(-valLen // batchSize),
-        epochs = 50,
+        epochs = epochs,
         callbacks = cb)
     # saveHistory(historyName, modelHistory)
     # saveModel(model, mainPath, modelName)
@@ -655,7 +656,9 @@ def main():
         mainPath,
         dfTrain.shape[0],
         dfVal.shape[0],
-        True)
+        True,
+        batchSize = 32,
+        epochs = 15)
 
     # trainMainModel(textModel(),
     #     logDir,
