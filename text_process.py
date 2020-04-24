@@ -127,8 +127,6 @@ def t4saVGG(mainPath): # evaluate gen
     regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
     for layer in model.layers:
         if ("pool" not in layer.name) and ("dropout" not in layer.name):
-            print(layer.name)
-            print(layerNames[layerCounter])
             layer.name = layerNames[layerCounter]
             layerCounter += 1
         for attribute in ["kernel_regularizer", "bias_regularizer"]:
@@ -144,12 +142,12 @@ def t4saVGG(mainPath): # evaluate gen
         modelJson = readJson.read()
         model = model_from_json(modelJson)
         readJson.close()
-    optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     for layer in model.layers:
         print(layer.name)
         print(layer.losses)
+    optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     input()
     return model
 
