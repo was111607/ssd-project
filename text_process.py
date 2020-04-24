@@ -117,7 +117,6 @@ def t4saVGG(mainPath): # evaluate gen
         "fc8-retrain"]
     layerCounter = 0
     for layer in vgg19.layers:
-        layer.trainable = False
         model.add(layer)
     model.add(Dense(4096, activation = "relu"))
     model.add(Dropout(0.5))
@@ -142,12 +141,12 @@ def t4saVGG(mainPath): # evaluate gen
         modelJson = readJson.read()
         model = model_from_json(modelJson)
         readJson.close()
+    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     for layer in model.layers:
         print(layer.name)
         print(layer.losses)
     optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     input()
     return model
 
