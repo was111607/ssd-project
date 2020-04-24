@@ -96,8 +96,8 @@ def sentimentVGG():
     model.add(Dense(512, activation = "relu"))
     model.add(Dropout(0.5))
     model.add(Dense(3, activation = "softmax"))
-    for layer in model.layers[:-8]:
-        layer.trainable = False
+    # for layer in model.layers[:-8]:
+    #     layer.trainable = False
     model.compile(optimizer = "Adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
