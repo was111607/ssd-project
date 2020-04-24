@@ -8,7 +8,7 @@ from os import path
 from keras.callbacks import CSVLogger, EarlyStopping, LearningRateScheduler
 from keras.models import Model, Sequential, load_model, model_from_json
 from keras.preprocessing.image import load_img, img_to_array, ImageDataGenerator
-from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Dropout, RepeatVector
+from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Flatten, Dropout, RepeatVector
 from keras.layers.merge import add, concatenate
 from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.utils import to_categorical, plot_model
