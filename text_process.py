@@ -269,10 +269,12 @@ def t4saVGG(mainPath): # evaluate gen
     print(model.summary())
     for layer in model.layers:
         print(layer.name)
-        print(layer.losses)
-        print(layer.weights)
+        # print(layer.losses)
+        # print(layer.weights)
+
+        print(layer.trainable)
         print("\n")
-    visualiseModel(model, "vgg_ft.png")
+    # visualiseModel(model, "vgg_ft.png")
     input()
     return model
 
@@ -630,7 +632,7 @@ def main():
     trainImgFeatures = np.load(path.join(dir, "image_features_training.npy")) # getInputArray # 50 FOR TUNING
     # valImgFeatures = np.load(path.join(dir, "image_features_validation.npy"))
     # testImgFeatures = np.load(path.join(dir, "image_features_testing.npy"))
-    dir = path.join(mainPath, "b-t4sa", "test")
+    dir = path.join(mainPath, "b-t4sa", "image categories")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
     if not path.exists(dir):
