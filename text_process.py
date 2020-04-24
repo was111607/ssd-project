@@ -95,7 +95,8 @@ def scheduledLr(epoch):
         return initialLr / (10 ** decayStep)
 
 def t4saVGG(mainPath): # evaluate gen
-    vgg19 = VGG19(weights = None, include_top = False, input_shape = (224, 224, 3))
+    input = Input(shape = (224, 224, 3))
+    vgg19 = VGG19(weights = None, include_top = False, input_tensor = input)
     layerNames = ["conv1_1",
         "conv1_2",
         "conv2_1",
@@ -138,6 +139,7 @@ def t4saVGG(mainPath): # evaluate gen
                 print("regs set")
                 setattr(layer, attribute, regulariser)
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
+    print(model.summary())
     try:
         dir = path.join(mainPath, "VGG_ft_structure.json")
         modelJson = model.to_json()
