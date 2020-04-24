@@ -126,7 +126,6 @@ def t4saVGG(mainPath): # evaluate gen
     optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
-    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     for layer in model.layers:
         print(layer.name)
     for layer in model.layers:
@@ -138,22 +137,22 @@ def t4saVGG(mainPath): # evaluate gen
             if (hasattr(layer, attribute) is True) and (layer.trainable is True):
                 print("regs set")
                 setattr(layer, attribute, regulariser)
+    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     try:
         dir = path.join(mainPath, "VGG_ft_structure.json")
         modelJson = model.to_json()
-        model.load_weights("yes.h5")
         with open(dir, "w") as writeJson:
             writeJson.write(modelJson)
             writeJson.close()
         # Reload json to implement change in regularizers
-        model.save_weights("yes.h5")
+        # model.save_weights("yes.h5")
         with open(dir, "r") as readJson:
             modelJson = readJson.read()
-            model = model_from_json(modelJson)
             readJson.close()
     except Exception as e:
         print(traceback.format_exc())
         exit()
+    model = model_from_json(modelJson)
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     for layer in model.layers[-2]:
         layer.trainable = False
