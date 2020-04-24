@@ -123,7 +123,10 @@ def t4saVGG(mainPath): # evaluate gen
     x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax", name = "fc8-retrain")(x2)
     model = Model(input = vgg19.input, output = output)
+    optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
+    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     for layer in model.layers:
         print(layer.name)
     for layer in model.layers:
@@ -157,8 +160,6 @@ def t4saVGG(mainPath): # evaluate gen
     for layer in model.layers:
         print(layer.name)
         print(layer.losses)
-    optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     input()
     return model
 
