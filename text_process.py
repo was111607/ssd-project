@@ -94,7 +94,7 @@ def scheduledLr(epoch):
     if epoch % 4 == 0:
         decayStep = epoch / 4
         ans = initialLr / (10.0 ** decayStep)
-        print("ans")
+        print(ans)
         print(type(ans))
         return ans
 
