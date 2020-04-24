@@ -150,7 +150,7 @@ def t4saVGG(mainPath): # evaluate gen
                       bias_regularizer = reg,
                       kernel_regularizer = reg,
                       trainable = False)(x)
-    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block2_pool')(x)
+    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block2_pool")(x)
 
     # Block 3
     x = layers.Conv2D(256, (3, 3),
