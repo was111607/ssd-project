@@ -212,11 +212,11 @@ def featureVGG():
 
 def loadModel(mainPath, fname):
     try:
-        dir = path.join(mainPath, "models")
-        model = load_model(path.join("models", fname + ".h5"))
+        path = path.join(mainPath, "models", fname + ".h5")
+        model = load_model(path)
         return model
     except OSError:
-        print("Cannot find model by " + fname + " to load.")
+        print("Cannot find model: " + path + " to load.")
         exit()
 
 # Features accounted for separately
