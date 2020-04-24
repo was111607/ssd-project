@@ -144,8 +144,8 @@ def t4saVGG(mainPath): # evaluate gen
         readJson.close()
     # model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     for layer in yes.layers:
-        print(yes.name)
-        print(yes.losses)
+        print(layer.name)
+        print(layer.losses)
     optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
     yes.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     input()
