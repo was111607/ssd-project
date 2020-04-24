@@ -94,7 +94,7 @@ def scheduledLr(epoch):
         return initialLr / (10 ** decayStep)
 
 def t4saVGG(mainPath): # evaluate gen
-    vgg19 = VGG19(weights = None, include_top = False)
+    vgg19 = VGG19(weights = None, include_top = False, input_shape = (224, 224, 3))
     layerNames = ["conv1_1",
         "conv1_2",
         "conv2_1",
@@ -112,8 +112,8 @@ def t4saVGG(mainPath): # evaluate gen
         "conv5_3",
         "conv5_4"]
     layerCounter = 0
-    for layer in vgg19.layers:
-        model.add(layer)
+    # for layer in vgg19.layers:
+    #     model.add(layer)
     vgg19out = vgg19.output
     flatten = Flatten(name = "flatten")(vgg19out)
     hidden1 = Dense(4096, activation = "relu", name = "fc6")(flatten)
