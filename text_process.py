@@ -146,6 +146,8 @@ def t4saVGG(mainPath): # evaluate gen
     #     model = model_from_json(modelJson)
     #     readJson.close()
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
+    for layer in model.layers[-2]:
+        layer.trainable = False
     for layer in model.layers:
         print(layer.name)
         print(layer.losses)
