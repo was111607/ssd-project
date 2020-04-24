@@ -135,7 +135,9 @@ def t4saVGG(mainPath): # evaluate gen
     modelJson = model.to_json()
     dir = path.join(mainPath, "VGG_ft_structure.json")
     # Reload json to implement change in regularizers
+    model.save_weights("yes.h5")
     model = model_from_json(modelJson)
+    model.load_weights("yes.h5")
     # with open(dir, "w") as writeJson:
     #     writeJson.write(modelJson)
     #     writeJson.close()
