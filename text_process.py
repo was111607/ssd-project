@@ -126,7 +126,7 @@ def t4saVGG(mainPath): # evaluate gen
     model.add(Dense(3, activation = "softmax"))
     regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
     for layer in model.layers:
-        if "pool" not in layer.name:
+        if ("pool" not in layer.name) or ("dropout" not in layer.name):
             print(layer.name)
             print(layerNames[layerCounter])
             layer.name = layerNames[layerCounter]
