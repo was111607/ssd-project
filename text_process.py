@@ -145,7 +145,7 @@ def t4saVGG(mainPath): # evaluate gen
     for layer in model.layers:
         print(layer.names)
         print(layer.losses)
-    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5 "), by_name = True)
+    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
@@ -527,7 +527,7 @@ def main():
     if not path.exists(logDir):
         os.makedirs(logDir)
     #
-    imageSntmtTrain(t4saVGG(),
+    imageSntmtTrain(t4saVGG(mainPath),
         "decision_model",
         "decision_model_history",
         logDir,
