@@ -140,14 +140,14 @@ def t4saVGG(mainPath): # evaluate gen
         writeJson.close()
     with open(dir, "r") as readJson:
         modelJson = readJson.read()
-        model = model_from_json(modelJson)
+        yes = model_from_json(modelJson)
         readJson.close()
     # model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
-    for layer in model.layers:
-        print(layer.name)
-        print(layer.losses)
+    for layer in yes.layers:
+        print(yes.name)
+        print(yes.losses)
     optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    yes.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     input()
     return model
 
