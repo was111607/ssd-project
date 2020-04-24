@@ -120,7 +120,7 @@ def t4saVGG(mainPath): # evaluate gen
     flatten = Flatten(name = "flatten")(vgg19out)
     hidden1 = Dense(4096, activation = "relu", name = "fc6")(flatten)
     x1 = Dropout(0.5)(hidden1)
-    hidden2 = Dense(4096, activation = "relu", name = "fc8")(x1)
+    hidden2 = Dense(4096, activation = "relu", name = "fc7")(x1)
     x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax", name = "fc8-retrain")(x2)
     model = Model(input = vgg19.input, output = output)
