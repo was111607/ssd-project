@@ -292,7 +292,7 @@ def sentimentVGG():
     model.compile(optimizer = "Adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-def categoryVGG():
+def initCatVGG():
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers:
@@ -301,7 +301,7 @@ def categoryVGG():
 #    visualiseModel(model, "decision_vgg.png")
     return model
 
-def featureVGG():
+def initFtrVGG():
     vgg19 = VGG19(weights = "imagenet")
     model = Sequential()
     for layer in vgg19.layers[:-1]: # Output of FC2 layer
@@ -622,7 +622,7 @@ def main():
     #         #input("Predicting and saving feature data completed")
     if not path.exists(dir):
         os.makedirs(dir)
-        featureVGG = featureVGG()
+        featureVGG = initFtrVGG()
         predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_features_training"), mainPath, "backup_data")
         predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_features_validation"), mainPath, "backup_data")
         predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_features_testing"), mainPath, "backup_data")
@@ -635,7 +635,7 @@ def main():
     #         #input("Predicting and saving classification data completed")
     if not path.exists(dir):
         os.makedirs(dir)
-        categoryVGG = categoryVGG()
+        categoryVGG = initCatVGG()
         predictAndSave(trainPaths, categoryVGG, 30, path.join(dir, "image_categories_training"), mainPath, "backup_data") # Remove recover, change 10 to 20, remove backupNam
         predictAndSave(valPaths, categoryVGG, 10, path.join(dir, "image_categories_validation"), mainPath, "backup_data")
         predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath, "backup_data")
