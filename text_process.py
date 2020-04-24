@@ -111,33 +111,29 @@ def t4saVGG(mainPath): # evaluate gen
         "conv5_1",
         "conv5_2",
         "conv5_3",
-        "conv5_4",
-        "fc6",
-        "fc7",
-        "fc8-retrain"]
+        "conv5_4"]
     layerCounter = 0
     for layer in vgg19.layers:
         model.add(layer)
-    model.add(Dense(4096, activation = "relu"))
+    model.add(Flatten(name = "flatten"))
+    model.add(Dense(4096, activation = "relu", name = "fc6"))
     model.add(Dropout(0.5))
-    model.add(Dense(4096, activation = "relu"))
+    model.add(Dense(4096, activation = "relu", name = "fc8"))
     model.add(Dropout(0.5))
-    model.add(Dense(3, activation = "softmax"))
+    model.add(Dense(3, activation = "softmax", name = "fc8-retrain"))
     regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
     for layer in model.layers:
-        if ("pool" not in layer.name) and ("dropout" not in layer.name):
-            print(layer.name + "is getting replaced")
+        if "conv" in layer.name:
             layer.name = layerNames[layerCounter]
             layerCounter += 1
         for attribute in ["kernel_regularizer", "bias_regularizer"]:
             if (hasattr(layer, attribute) is True) and (layer.trainable is True):
                 setattr(layer, attribute, regulariser)
-                print("set")
-    #modelJson = model.to_json()
+    modelJson = model.to_json()
     dir = path.join(mainPath, "VGG_ft_structure.json")
     # Reload json to implement change in regularizers
     model.save_weights("yes.h5")
-    model = model_from_json(model.to_json())
+    model = model_from_json(modelJson)
     model.load_weights("yes.h5")
     # with open(dir, "w") as writeJson:
     #     writeJson.write(modelJson)
