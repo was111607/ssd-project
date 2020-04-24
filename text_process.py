@@ -95,22 +95,22 @@ def scheduledLr(epoch):
         return initialLr / (10 ** decayStep)
 
 def t4saVGG(mainPath): # evaluate gen
-    layerNames = ["conv1_1",
-        "conv1_2",
-        "conv2_1",
-        "conv2_2",
-        "conv3_1",
-        "conv3_2",
-        "conv3_3",
-        "conv3_4",
-        "conv4_1",
-        "conv4_2",
-        "conv4_3",
-        "conv4_4",
-        "conv5_1",
-        "conv5_2",
-        "conv5_3",
-        "conv5_4"]
+    # layerNames = ["conv1_1",
+    #     "conv1_2",
+    #     "conv2_1",
+    #     "conv2_2",
+    #     "conv3_1",
+    #     "conv3_2",
+    #     "conv3_3",
+    #     "conv3_4",
+    #     "conv4_1",
+    #     "conv4_2",
+    #     "conv4_3",
+    #     "conv4_4",
+    #     "conv5_1",
+    #     "conv5_2",
+    #     "conv5_3",
+    #     "conv5_4"]
     layerCounter = 0
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
@@ -266,16 +266,14 @@ def t4saVGG(mainPath): # evaluate gen
     for layer in model.layers:
         print(layer.name)
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
-    print(model.summary())
-    for layer in model.layers:
-        print(layer.name)
-        # print(layer.losses)
-        # print(layer.weights)
-
-        print(layer.trainable)
-        print("\n")
+    # print(model.summary())
+    # for layer in model.layers:
+    #     print(layer.name)
+    #     print(layer.losses)
+    #     print(layer.weights)
+    #     print(layer.trainable)
+    #     print("\n")
     # visualiseModel(model, "vgg_ft.png")
-    input()
     return model
 
 def sentimentVGG():
