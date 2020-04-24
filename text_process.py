@@ -132,7 +132,7 @@ def t4saVGG(mainPath): # evaluate gen
         for attribute in ["kernel_regularizer", "bias_regularizer"]:
             if (hasattr(layer, attribute) is True) and (layer.trainable is True):
                 setattr(layer, attribute, regulariser)
-    modelJSon = model.to_json()
+    modelJson = model.to_json()
     dir = path.join(mainPath, "VGG_ft_structure.json")
     # Reload json to implement change in regularizers
     with open(dir, "w") as writeJson:
