@@ -94,7 +94,7 @@ def scheduledLr(epoch):
         return initialLr / (10 ** decayStep)
 
 def t4saVGG(mainPath): # evaluate gen
-    vgg19 = VGG19(weights = "./vgg19_ft_weights.h5", include_top = False)
+    vgg19 = VGG19(weights = path.join(mainPath, "vgg19_ft_weights.h5"), include_top = False)
     model = Sequential()
     layerNames = ["conv1_1",
         "conv1_2",
