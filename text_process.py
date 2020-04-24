@@ -5,13 +5,14 @@ import pickle
 import numpy as np
 import os
 from os import path
-from keras.callbacks import CSVLogger, EarlyStopping
-from keras.models import Model, Sequential, load_model
+from keras.callbacks import CSVLogger, EarlyStopping, LearningRateScheduler
+from keras.models import Model, Sequential, load_model, model_from_json
 from keras.preprocessing.image import load_img, img_to_array, ImageDataGenerator
 from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Dropout, RepeatVector
 from keras.layers.merge import add, concatenate
 from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.utils import to_categorical, plot_model
+from keras import regularizers
 from keras.optimizers import SGD
 from ast import literal_eval
 from io import BytesIO
@@ -84,6 +85,70 @@ def getImgReps(df):
 def getImgPredict(df, model): # pathList old arg
     imageReps = getImgReps(df)
     return model.predict(imageReps, batch_size = 16)
+
+# initialise using LearningRateScheduler and add as callback to training if required
+def scheduledLr(epoch):
+    initialLr = 0.001
+    if epoch % 4 == 0:
+        decayStep = epoch // 4
+        return initialLr / (10 ** decayStep)
+
+def t4saVGG(mainPath): # evaluate gen
+    vgg19 = VGG19(weights = None, include_top = False)
+    model = Sequential()
+    layerNames = ["conv1_1",
+        "conv1_2",
+        "conv2_1",
+        "conv2_2",
+        "conv3_1",
+        "conv3_2",
+        "conv3_3",
+        "conv3_4",
+        "conv4_1",
+        "conv4_2",
+        "conv4_3",
+        "conv4_4",
+        "conv5_1",
+        "conv5_2",
+        "conv5_3",
+        "conv5_4",
+        "fc6",
+        "fc7",
+        "fc8-retrain"]
+    layerCounter = 0
+    for layer in vgg19.layers:
+        layer.trainable = False
+        model.add(layer)
+    model.add(Dense(4096, activation = "relu"))
+    model.add(Dropout(0.5))
+    model.add(Dense(4096, activation = "relu"))
+    model.add(Dropout(0.5))
+    model.add(Dense(3, activation = "softmax"))
+    regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
+    for layer in model.layers:
+        if "pool" not in layer.name:
+            layer.name = layerNames[0]
+            counter += 1
+        for attribute in ["kernel_regularizer", "bias_regularizer"]:
+            if (hasattr(layer, attribute) is True) and (layer.trainable is True):
+                setattr(layer, attribute, regulariser)
+    modelJSon = model.to_json()
+    dir = path.join(mainPath, "VGG_ft_structure.json")
+    # Reload json to implement change in regularizers
+    with open(dir, "w") as writeJSon:
+        writeJson.write(modelJSon)
+        writeJSon.close()
+    with open(dir, "r") as readJSon:
+        modelJson = readJSon.read()
+        model = model_from_json(modelJson)
+        readJson.close()
+    for layer in model.layers:
+        print(layer.names)
+        print(layer.losses)
+    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5 "), by_name = True)
+    optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    return model
 
 def sentimentVGG():
     vgg19 = VGG19(weights = "imagenet")
@@ -382,16 +447,15 @@ def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, h
     modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [logger, earlyStoppage])
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(modelName, model, mainPath)
-        # tModel = textModel()
-        # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
-        # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
-        # saveHistory("text_model_history", tModelHistory)
-        # saveModel("text_model", tModel)
 
-def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen):
+def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen, isFt):
     batchSize = 16
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, "image_sentiments_log.csv"), append = False, separator = ",")
+    cb = [earlyStoppage, logger]
+    if isFt is True:
+        lrScheduler = LearningRateScheduler(scheduledLr)
+        cb.append(lrScheduler)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
     trainGen = dataGen.flow_from_directory(path.join(dir, "train"), target_size=(224, 224), batch_size = batchSize)
@@ -401,9 +465,9 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
         validation_data = valGen,
         validation_steps = -(-valLen // batchSize),
         epochs = 50,
-        callbacks = [logger, earlyStoppage])
-    saveHistory(historyName, modelHistory)
-    saveModel(modelName, model, mainPath)
+        callbacks = cb)
+    # saveHistory(historyName, modelHistory)
+    # saveModel(modelName, model, mainPath)
 
 def main():
     awsDir = "/media/Data3/sewell"
@@ -463,13 +527,14 @@ def main():
     if not path.exists(logDir):
         os.makedirs(logDir)
     #
-    imageSntmtTrain(sentimentVGG(),
+    imageSntmtTrain(t4saVGG(),
         "decision_model",
         "decision_model_history",
         logDir,
         mainPath,
         dfTrain.shape[0],
-        dfVal.shape[0])
+        dfVal.shape[0],
+        True)
 
     # trainMainModel(textModel(),
     #     logDir,
