@@ -95,7 +95,6 @@ def scheduledLr(epoch):
 
 def t4saVGG(mainPath): # evaluate gen
     vgg19 = VGG19(weights = None, include_top = False)
-    model = Sequential()
     layerNames = ["conv1_1",
         "conv1_2",
         "conv2_1",
@@ -115,12 +114,14 @@ def t4saVGG(mainPath): # evaluate gen
     layerCounter = 0
     for layer in vgg19.layers:
         model.add(layer)
-    model.add(Flatten(name = "flatten"))
-    model.add(Dense(4096, activation = "relu", name = "fc6"))
-    model.add(Dropout(0.5))
-    model.add(Dense(4096, activation = "relu", name = "fc8"))
-    model.add(Dropout(0.5))
-    model.add(Dense(3, activation = "softmax", name = "fc8-retrain"))
+    vgg19out = vgg19.output
+    flatten = Flatten(name = "flatten")(vgg19out)
+    hidden1 = Dense(4096, activation = "relu", name = "fc6")(flatten)
+    x1 = Dropout(0.5)(hidden1)
+    hidden2 = Dense(4096, activation = "relu", name = "fc8")(x1)
+    x2 = Dropout(0.5)(hidden2)
+    output = Dense(3, activation = "softmax", name = "fc8-retrain")(x2)
+    model = Model(input = vgg19.input, output = output)
     regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
     for layer in model.layers:
         if "conv" in layer.name:
