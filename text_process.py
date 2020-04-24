@@ -95,8 +95,7 @@ def scheduledLr(epoch):
         return initialLr / (10 ** decayStep)
 
 def t4saVGG(mainPath): # evaluate gen
-    input = Input(shape = (224, 224, 3))
-    vgg19 = VGG19(weights = None, include_top = False, input_tensor = input)
+#    vgg19 = VGG19(weights = None, include_top = False, input_tensor = input)
     layerNames = ["conv1_1",
         "conv1_2",
         "conv2_1",
@@ -116,32 +115,176 @@ def t4saVGG(mainPath): # evaluate gen
     layerCounter = 0
     # for layer in vgg19.layers:
     #     model.add(layer)
-    vgg19out = vgg19.output
-    flatten = Flatten(name = "flatten")(vgg19out)
-    hidden1 = Dense(4096, activation = "relu", name = "fc6")(flatten)
-    x1 = Dropout(0.5)(hidden1)
-    hidden2 = Dense(4096, activation = "relu", name = "fc7")(x1)
-    x2 = Dropout(0.5)(hidden2)
-    output = Dense(3, activation = "softmax", name = "fc8-retrain")(x2)
-    model = Model(input = vgg19.input, output = output)
+    # vgg19out = vgg19.output
+    reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
+    input = Input(shape = (224, 224, 3))
+    # Block 1
+    x = layers.Conv2D(64, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv1_1",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(input)
+    x = layers.Conv2D(64, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv1_2",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block1_pool")(x)
+
+    # Block 2
+    x = layers.Conv2D(128, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv2_1",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(128, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv2_2",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block2_pool')(x)
+
+    # Block 3
+    x = layers.Conv2D(256, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv3_1",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(256, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv3_2",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(256, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv3_3",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(256, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv3_4",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block3_pool")(x)
+
+    # Block 4
+    x = layers.Conv2D(512, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv4_1",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(512, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv4_2",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(512, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv4_3",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(512, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv4_4",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block4_pool")(x)
+
+    # Block 5
+    x = layers.Conv2D(512, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv5_1",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(512, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv5_2",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(512, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv5_3",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.Conv2D(512, (3, 3),
+                      activation = "relu",
+                      padding = "same",
+                      name = "conv5_4",
+                      bias_regularizer = reg,
+                      kernel_regularizer = reg,
+                      trainable = False)(x)
+    x = layers.MaxPooling2D((2, 2), strides=(2, 2), name = "block5_pool")(x)
+    flatten = Flatten(name = "flatten")(x)
+    hidden1 = Dense(4096,
+        activation = "relu",
+        padding = "same",
+        name = "fc6",
+        bias_regularizer = reg,
+        kernel_regularizer = reg,
+        trainable = True)(flatten)
+    dropout1 = Dropout(0.5)(hidden1)
+    hidden2 = Dense(4096,
+        activation = "relu",
+        padding = "same",
+        name = "fc7",
+        bias_regularizer = reg,
+        kernel_regularizer = reg,
+        trainable = True)(dropout1)
+    dropout2 = Dropout(0.5)(hidden2)
+    output = Dense(3,
+        activation = "softmax",
+        name = "fc8-retrain",
+        bias_regularizer = reg,
+        kernel_regularizer = reg,
+        trainable = True)(dropout2)
+    model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    regulariser = regularizers.l2(0.000005) # / t4sa stated decay / 2
     for layer in model.layers:
         print(layer.name)
-    for layer in model.layers:
-        if "conv" in layer.name:
-            print("set to" + layerNames[layerCounter])
-            layer.name = layerNames[layerCounter]
-            layerCounter += 1
-        for attribute in ["kernel_regularizer", "bias_regularizer"]:
-            if (hasattr(layer, attribute) is True) and (layer.trainable is True):
-                print("regs set")
-                setattr(layer, attribute, regulariser)
-    print("before:")
-    for layer in model.layers:
-        print(layer.weights)
-        print("\n")
+    # for layer in model.layers:
+    #     if "conv" in layer.name:
+    #         print("set to" + layerNames[layerCounter])
+    #         layer.name = layerNames[layerCounter]
+    #         layerCounter += 1
+    #     for attribute in ["kernel_regularizer", "bias_regularizer"]:
+    #         if (hasattr(layer, attribute) is True) and (layer.trainable is True):
+    #             print("regs set")
+    #             setattr(layer, attribute, regulariser)
+    # print("before:")
+    # for layer in model.layers:
+    #     print(layer.weights)
+    #     print("\n")
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     print("after:")
     for layer in model.layers:
