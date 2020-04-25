@@ -31,12 +31,10 @@ def evalModel(mainPath, modelType, modelName, input, YTest, fusionType, scoreNam
     print(f"The loss and accuracy for {fusionType} fusion is: {score}")
     saveScore(score, scoreName)
 
-def evalDecisionModel(mainPath, modelType, modelName, input, YTest, fusionType, scoreName):
+def evalDecisionModel(mainPath, modelType, modelName, textModelType, textModelName, input, YTest, fusionType, scoreName):
     filePath = path.join(mainPath, "models", modelType, modelName + ".h5")
-    if not path.exists(filePath):
-        model = dFusionModel(mainPath)
-    else:
-        model = loadModel(mainPath, "", modelName)
+    textModel = loadModel(mainPath, textModelType, textModelName)
+    model = dFusionModel(mainPath, textModel)
     score = model.evaluate(input, to_categorical(YTest))
     print(f"The loss and accuracy for {fusionType} is: {score}")
     saveScore(score, scoreName)
@@ -63,22 +61,10 @@ def main():
     #tModel = loadModel("text_model")
 
     #print(dModel.predict([[XTest[0]], [testImgClass[0]]]))
-    evalModel(mainPath, "", "text_model", XTest, YTest, "no fusion (text only)", "text_model_score")
-    evalDecisionModel(mainPath, "", "decision_model", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score")
+    evalModel(mainPath, "", "text_model", XTest, YTest, "no fusion (text only)", "text_model_score_2")
+    evalDecisionModel(mainPath, "", "decision_model", "", "text_model", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_2")
     # evalModel(mainPath, "", "cat_ftr-lvl_model", [XTest, testImgCategories], YTest, "image category feature-level fusion", "cat_ftr-lvl_model_score")
     # evalModel(mainPath, "", "cmp_ftr-lvl_model", [XTest, testImgFeatures], YTest, "image components feature-level fusion", "cmp_ftr-lvl_model_score")
-
-    #fModelScore = fModel.evaluate([XTest, testImgFeatures], to_categorical(YTest))
-    #dModelScore = dModel.evaluate([XTest, testImgClass], to_categorical(YTest))
-    #tModelScore = tModel.evaluate(XTest, to_categorical(YTest))
-
-#    print(f"The loss and accuracy for feature-level fusion is: {fModelScore}")
-    #print(f"The loss and accuracy for decision-level fusion is: {dModelScore}")
-    #print(f"The loss and accuracy for no fusion (text only) is: {tModelScore}")
-
-    #saveScore(fModelScore, "feature_model_score")
-    #saveScore(dModelScore, "decision_model_score")
-    #saveScore(tModelScore, "text_model_score")
 
 if __name__ == "__main__":
     main()
