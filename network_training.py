@@ -352,7 +352,7 @@ def dFusionModel(mainPath):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
 #    print(model.summary())
-    # saveModel(model, mainPath, "decision_model", overWrite = False)
+    saveModel(model, mainPath, "decision_model", overWrite = False)
     return model
 
 def catFtrModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
