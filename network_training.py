@@ -96,24 +96,7 @@ def scheduledLr(epoch, lr):
         return lr / divStep
     return lr
 
-def t4saVGG(mainPath): # evaluate gen
-    # layerNames = ["conv1_1",
-    #     "conv1_2",
-    #     "conv2_1",
-    #     "conv2_2",
-    #     "conv3_1",
-    #     "conv3_2",
-    #     "conv3_3",
-    #     "conv3_4",
-    #     "conv4_1",
-    #     "conv4_2",
-    #     "conv4_3",
-    #     "conv4_4",
-    #     "conv5_1",
-    #     "conv5_2",
-    #     "conv5_3",
-    #     "conv5_4"]
-    layerCounter = 0
+def t4saVGG(mainPath):
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
     x = Conv2D(64, (3, 3),
@@ -266,8 +249,8 @@ def t4saVGG(mainPath): # evaluate gen
     optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
     gaOptimiser = ga.keras.optimizers.Optimizer(optimiser, steps = 2)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    for layer in model.layers:
-        print(layer.name)
+    # for layer in model.layers:
+    #     print(layer.name)
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     saveModel(model, mainPath, "img_model", overWrite = False)
     return model
@@ -572,7 +555,7 @@ def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, h
     logger = CSVLogger(path.join(logDir, logName + ".csv"), append = False, separator = ",")
     modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [logger, earlyStoppage])
     saveHistory(historyName, modelHistory, mainPath)
-    saveModel(model, mainPath, modelName)
+    saveModel(model, mainPath, modelName, overWrite = True)
 
 def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen, isFt, batchSize = 16, epochs = 50):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
@@ -677,7 +660,7 @@ def main():
     # # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
     # # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
     # # saveHistory("text_model_history", tModelHistory)
-    # # saveModel(tModel, mainPath, "text_model")
+    # # saveModel(tModel, mainPath, "text_model", overWrite = True)
     #
     # trainMainModel(catFtrModel(),
     #     logDir,
@@ -693,7 +676,7 @@ def main():
     # # dLogger = CSVLogger(logDir + "/decision_log.csv", append = False, separator = ",")
     # # dModelHistory = dModel.fit([XTrain, trainImgCategories], to_categorical(YTrain), validation_data = ([XVal, valImgCategories], to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [dLogger])#, earlyStoppage])
     # # saveHistory("decision_model_history", dModelHistory)
-    # # saveModel(dModel, mainPath, "decision_model")
+    # # saveModel(dModel, mainPath, "decision_model", overWrite = True)
     #
     # trainMainModel(compFtrModel(),
     #     logDir,
