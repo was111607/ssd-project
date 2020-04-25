@@ -36,7 +36,6 @@ def matchMainModelInput(matchings, df):
     return df
 
 def getImgSntmts(mainPath, testLen, modelName, batchSize = 32):
-    batchSize = 32
     matchings = {}
     model = loadModel(mainPath, modelName)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
