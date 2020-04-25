@@ -47,7 +47,7 @@ def getImgSntmts(mainPath, testLen, modelName, batchSize = 32):
     inputOrder = testGen.filenames
     for imagePath, prob in zip(inputOrder, probs):
         fileName = re.search(r"(?<=/)[0-9]+-[0-9].jpg", imagePath).group(0)
-        matchings[fileName] = prob
+        matchings[fileName] = prob.tolist()
     saveResults(matchings, mainPath)
     return matchings
 
