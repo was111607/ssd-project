@@ -46,7 +46,7 @@ def main():
     testImgFeatures = np.load(path.join(mainPath, "b-t4sa/image features/image_features_testing.npy"))
     testImgCategories = np.load(path.join(mainPath, "b-t4sa/image categories/image_categories_testing.npy"))
     if "IMG_PREDS" in dfTest.columns:
-        testImgSntmtProbs = np.stack(dfTest["IMG_TEST"].apply(toArray))
+        testImgSntmtProbs = np.stack(dfTest["IMG_PREDS"].apply(toArray))
     # fModel = loadModel("training_all", "feature_model")
     # dModel = loadModel("training_all", "decision_model")
     #tModel = loadModel("text_model")
