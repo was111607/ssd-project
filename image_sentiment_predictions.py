@@ -66,7 +66,7 @@ def main():
     testLen = dfTest.shape[0]
     matchings = getImgSntmts(mainPath, testLen, "img_model")
     updatedDf = matchMainModelInput(matchings, dfTest)
-    saveDataFrame(updatedDf, path.join(mainPath, "b-t4sa/model_input_testing_updated.csv"))
+    saveDataFrame(updatedDf, path.join(mainPath, "b-t4sa/model_input_testing_updated_2.csv"))
 
 if __name__ == "__main__":
     main()
