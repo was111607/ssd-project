@@ -26,7 +26,7 @@ def saveScore(score, fname):
 def evalModel(modelName, input, YTest, fusionType, scoreName):
     model = loadModel("training_all", modelName)
     score = model.evaluate(input, to_categorical(YTest))
-    print(f"The loss and accuracy for " + fusionType " fusion is: {score}")
+    print(f"The loss and accuracy for " + fusionType + " fusion is: {score}")
     saveScore(score, scoreName)
 
 def main():
