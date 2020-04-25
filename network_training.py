@@ -327,30 +327,32 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
 #    print(model.summary())
     return model
 
-def dFusionModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+def dFusionModel(mainPath):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
         readFile.close()
-    seqLength = 30
-    embedDim = 512
-    input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
-    #print(textFtrs.output)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
-    hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
-    x1 = Dropout(0.6)(hidden1)
-    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
-    x2 = Dropout(0.3)(hidden2)
-    textClass = Dense(3, activation = "softmax")(x2)
+    # seqLength = 30
+    # embedDim = 512
+    # input = Input(shape=(seqLength,))
+    # textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    # #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    # #print(textFtrs.output)
+    # lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
+    # hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
+    # x1 = Dropout(0.6)(hidden1)
+    # hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    # x2 = Dropout(0.3)(hidden2)
+    # textClass = Dense(3, activation = "softmax")(x2)
+    textModel = loadModel(mainPath, "text_model")
     imageSntmts = Input(shape=(3,))
-    output = Lambda(lambda inputs: (inputs[0] / 2) + (inputs[1] / 2))([textClass, imageSntmts])
-    model = Model(input = [input, imageSntmts], output = output)
+    output = Lambda(lambda inputs: (inputs[0] / 2) + (inputs[1] / 2))([textModel.output, imageSntmts])
+    model = Model(input = [textModel.input, imageSntmts], output = output)
     optimiser = SGD(lr = 0.05, momentum = 0.8)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
 #    print(model.summary())
+    # saveModel(model, mainPath, "decision_model", overWrite = False)
     return model
 
 def catFtrModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
@@ -550,10 +552,10 @@ def summariseResults(results):
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
-def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath):
+def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath, batchSize = 16, epochs = 50):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, logName + ".csv"), append = False, separator = ",")
-    modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [logger, earlyStoppage])
+    modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = epochs, batch_size = batchSize, callbacks = [logger, earlyStoppage])
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName, overWrite = True)
 
@@ -646,16 +648,16 @@ def main():
     #     batchSize = 32,
     #     epochs = 15)
 
-    trainMainModel(textModel(),
-        logDir,
-        "text_log",
-        XTrain,
-        YTrain,
-        XVal,
-        YVal,
-        "text_model_history",
-        "text_model",
-        mainPath)
+    # trainMainModel(textModel(),
+    #     logDir,
+    #     "text_log",
+    #     XTrain,
+    #     YTrain,
+    #     XVal,
+    #     YVal,
+    #     "text_model_history",
+    #     "text_model",
+    #     mainPath)
 
     # trainMainModel(dFusionModel(),
     #     logDir,
