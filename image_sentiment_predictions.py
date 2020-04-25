@@ -65,5 +65,5 @@ def main():
     updatedDf = matchMainModelInput(matchings, dfTest)
     saveDataFrame(updatedDf, path.join(mainPath, "b-t4sa/model_input_testing_updated.csv"))
 
-if "__name__" == "__main__":
+if __name__ == "__main__":
     main()
