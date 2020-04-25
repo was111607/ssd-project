@@ -28,7 +28,7 @@ def saveScore(score, fname):
 def evalModel(mainPath, modelName, input, YTest, fusionType, scoreName):
     model = loadModel(mainPath, "training_all", modelName)
     score = model.evaluate(input, to_categorical(YTest))
-    print(f"The loss and accuracy for " + fusionType + " fusion is: {score}")
+    print(f"The loss and accuracy for {fusionType} fusion is: {score}")
     saveScore(score, scoreName)
 
 def evalDecisionModel(mainPath, modelType, modelName, input, YTest, fusionType, scoreName):
@@ -38,7 +38,7 @@ def evalDecisionModel(mainPath, modelType, modelName, input, YTest, fusionType, 
     else:
         model = loadModel(mainPath, "", modelName)
     score = model.evaluate(input, to_categorical(YTest))
-    print(f"The loss and accuracy for " + fusionType + " fusion is: {score}")
+    print(f"The loss and accuracy for {fusionType} fusion is: {score}")
     saveScore(score, scoreName)
 
 def main():
