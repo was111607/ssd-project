@@ -345,7 +345,7 @@ def dFusionModel(mainPath):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 
     # x2 = Dropout(0.3)(hidden2)
     # textClass = Dense(3, activation = "softmax")(x2)
     textModel = loadModel(mainPath, "text_model")
-    imageSntmts = Input(shape=(3,))
+    imageSntmts = Input(shape=(3,), name = "input_2")
     output = Lambda(lambda inputs: (inputs[0] / 2) + (inputs[1] / 2))([textModel.output, imageSntmts])
     model = Model(input = [textModel.input, imageSntmts], output = output)
     optimiser = SGD(lr = 0.05, momentum = 0.8)
