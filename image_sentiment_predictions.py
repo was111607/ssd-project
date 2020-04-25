@@ -5,6 +5,7 @@ import csv
 import os
 from os import path
 from keras.preprocessing.image import ImageDataGenerator
+from keras.applications.vgg19 import preprocess_input
 from keras.models import load_model
 
 def loadModel(mainPath, fname):
