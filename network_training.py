@@ -648,16 +648,16 @@ def main():
     #     batchSize = 32,
     #     epochs = 15)
 
-    # trainMainModel(textModel(),
-    #     logDir,
-    #     "text_log",
-    #     XTrain,
-    #     YTrain,
-    #     XVal,
-    #     YVal,
-    #     "text_model_history",
-    #     "text_model",
-    #     mainPath)
+    trainMainModel(textModel(),
+        logDir,
+        "text_log",
+        XTrain,
+        YTrain,
+        XVal,
+        YVal,
+        "text_model_history",
+        "text_model",
+        mainPath)
 
     # trainMainModel(dFusionModel(),
     #     logDir,
