@@ -44,7 +44,7 @@ def main():
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
     testImgFeatures = np.load(path.join(mainPath, "b-t4sa/image features/image_features_testing.npy"))
-    testImgCategories = np.load(path.join(mainPath, "b-t4sa/image classifications/image_categories_testing.npy"))
+    testImgCategories = np.load(path.join(mainPath, "b-t4sa/image categories/image_categories_testing.npy"))
     if "IMG_PREDS" in dfTest.columns:
         testImgSntmtProbs = np.stack(dfTest["IMG_TEST"].apply(toArray))
     # fModel = loadModel("training_all", "feature_model")
