@@ -16,7 +16,7 @@ def loadModel(mainPath, fname):
         exit()
 
 def saveResults(dict, mainPath):
-    with open(path.join(mainPath, "image_predictions.pickle", "wb") as writeFile:
+    with open(path.join(mainPath, "image_predictions.pickle"), "wb") as writeFile:
         pickle.dump(dict, writeFile)
         writeFile.close()
 
