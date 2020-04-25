@@ -327,7 +327,7 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
 #    print(model.summary())
     return model
 
-def dFusionModel(mainPath, textModel, saveName):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+def dFusionModel(mainPath, textModel):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
