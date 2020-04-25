@@ -39,7 +39,7 @@ def main():
         mainPath = awsDir
     else:
         mainPath = curDir
-    testFile = path.join(main, "b-t4sa/model_input_testing_updated.csv")
+    testFile = path.join(mainPath, "b-t4sa/model_input_testing_updated.csv")
     dfTest = pd.read_csv(testFile, header = 0)
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
