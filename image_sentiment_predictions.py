@@ -39,12 +39,13 @@ def getImgSntmts(mainPath, testLen, modelName, batchSize = 32):
     matchings = {}
     model = loadModel(mainPath, modelName)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
+    print(testGen.filenames)
     dir = path.join(mainPath, "b-t4sa", "data")
     testGen = dataGen.flow_from_directory(path.join(dir, "test"), target_size=(224, 224), batch_size = batchSize, class_mode = None, shuffle = False)
     probs = model.predict_generator(testGen, steps = -(-testLen // batchSize), verbose = 1)
     inputOrder = testGen.filenames
     for imagePath, prob in zip(inputOrder, probs):
-        fileName = re.search(r"(?<=/)[0-9]+-[0-9].jpg", line).group(0)
+        fileName = re.search(r"(?<=/)[0-9]+-[0-9].jpg", imagePath).group(0)
         matchings[fileName] = prob
     saveResults(matchings, mainPath)
     return matchings
