@@ -635,18 +635,29 @@ def main():
     if not path.exists(logDir):
         os.makedirs(logDir)
 
-    imageSntmtTrain(t4saVGG(mainPath),
-        "img_model",
-        "img_history",
-        logDir,
-        mainPath,
-        dfTrain.shape[0],
-        dfVal.shape[0],
-        True,
-        batchSize = 32,
-        epochs = 15)
+    # imageSntmtTrain(t4saVGG(mainPath),
+    #     "img_model",
+    #     "img_history",
+    #     logDir,
+    #     mainPath,
+    #     dfTrain.shape[0],
+    #     dfVal.shape[0],
+    #     True,
+    #     batchSize = 32,
+    #     epochs = 15)
 
-    # trainMainModel(textModel(),
+    trainMainModel(textModel(),
+        logDir,
+        "text_log",
+        XTrain,
+        YTrain,
+        XVal,
+        YVal,
+        "text_model_history",
+        "text_model",
+        mainPath)
+
+    # trainMainModel(dFusionModel(),
     #     logDir,
     #     "text_log",
     #     XTrain,
@@ -656,6 +667,7 @@ def main():
     #     "text_model_history",
     #     "text_model",
     #     mainPath)
+
     # # tModel = textModel()
     # # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
     # # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
