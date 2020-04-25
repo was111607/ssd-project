@@ -89,14 +89,12 @@ def getImgPredict(df, model): # pathList old arg
     return model.predict(imageReps, batch_size = 16)
 
 # initialise using LearningRateScheduler and add as callback to training if required
-def scheduledLr(epoch):
-    initialLr = 0.001
-    if epoch % 4 == 0:
-        decayStep = epoch / 4
-        ans = initialLr / (10.0 ** decayStep)
-        print(ans)
-        print(type(ans))
-        return ans
+def scheduledLr(epoch, lr):
+    epochStep = 4
+    divStep = 10
+    if (epoch % epochStep == 0) and (epoch != 0):
+        return lr / divStep
+    return lr
 
 def t4saVGG(mainPath): # evaluate gen
     # layerNames = ["conv1_1",
