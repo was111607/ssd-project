@@ -1,53 +1,70 @@
 import pandas as pd
 import numpy as np
 import pickle
-import matplotlib.pyplot as plt
 from os import path
 from keras.models import load_model
 from keras.utils import to_categorical
+from keras.optimizers import SGD
 from ast import literal_eval
 
 def toArray(list):
     return np.array(literal_eval(str(list)))
 
-def getInputArray(fname):
-    input = pd.read_csv(fname, header = None)
-    return input.to_numpy()
-
-def loadModel(fname):
+def loadModel(modelType, fname):
     try:
-        model = load_model("./models/" + fname + ".h5")
+        model = load_model(path.join("models", modelType, fname + ".h5"))
         return model
     except OSError:
-        print("Cannot find model by " + fname + "to load.")
+        print("Cannot find model by " + fname + " to load.")
+        exit()
 
 def saveScore(score, fname):
     with open(fname + ".pickle", "wb") as writeFile:
         pickle.dump(score, writeFile)
         writeFile.close()
 
+def evalModel(modelName, input, YTest, fusionType, scoreName):
+    model = loadModel("training_all", modelName)
+    score = model.evaluate(input, to_categorical(YTest))
+    print(f"The loss and accuracy for " + fusionType " fusion is: {score}")
+    saveScore(score, scoreName)
+
 def main():
-    testFile = "./b-t4sa/model_input_testing.csv"
+    awsDir = "/media/Data3/sewell"
+    curDir = "."
+    isAws = True
+    if isAws is True:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        mainPath = awsDir
+    else:
+        mainPath = curDir
+    testFile = path.join(main, "/b-t4sa/model_input_testing_updated.csv")
     dfTest = pd.read_csv(testFile, header = 0)
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
-#    testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
-    testImgFeatures = np.load("./b-t4sa/image features/image_features_testing.npy")
-    testImgClass = np.load("./b-t4sa/image classifications/image_classifications_testing.npy")
-
-    fModel = loadModel("feature_model")
-    #dModel = loadModel("decision_model")
+    testImgFeatures = np.load(path.join(mainPath, "b-t4sa/image features/image_features_testing.npy"))
+    testImgCategories = np.load(path.join(mainPath, "b-t4sa/image classifications/image_categories_testing.npy"))
+    if "IMG_PREDS" in dfTest.columns:
+        testImgSntmtProbs = np.stack(dfTest["IMG_TEST"].apply(toArray))
+    # fModel = loadModel("training_all", "feature_model")
+    # dModel = loadModel("training_all", "decision_model")
     #tModel = loadModel("text_model")
 
-    fModelScore = fModel.evaluate([XTest, testImgFeatures], to_categorical(YTest))
+    #print(dModel.predict([[XTest[0]], [testImgClass[0]]]))
+    # evalModel("text_model", XTest, YTest, "no fusion (text only)", "text_model_score")
+    evalModel("decision_model", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score")
+    # evalModel("cat_ftr-lvl_model", [XTest, testImgCategories], YTest, "image category feature-level fusion", "cat_ftr-lvl_model_score")
+    # evalModel("cmp_ftr-lvl_model", [XTest, testImgFeatures], YTest, "image components feature-level fusion", "cmp_ftr-lvl_model_score")
+
+    #fModelScore = fModel.evaluate([XTest, testImgFeatures], to_categorical(YTest))
     #dModelScore = dModel.evaluate([XTest, testImgClass], to_categorical(YTest))
     #tModelScore = tModel.evaluate(XTest, to_categorical(YTest))
 
-    print(f"The loss and accuracy for feature-level fusion is: {fModelScore}")
+#    print(f"The loss and accuracy for feature-level fusion is: {fModelScore}")
     #print(f"The loss and accuracy for decision-level fusion is: {dModelScore}")
     #print(f"The loss and accuracy for no fusion (text only) is: {tModelScore}")
 
-    saveScore(fModelScore, "feature_model_score")
+    #saveScore(fModelScore, "feature_model_score")
     #saveScore(dModelScore, "decision_model_score")
     #saveScore(tModelScore, "text_model_score")
 
