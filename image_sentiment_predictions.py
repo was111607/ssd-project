@@ -7,6 +7,7 @@ from os import path
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.vgg19 import preprocess_input
 from keras.models import load_model
+import pickle
 
 def loadModel(mainPath, fname):
     try:
@@ -41,7 +42,6 @@ def getImgSntmts(mainPath, testLen, modelName, batchSize = 32):
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
     testGen = dataGen.flow_from_directory(path.join(dir, "test"), target_size=(224, 224), batch_size = batchSize, class_mode = None, shuffle = False)
-    print(testGen.filenames)
     testGen.reset()
     probs = model.predict_generator(testGen, steps = -(-testLen // batchSize), verbose = 1)
     inputOrder = testGen.filenames
