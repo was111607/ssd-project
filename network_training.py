@@ -269,14 +269,7 @@ def t4saVGG(mainPath): # evaluate gen
     for layer in model.layers:
         print(layer.name)
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
-    # print(model.summary())
-    # for layer in model.layers:
-    #     print(layer.name)
-    #     print(layer.losses)
-    #     print(layer.weights)
-    #     print(layer.trainable)
-    #     print("\n")
-    # visualiseModel(model, "vgg_ft.png")
+    saveModel(model, mainPath, "img_model", overWrite = False)
     return model
 
 def sentimentVGG():
@@ -469,12 +462,21 @@ def saveResults(dname, results, mainPath):
         writeParams.close()
     print("Saved grid search results for " + dname)
 
-def saveModel(model, mainPath, fname):
+def saveModel(model, mainPath, fname, overWrite = False):
     dir = path.join(mainPath, "models")
     if not path.exists(dir):
         os.makedirs(dir)
-    model.save(path.join(dir, fname + ".h5"))
-    print("Saved model for " + fname)
+    filePath = path.join(dir, fname + ".h5")
+    if path.exists(filePath):
+        if overWrite is True:
+            msg = "Saved, replacing existing file of same name"
+            model.save(filePath)
+        else:
+            msg = "Not saved, model already exists"
+    else:
+        msg = "Saved"
+        model.save(filePath)
+    print(fname + " - " + msg)
 
 def toArray(list):
     return np.array(literal_eval(str(list)))
@@ -589,8 +591,8 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
         validation_steps = -(-valLen // batchSize),
         epochs = epochs,
         callbacks = cb)
-    # saveHistory(historyName, modelHistory)
-    # saveModel(model, mainPath, modelName)
+    saveHistory(historyName, modelHistory)
+    saveModel(model, mainPath, modelName, overWrite = True)
 
 def main():
     awsDir = "/media/Data3/sewell"
@@ -649,10 +651,10 @@ def main():
     logDir = "./logs"
     if not path.exists(logDir):
         os.makedirs(logDir)
-    #
+
     imageSntmtTrain(t4saVGG(mainPath),
-        "decision_model",
-        "decision_model_history",
+        "img_model",
+        "img_history",
         logDir,
         mainPath,
         dfTrain.shape[0],
