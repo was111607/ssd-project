@@ -263,7 +263,7 @@ def t4saVGG(mainPath): # evaluate gen
         kernel_regularizer = reg,
         trainable = True)(dropout2)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.0, momentum = 0.9) # learning_rate decays
+    optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
     gaOptimiser = ga.keras.optimizers.Optimizer(optimiser, steps = 2)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     for layer in model.layers:
