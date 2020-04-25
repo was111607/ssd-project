@@ -96,7 +96,7 @@ def scheduledLr(epoch, lr):
         return lr / divStep
     return lr
 
-def t4saVGG(mainPath):
+def t4saVGG(mainPath, saveName):
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
     x = Conv2D(64, (3, 3),
@@ -248,27 +248,172 @@ def t4saVGG(mainPath):
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
     gaOptimiser = ga.keras.optimizers.Optimizer(optimiser, steps = 2)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    model.compile(optimizer = gaOptimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     # for layer in model.layers:
     #     print(layer.name)
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
-    saveModel(model, mainPath, "img_model", overWrite = False)
     return model
 
 def sentimentVGG():
-    vgg19 = VGG19(weights = "imagenet")
-    model = Sequential()
-    for layer in vgg19.layers[:-1]:
-        model.add(layer)
-    model.add(Dropout(0.5))
-    model.add(Dense(1024, activation = "relu"))
-    model.add(Dropout(0.5))
-    model.add(Dense(512, activation = "relu"))
-    model.add(Dropout(0.5))
-    model.add(Dense(3, activation = "softmax"))
-    # for layer in model.layers[:-8]:
-    #     layer.trainable = False
-    model.compile(optimizer = "Adam", loss = "categorical_crossentropy", metrics = ["accuracy"])
+    vgg19 = VGG19(weights = None, include_top = False)
+    reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
+    input = Input(shape = (224, 224, 3))
+    x = Conv2D(64, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv1_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(input)
+    x = Conv2D(64, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv1_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block1_pool")(x)
+
+    # Block 2
+    x = Conv2D(128, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv2_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(128, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv2_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block2_pool")(x)
+
+    # Block 3
+    x = Conv2D(256, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv3_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(256, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv3_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(256, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv3_3",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(256, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv3_4",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block3_pool")(x)
+
+    # Block 4
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv4_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv4_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv4_3",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv4_4",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block4_pool")(x)
+
+    # Block 5
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv5_1",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv5_2",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv5_3",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = Conv2D(512, (3, 3),
+            activation = "relu",
+            padding = "same",
+            name = "conv5_4",
+            bias_regularizer = reg,
+            kernel_regularizer = reg,
+            trainable = True)(x)
+    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block5_pool")(x)
+    flatten = Flatten(name = "flatten")(x)
+    hidden1 = Dense(4096,
+        activation = "relu",
+        name = "fc6",
+        bias_regularizer = reg,
+        kernel_regularizer = reg,
+        trainable = True)(flatten)
+    dropout1 = Dropout(0.5)(hidden1)
+    hidden2 = Dense(4096,
+        activation = "relu",
+        name = "fc7",
+        bias_regularizer = reg,
+        kernel_regularizer = reg,
+        trainable = True)(dropout1)
+    dropout2 = Dropout(0.5)(hidden2)
+    hidden3 = Dense(2048,
+        activation = "relu",
+        name = "fc8",
+        bias_regularizer = reg,
+        kernel_regularizer = reg,
+        trainable = True)(dropout1)
+    dropout3 = Dropout(0.5)(hidden3)
+    output = Dense(3,
+        activation = "softmax",
+        name = "fc9",
+        bias_regularizer = reg,
+        kernel_regularizer = reg,
+        trainable = True)(dropout3)
+    model = Model(input = input, output = output)
+    optimiser = SGD(lr = 0.0005, momentum = 0.9) # learning_rate decays
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
 def initCatVGG():
@@ -293,6 +438,7 @@ def loadModel(mainPath, fname):
     try:
         modelPath = path.join(mainPath, "models", fname + ".h5")
         model = load_model(modelPath)
+        print(fname + " successfully loaded")
         return model
     except OSError:
         print("Cannot find model: " + modelPath + " to load.")
@@ -637,7 +783,7 @@ def main():
     if not path.exists(logDir):
         os.makedirs(logDir)
 
-    # imageSntmtTrain(t4saVGG(mainPath),
+    # imageSntmtTrain(t4saVGG(mainPath, "img_model_ft"),
     #     "img_model",
     #     "img_history",
     #     logDir,
@@ -648,16 +794,27 @@ def main():
     #     batchSize = 32,
     #     epochs = 15)
 
-    trainMainModel(textModel(),
+    imageSntmtTrain(sentimentVGG(mainPath, "img_model_st"),
+        "img_model_st",
+        "img_history",
         logDir,
-        "text_log",
-        XTrain,
-        YTrain,
-        XVal,
-        YVal,
-        "text_model_history",
-        "text_model",
-        mainPath)
+        mainPath,
+        dfTrain.shape[0],
+        dfVal.shape[0],
+        True,
+        batchSize = 32,
+        epochs = 15)
+
+    # trainMainModel(textModel(),
+    #     logDir,
+    #     "text_log",
+    #     XTrain,
+    #     YTrain,
+    #     XVal,
+    #     YVal,
+    #     "text_model_history",
+    #     "text_model",
+    #     mainPath)
 
     # trainMainModel(dFusionModel(),
     #     logDir,
