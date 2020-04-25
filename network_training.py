@@ -794,16 +794,16 @@ def main():
     #     batchSize = 32,
     #     epochs = 15)
 
-    imageSntmtTrain(sentimentVGG(mainPath, "img_model_st"),
+    imageSntmtTrain(sentimentVGG(),
         "img_model_st",
         "img_history",
         logDir,
         mainPath,
         dfTrain.shape[0],
         dfVal.shape[0],
-        True,
-        batchSize = 32,
-        epochs = 15)
+        False,
+        batchSize = 16,
+        epochs = 50)
 
     # trainMainModel(textModel(),
     #     logDir,
