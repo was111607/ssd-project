@@ -12,12 +12,12 @@ from network_training import dFusionModel
 def toArray(list):
     return np.array(literal_eval(str(list)))
 
-def loadModel(mainPath, modelType, fname):
+def loadModel(mainPath, modelType, modelName):
     try:
-        model = load_model(path.join(mainPath, "models", modelType, fname + ".h5"))
+        model = load_model(path.join(mainPath, "models", modelType, modelName + ".h5"))
         return model
     except OSError:
-        print("Cannot find model by " + fname + " to load.")
+        print("Cannot find model by " + modelName + " to load.")
         exit()
 
 def saveScore(score, fname):
@@ -32,7 +32,7 @@ def evalModel(mainPath, modelName, input, YTest, fusionType, scoreName):
     saveScore(score, scoreName)
 
 def evalDecisionModel(mainPath, modelType, modelName, input, YTest, fusionType, scoreName):
-    filePath = path.join(mainPath, "models", modelType, fname + ".h5")
+    filePath = path.join(mainPath, "models", modelType, modelName + ".h5")
     if not path.exists(filePath):
         model = dFusionModel(mainPath)
     else:
