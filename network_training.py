@@ -397,20 +397,13 @@ def sentimentVGG():
         bias_regularizer = reg,
         kernel_regularizer = reg,
         trainable = True)(dropout1)
-    # dropout2 = Dropout(0.5)(hidden2)
-    # hidden3 = Dense(2048,
-    #     activation = "relu",
-    #     name = "fc8",
-    #     bias_regularizer = reg,
-    #     kernel_regularizer = reg,
-    #     trainable = True)(dropout1)
-    dropout3 = Dropout(0.5)(hidden2)
+    dropout2 = Dropout(0.5)(hidden2)
     output = Dense(3,
         activation = "softmax",
         name = "fc9",
         bias_regularizer = reg,
         kernel_regularizer = reg,
-        trainable = True)(dropout3)
+        trainable = True)(dropout2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
@@ -795,8 +788,8 @@ def main():
     #     epochs = 15)
 
     imageSntmtTrain(sentimentVGG(),
-        "img_model_st_like_vgg",
-        "img_model_st_like_vgg_history",
+        "img_model_st",
+        "img_model_st",
         logDir,
         mainPath,
         dfTrain.shape[0],
