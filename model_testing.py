@@ -44,11 +44,11 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
-    testFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st.csv")
+    testFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st_like_vgg.csv")
     dfTest = pd.read_csv(testFile, header = 0)
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
