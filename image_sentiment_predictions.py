@@ -29,7 +29,7 @@ def matchMainModelInput(matchings, df):
 
 def getImgSntmts(mainPath, testLen, modelName, isFt, batchSize = 32):
     matchings = {}
-    if (isFt is True) and not (path.exists(path.join(mainPath, "models", fname + ".h5")):
+    if (isFt is True) and not (path.exists(path.join(mainPath, "models", fname + ".h5"))):
         model = t4saVGG(mainPath, modelName)
         saveModel(model, mainPath, modelName, overWrite = False)
     else:
