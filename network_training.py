@@ -412,7 +412,7 @@ def sentimentVGG():
         kernel_regularizer = reg,
         trainable = True)(dropout3)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.0005, momentum = 0.9) # learning_rate decays
+    optimiser = SGD(lr = 0.0001, momentum = 0.8) # learning_rate decays
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
@@ -722,7 +722,7 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
         validation_steps = -(-valLen // batchSize),
         epochs = epochs,
         callbacks = cb)
-    saveHistory(historyName, modelHistory)
+    saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName, overWrite = True)
 
 def main():
