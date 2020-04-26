@@ -397,14 +397,14 @@ def sentimentVGG():
         bias_regularizer = reg,
         kernel_regularizer = reg,
         trainable = True)(dropout1)
-    dropout2 = Dropout(0.5)(hidden2)
-    hidden3 = Dense(2048,
-        activation = "relu",
-        name = "fc8",
-        bias_regularizer = reg,
-        kernel_regularizer = reg,
-        trainable = True)(dropout1)
-    dropout3 = Dropout(0.5)(hidden3)
+    # dropout2 = Dropout(0.5)(hidden2)
+    # hidden3 = Dense(2048,
+    #     activation = "relu",
+    #     name = "fc8",
+    #     bias_regularizer = reg,
+    #     kernel_regularizer = reg,
+    #     trainable = True)(dropout1)
+    dropout3 = Dropout(0.5)(hidden2)
     output = Dense(3,
         activation = "softmax",
         name = "fc9",
@@ -412,7 +412,7 @@ def sentimentVGG():
         kernel_regularizer = reg,
         trainable = True)(dropout3)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.8) # learning_rate decays
+    optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
@@ -709,9 +709,9 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, "image_sentiments_log.csv"), append = False, separator = ",")
     cb = [earlyStoppage, logger]
-    if isFt is True:
-        lrScheduler = LearningRateScheduler(scheduledLr, verbose = 1)
-        cb.append(lrScheduler)
+    #if isFt is True:
+    lrScheduler = LearningRateScheduler(scheduledLr, verbose = 1)
+    cb.append(lrScheduler)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
     trainGen = dataGen.flow_from_directory(path.join(dir, "train"), target_size=(224, 224), batch_size = batchSize)
@@ -730,7 +730,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -795,8 +795,8 @@ def main():
     #     epochs = 15)
 
     imageSntmtTrain(sentimentVGG(),
-        "img_model_st",
-        "img_history",
+        "img_model_st_like_vgg",
+        "img_model_st_like_vgg_history",
         logDir,
         mainPath,
         dfTrain.shape[0],
