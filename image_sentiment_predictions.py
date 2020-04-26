@@ -6,17 +6,8 @@ import os
 from os import path
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.vgg19 import preprocess_input
-from keras.models import load_model
 import pickle
-
-def loadModel(mainPath, fname):
-    try:
-        modelPath = path.join(mainPath, "models", fname + ".h5")
-        model = load_model(modelPath)
-        return model
-    except OSError:
-        print("Cannot find model: " + modelPath + " to load.")
-        exit()
+from network_training import t4saVGG, loadModel
 
 def saveResults(dict, mainPath):
     with open(path.join(mainPath, "image_predictions.pickle"), "wb") as writeFile:
@@ -36,9 +27,13 @@ def matchMainModelInput(matchings, df):
     df["IMG_PREDS"] = df["IMG"].apply(getFilename).map(matchings)
     return df
 
-def getImgSntmts(mainPath, testLen, modelName, batchSize = 32):
+def getImgSntmts(mainPath, testLen, modelName, isFt, batchSize = 32):
     matchings = {}
-    model = loadModel(mainPath, modelName)
+    if (isFt is True) and not (path.exists(path.join(mainPath, "models", fname + ".h5")):
+        model = t4saVGG(mainPath, modelName)
+        saveModel(model, mainPath, modelName, overWrite = False)
+    else:
+        model = loadModel(mainPath, modelName)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
     testGen = dataGen.flow_from_directory(path.join(dir, "test"), target_size=(224, 224), batch_size = batchSize, class_mode = None, shuffle = False)
@@ -64,9 +59,9 @@ def main():
     pd.set_option('display.max_colwidth', -1)
     dfTest = pd.read_csv(testFile, header = 0)
     testLen = dfTest.shape[0]
-    matchings = getImgSntmts(mainPath, testLen, "img_model")
+    matchings = getImgSntmts(mainPath, testLen, "img_model_st", False, batchSize = 16)
     updatedDf = matchMainModelInput(matchings, dfTest)
-    saveDataFrame(updatedDf, path.join(mainPath, "b-t4sa/model_input_testing_updated.csv"))
+    saveDataFrame(updatedDf, path.join(mainPath, "b-t4sa/model_input_testing_updated_st.csv"))
 
 if __name__ == "__main__":
     main()
