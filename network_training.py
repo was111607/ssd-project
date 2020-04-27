@@ -249,12 +249,11 @@ def t4saVGG(mainPath, saveName):
     optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
     gaOptimiser = ga.keras.optimizers.Optimizer(optimiser, steps = 2)
     model.compile(optimizer = gaOptimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    # for layer in model.layers:
-    #     print(layer.name)
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
+    saveModel(model, mainPath, saveName, overWrite = False)
     return model
 
-def sentimentVGG():
+def sentimentVGG(extend):
     vgg19 = VGG19(weights = None, include_top = False)
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
@@ -418,14 +417,21 @@ def initCatVGG():
 #    visualiseModel(model, "decision_vgg.png")
     return model
 
-def initFtrVGG():
-    vgg19 = VGG19(weights = "imagenet")
-    model = Sequential()
-    for layer in vgg19.layers[:-1]: # Output of FC2 layer
-        model.add(layer)
-    model.add(Dense(512, activation = "relu"))
-#    visualiseModel(model, "feature_vgg.png")
+def initFtrVGG(modelName):
+#     vgg19 = VGG19(weights = "imagenet")
+#     model = Sequential()
+#     for layer in vgg19.layers[:-1]: # Output of FC2 layer
+#         model.add(layer)
+#     model.add(Dense(512, activation = "relu"))
+# #    visualiseModel(model, "feature_vgg.png")
+#     return model
+    imgModel = loadModel(modelName)
+    features = Dense(512, activation = "relu")(imgModel.layers[-2].output)
+    model = Model(inputs = imgModel.input, outputs = features)
+    optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
+
 
 def loadModel(mainPath, fname):
     try:
@@ -723,7 +729,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -745,17 +751,17 @@ def main():
     valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
-    dir = path.join(mainPath, "b-t4sa", "image features")
+    dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
     #         #input("Predicting and saving feature data completed")
     if not path.exists(dir):
         os.makedirs(dir)
-        featureVGG = initFtrVGG()
-        predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_features_training"), mainPath, "backup_data")
-        predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_features_validation"), mainPath, "backup_data")
-        predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_features_testing"), mainPath, "backup_data")
+        featureVGG = initFtrVGG("img_model_st")
+        predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_sntmt_features_training"), mainPath, "backup_data")
+        predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_validation"), mainPath, "backup_data")
+        predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_testing"), mainPath, "backup_data")
         input("Predicting and saving feature data completed")
-    trainImgFeatures = np.load(path.join(dir, "image_features_training.npy")) # getInputArray # 50 FOR TUNING
+    trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
     # valImgFeatures = np.load(path.join(dir, "image_features_validation.npy"))
     # testImgFeatures = np.load(path.join(dir, "image_features_testing.npy"))
     dir = path.join(mainPath, "b-t4sa", "image categories")
@@ -787,16 +793,16 @@ def main():
     #     batchSize = 32,
     #     epochs = 15)
 
-    imageSntmtTrain(sentimentVGG(),
-        "img_model_st",
-        "img_model_st",
-        logDir,
-        mainPath,
-        dfTrain.shape[0],
-        dfVal.shape[0],
-        False,
-        batchSize = 16,
-        epochs = 50)
+    # imageSntmtTrain(sentimentVGG(),
+    #     "img_model_st",
+    #     "img_model_st",
+    #     logDir,
+    #     mainPath,
+    #     dfTrain.shape[0],
+    #     dfVal.shape[0],
+    #     False,
+    #     batchSize = 16,
+    #     epochs = 50)
 
     # trainMainModel(textModel(),
     #     logDir,
@@ -820,12 +826,6 @@ def main():
     #     "text_model",
     #     mainPath)
 
-    # # tModel = textModel()
-    # # tLogger = CSVLogger(dir + "/text_log.csv", append = False, separator = ",")
-    # # tModelHistory = tModel.fit(XTrain, to_categorical(YTrain), validation_data = (XVal, to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [tLogger])#, earlyStoppage])
-    # # saveHistory("text_model_history", tModelHistory)
-    # # saveModel(tModel, mainPath, "text_model", overWrite = True)
-    #
     # trainMainModel(catFtrModel(),
     #     logDir,
     #     "cat_ftr-lvl_log",
@@ -836,11 +836,6 @@ def main():
     #     "cat_ftr-lvl_model_history",
     #     "cat_ftr-lvl_model",
     #     mainPath)
-    # # dModel = catFtrModel()
-    # # dLogger = CSVLogger(logDir + "/decision_log.csv", append = False, separator = ",")
-    # # dModelHistory = dModel.fit([XTrain, trainImgCategories], to_categorical(YTrain), validation_data = ([XVal, valImgCategories], to_categorical(YVal)), epochs = 50, batch_size = 16, callbacks = [dLogger])#, earlyStoppage])
-    # # saveHistory("decision_model_history", dModelHistory)
-    # # saveModel(dModel, mainPath, "decision_model", overWrite = True)
     #
     # trainMainModel(compFtrModel(),
     #     logDir,
@@ -852,11 +847,6 @@ def main():
     #     "cmp_ftr-lvl_model_history",
     #     "cmp_ftr-lvl_model",
     #     mainPath)
-    # fModel = compFtrModel()
-    # fLogger = CSVLogger(logDir + "/feature_log.csv", append = False, separator = ",")
-    # fModelHistory = fModel.fit([XTrain, trainImgFeatures], to_categorical(YTrain), validation_data = ([XVal, valImgFeatures], to_categorical(YVal)), epochs = 1, batch_size = 64, callbacks = [fLogger])#, earlyStoppage])
-    # saveHistory("feature_model_history", fModelHistory)
-    # saveModel(fModel, mainPath, "feature_model")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
