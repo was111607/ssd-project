@@ -432,7 +432,6 @@ def initFtrVGG(mainPath, modelName):
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-
 def loadModel(mainPath, fname):
     try:
         modelPath = path.join(mainPath, "models", fname + ".h5")
@@ -500,7 +499,7 @@ def dFusionModel(mainPath, textModel):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): 
 #    saveModel(model, mainPath, saveName, overWrite = False) - No need to save as no weights exist in the extra layers
     return model
 
-def catFtrModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -513,7 +512,7 @@ def catFtrModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     #print(textFtrs.output)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.4))(textFtrs)
     imageFtrs = Input(shape=(embedDim,))
-    concat = concatenate([lstm, imageFtrs], axis = -1)
+    concat = concatenate([lstm, imageFtrs])
     hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
     x1 = Dropout(0.2)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
@@ -529,37 +528,37 @@ def catFtrModel(lr, mom): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     #     x2 = Dropout(0.3)(hidden4)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = lr, momentum = mom) #(lr = 0.075, momentum = 0.6)
+    optimiser = SGD(lr = 0.001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
 #    visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
     # print(model.summary())
     return model
 
-def compFtrModel(lr, mom): #(dRate): # (dRate):
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
-        readFile.close()
-    seqLength = 30
-    embedDim = 512
-    input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-    imageFtrs = Input(shape=(embedDim,))
-    repeated = RepeatVector(seqLength)(imageFtrs)
-    #print(textFtrs.output)
-    concat = concatenate([textFtrs, repeated], axis = -1)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.8))(concat) # 0.8, 0.0
-    hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
-    x1 = Dropout(0.5)(hidden1)
-    hidden2 = Dense(256, activation = "relu")(x1)
-    x2 = Dropout(0.5)(hidden2)
-    output = Dense(3, activation = "softmax")(x2)
-    model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = lr, momentum = mom)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    # visualiseModel(model, "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
-    # print(model.summary())
-    return model
+# def cmpFtrModel(): #(dRate): # (dRate):
+#     with open("./training_counter.pickle", "rb") as readFile:
+#         tokeniser = pickle.load(readFile)
+#         maxVocabSize = len(tokeniser) + 1 # ~ 120k
+#         readFile.close()
+#     seqLength = 30
+#     embedDim = 512
+#     input = Input(shape=(seqLength,))
+#     textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+#     imageFtrs = Input(shape=(embedDim,))
+#     repeated = RepeatVector(seqLength)(imageFtrs)
+#     #print(textFtrs.output)
+#     concat = concatenate([textFtrs, repeated], axis = -1)
+#     lstm = Bidirectional(LSTM(embedDim, dropout = 0.8))(concat) # 0.8, 0.0
+#     hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
+#     x1 = Dropout(0.5)(hidden1)
+#     hidden2 = Dense(256, activation = "relu")(x1)
+#     x2 = Dropout(0.5)(hidden2)
+#     output = Dense(3, activation = "softmax")(x2)
+#     model = Model(inputs = [input, imageFtrs], output = output)
+#     optimiser = SGD(lr = 0.001, momentum = 0.9)
+#     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+#     # visualiseModel(model, "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
+#     # print(model.summary())
+#     return model
 
 def saveData(list, fname):
     with open(fname, "w") as writeFile:
@@ -698,7 +697,8 @@ def summariseResults(results):
 def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath, batchSize = 16, epochs = 50):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, logName + ".csv"), append = False, separator = ",")
-    modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = epochs, batch_size = batchSize, callbacks = [logger, earlyStoppage])
+    lrScheduler = LearningRateScheduler(scheduledLr, verbose = 1)
+    modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = epochs, batch_size = batchSize, callbacks = [logger, earlyStoppage, lrScheduler])
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName, overWrite = True)
 
@@ -760,8 +760,8 @@ def main():
         predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_testing"), mainPath, "backup_data")
         input("Predicting and saving feature data completed")
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
-    # valImgFeatures = np.load(path.join(dir, "image_features_validation.npy"))
-    # testImgFeatures = np.load(path.join(dir, "image_features_testing.npy"))
+    valImgFeatures = np.load(path.join(dir, "image_sntmt_features_validation.npy"))
+    testImgFeatures = np.load(path.join(dir, "image_sntmt_features_testing.npy"))
     dir = path.join(mainPath, "b-t4sa", "image categories")
     #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
     #         #input("Predicting and saving classification data completed")
@@ -772,10 +772,10 @@ def main():
         predictAndSave(valPaths, categoryVGG, 10, path.join(dir, "image_categories_validation"), mainPath, "backup_data")
         predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath, "backup_data")
         input("Predicting and saving categories data completed")
-    #trainImgCategories = np.load(path.join(dir, "image_categories_training.npy")) # 50 FOR TUNING
-    # valImgCategories = np.load(path.join(dir, "image_categories_validation.npy"))
-    # testImgCategories = np.load(path.join(dir, "image_categories_testing.npy"))
-    #
+    trainImgCategories = np.load(path.join(dir, "image_categories_training.npy")) # 50 FOR TUNING
+    valImgCategories = np.load(path.join(dir, "image_categories_validation.npy"))
+    testImgCategories = np.load(path.join(dir, "image_categories_testing.npy"))
+
     logDir = "./logs"
     if not path.exists(logDir):
         os.makedirs(logDir)
@@ -826,25 +826,25 @@ def main():
 
     # trainMainModel(catFtrModel(),
     #     logDir,
-    #     "cat_ftr-lvl_log",
+    #     "cat_sntmt_ftr-lvl_log",
     #     [XTrain, trainImgCategories],
     #     YTrain,
     #     [XVal, valImgCategories],
     #     YVal,
-    #     "cat_ftr-lvl_model_history",
-    #     "cat_ftr-lvl_model",
+    #     "cat_sntmt_ftr-lvl_model_history",
+    #     "cat_sntmt_ftr-lvl_model",
     #     mainPath)
-    #
-    # trainMainModel(compFtrModel(),
-    #     logDir,
-    #     "cmpt_ftr-lvl_log",
-    #     [XTrain, trainImgFeatures],
-    #     YTrain,
-    #     [XVal, valImgFeatures],
-    #     YVal,
-    #     "cmp_ftr-lvl_model_history",
-    #     "cmp_ftr-lvl_model",
-    #     mainPath)
+
+    trainMainModel(ftrModel(),
+        logDir,
+        "sntmt_ftr-lvl_log",
+        [XTrain, trainImgFeatures],
+        YTrain,
+        [XVal, valImgFeatures],
+        YVal,
+        "sntmt_ftr-lvl_model_history",
+        "sntmt_ftr-lvl_model",
+        mainPath)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
