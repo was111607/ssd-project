@@ -638,10 +638,9 @@ def batchPredict(df, model, noPartitions, mainPath, backupName):
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
-        dir = np.save(path.join(mainPath, backupName), updatedPartitions)
+        np.save(path.join(mainPath, backupName), updatedPartitions)
         # np.save("backup_data", updatedPartitions)
         print("Saved backup")
-        #saveData(updatedPartitions.tolist(), "backupData.csv")
     return updatedPartitions
 
 # def imgRepsAndSave(df, noPartitions, saveName, isAws):
@@ -655,7 +654,6 @@ def predictAndSave(df, model, noPartitions, saveName, mainPath, backupName):
     print("Predicting for " + saveName)
     predictions = batchPredict(df, model, noPartitions, mainPath, backupName)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
     np.save(saveName, predictions)
-    #saveData(predictions.tolist(), saveName + ".csv")
     print("Saved to " + saveName + ".npy")
 
 # def recoverImgRepsAndSave(df, noPartitions, saveName, backupName, backupName2, isAws):
