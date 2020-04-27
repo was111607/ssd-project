@@ -62,7 +62,7 @@ def main():
 
     #print(dModel.predict([[XTest[0]], [testImgClass[0]]]))
     evalModel(mainPath, "", "text_model", XTest, YTest, "no fusion (text only)", "text_model_score_2")
-    evalDecisionModel(mainPath, "", "decision_model", "", "text_model", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_2")
+    evalDecisionModel(mainPath, "", "decision_model", "", "text_model", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st")
     # evalModel(mainPath, "", "cat_ftr-lvl_model", [XTest, testImgCategories], YTest, "image category feature-level fusion", "cat_ftr-lvl_model_score")
     # evalModel(mainPath, "", "cmp_ftr-lvl_model", [XTest, testImgFeatures], YTest, "image components feature-level fusion", "cmp_ftr-lvl_model_score")
 
