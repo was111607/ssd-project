@@ -528,7 +528,7 @@ def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     #     x2 = Dropout(0.3)(hidden4)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
+    optimiser = SGD(lr = 0.0005, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
 #    visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
     # print(model.summary())
@@ -694,7 +694,7 @@ def summariseResults(results):
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
-def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath, batchSize = 16, epochs = 50):
+def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath, batchSize = 16, epochs = 15):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, logName + ".csv"), append = False, separator = ",")
     lrScheduler = LearningRateScheduler(scheduledLr, verbose = 1)
@@ -702,7 +702,7 @@ def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, h
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName, overWrite = True)
 
-def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen, isFt, batchSize = 16, epochs = 50):
+def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen, isFt, batchSize = 16, epochs = 15):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, "image_sentiments_log.csv"), append = False, separator = ",")
     cb = [earlyStoppage, logger]
