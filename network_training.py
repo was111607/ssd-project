@@ -802,16 +802,16 @@ def main():
     #     batchSize = 16,
     #     epochs = 50)
 
-    # trainMainModel(textModel(),
-    #     logDir,
-    #     "text_log",
-    #     XTrain,
-    #     YTrain,
-    #     XVal,
-    #     YVal,
-    #     "text_model_history",
-    #     "text_model",
-    #     mainPath)
+    trainMainModel(textModel(),
+        logDir,
+        "text__lr0005_log",
+        XTrain,
+        YTrain,
+        XVal,
+        YVal,
+        "text_lr0005_history",
+        "text_lr0005",
+        mainPath)
 
     # trainMainModel(dFusionModel(),
     #     logDir,
@@ -835,16 +835,16 @@ def main():
     #     "cat_sntmt_ftr-lvl_model",
     #     mainPath)
 
-    trainMainModel(ftrModel(),
-        logDir,
-        "sntmt_ftr-lvl_log",
-        [XTrain, trainImgFeatures],
-        YTrain,
-        [XVal, valImgFeatures],
-        YVal,
-        "sntmt_ftr-lvl_model_history",
-        "sntmt_ftr-lvl_model",
-        mainPath)
+    # trainMainModel(ftrModel(),
+    #     logDir,
+    #     "sntmt_ftr-lvl_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     "sntmt_ftr-lvl_model_history",
+    #     "sntmt_ftr-lvl_model",
+    #     mainPath)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
