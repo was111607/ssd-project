@@ -59,9 +59,9 @@ def main():
     pd.set_option('display.max_colwidth', -1)
     dfTest = pd.read_csv(testFile, header = 0)
     testLen = dfTest.shape[0]
-    matchings = getImgSntmts(mainPath, testLen, "img_model_st_like_vgg", False, batchSize = 16)
+    matchings = getImgSntmts(mainPath, testLen, "img_model_st", False, batchSize = 16)
     updatedDf = matchMainModelInput(matchings, dfTest)
-    saveDataFrame(updatedDf, path.join(mainPath, "b-t4sa/model_input_testing_updated_st_like_vgg.csv"))
+    saveDataFrame(updatedDf, path.join(mainPath, "b-t4sa/model_input_testing_updated_st.csv"))
 
 if __name__ == "__main__":
     main()
