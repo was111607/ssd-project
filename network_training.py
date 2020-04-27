@@ -417,7 +417,7 @@ def initCatVGG():
 #    visualiseModel(model, "decision_vgg.png")
     return model
 
-def initFtrVGG(modelName):
+def initFtrVGG(mainPath, modelName):
 #     vgg19 = VGG19(weights = "imagenet")
 #     model = Sequential()
 #     for layer in vgg19.layers[:-1]: # Output of FC2 layer
@@ -425,7 +425,7 @@ def initFtrVGG(modelName):
 #     model.add(Dense(512, activation = "relu"))
 # #    visualiseModel(model, "feature_vgg.png")
 #     return model
-    imgModel = loadModel(modelName)
+    imgModel = loadModel(mainPath, modelName)
     features = Dense(512, activation = "relu")(imgModel.layers[-2].output)
     model = Model(inputs = imgModel.input, outputs = features)
     optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
@@ -756,7 +756,7 @@ def main():
     #         #input("Predicting and saving feature data completed")
     if not path.exists(dir):
         os.makedirs(dir)
-        featureVGG = initFtrVGG("img_model_st")
+        featureVGG = initFtrVGG(mainPath, "img_model_st")
         predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_sntmt_features_training"), mainPath, "backup_data")
         predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_validation"), mainPath, "backup_data")
         predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_testing"), mainPath, "backup_data")
