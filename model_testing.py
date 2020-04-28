@@ -48,7 +48,7 @@ def main():
         mainPath = awsDir
     else:
         mainPath = curDir
-    testFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st_like_vgg.csv")
+    testFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st.csv")
     dfTest = pd.read_csv(testFile, header = 0)
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
@@ -61,10 +61,9 @@ def main():
     #tModel = loadModel("text_model")
 
     #print(dModel.predict([[XTest[0]], [testImgClass[0]]]))
-    evalModel(mainPath, "", "text_model", XTest, YTest, "no fusion (text only)", "text_model_score_2")
-    evalDecisionModel(mainPath, "", "decision_model", "", "text_model", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st")
-    # evalModel(mainPath, "", "cat_ftr-lvl_model", [XTest, testImgCategories], YTest, "image category feature-level fusion", "cat_ftr-lvl_model_score")
-    # evalModel(mainPath, "", "cmp_ftr-lvl_model", [XTest, testImgFeatures], YTest, "image components feature-level fusion", "cmp_ftr-lvl_model_score")
+    evalModel(mainPath, "", "text_lr0001", XTest, YTest, "no fusion (text only)", "text_model_score_2")
+    evalDecisionModel(mainPath, "", "decision_model", "", "text_lr0001", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st")
+    evalModel(mainPath, "", "sntmt_ftr-lvl_model_lr0001_", [XTest, testImgCategories], YTest, "image category feature-level fusion", "sntmt_ftr-lvl_model_lr0001_model_score")
 
 if __name__ == "__main__":
     main()

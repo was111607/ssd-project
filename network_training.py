@@ -813,7 +813,7 @@ def main():
     #     "text_lr0001",
     #     mainPath)
 
-    # trainMainModel(dFusionModel(),
+    # trainMainModel(dFusionModel(mainPath, loadModel(mainPath, "text_lr0001")), # NO NEED TO TRAIN SO REMOVE
     #     logDir,
     #     "text_log",
     #     XTrain,
@@ -835,16 +835,16 @@ def main():
     #     "cat_sntmt_ftr-lvl_model",
     #     mainPath)
 
-    trainMainModel(ftrModel(),
-        logDir,
-        "sntmt_ftr-lvl_lr0001_log",
-        [XTrain, trainImgFeatures],
-        YTrain,
-        [XVal, valImgFeatures],
-        YVal,
-        "sntmt_ftr-lvl_model_lr0001_history",
-        "sntmt_ftr-lvl_model_lr0001_",
-        mainPath)
+    # trainMainModel(ftrModel(),
+    #     logDir,
+    #     "sntmt_ftr-lvl_lr0001_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     "sntmt_ftr-lvl_model_lr0001_history",
+    #     "sntmt_ftr-lvl_model_lr0001_",
+    #     mainPath)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
