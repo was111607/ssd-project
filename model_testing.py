@@ -32,7 +32,7 @@ def evalModel(isDecision, mainPath, modelName, input, YTest, fusionType, scoreNa
     else:
         model = loadModel(mainPath, modelName)
     score = model.evaluate(input, to_categorical(YTest))
-    print(f"The loss and accuracy for {fusionType} fusion is: {score}")
+    print(f"The loss and accuracy for {fusionType} is: {score}")
     saveScore(score, scoreName)
 
 def main():
@@ -48,8 +48,7 @@ def main():
     dfTest = pd.read_csv(testFile, header = 0)
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
-    testImgFeatures = np.load(path.join(mainPath, "b-t4sa/image features/image_features_testing.npy"))
-    testImgCategories = np.load(path.join(mainPath, "b-t4sa/image categories/image_categories_testing.npy"))
+    testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing.npy"))
     if "IMG_PREDS" in dfTest.columns:
         testImgSntmtProbs = np.stack(dfTest["IMG_PREDS"].apply(toArray))
     # fModel = loadModel("training_all", "feature_model")
@@ -61,7 +60,7 @@ def main():
     # evalModel(False, mainPath, "text_model", XTest, YTest, "no fusion (text only)", "text_model_score_lr001")
     # evalModel(True, mainPath, "text_lr0001", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st_lr0001")
     # evalModel(True, mainPath, "text_model", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st_lr001")
-    evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgCategories], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_model_score")
+    evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrs], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_model_score")
 
 if __name__ == "__main__":
     main()

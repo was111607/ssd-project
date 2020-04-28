@@ -16,7 +16,7 @@ from keras.wrappers.scikit_learn import KerasClassifier # for grid search for mu
 #import keras.wrappers.scikit_learn
 import slms_search
 from sklearn import model_selection # gridSearchCV
-from network_training import predictSntmtFeatures, loadModel
+from network_training import predictSntmtFeatures, loadModel, scheduledLr
 
 # initialise using LearningRateScheduler and add as callback to training if required
 def scheduledLr(epoch, lr):
@@ -164,21 +164,16 @@ def main():
 
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
     valImgFeatures = np.load(path.join(dir, "image_sntmt_features_validation.npy"))
-    testImgFeatures = np.load(path.join(dir, "image_sntmt_features_testing.npy"))
-
-    logDir = "./logs"
-    if not path.exists(logDir):
-        os.makedirs(logDir)
-
-    batchSizes = [16, 32, 64, 128, 256]
-    paramGrid = dict(batch_size = batchSizes)
-    model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
-    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_batch_sizes")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
     # model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_batch_sizes")
+
+    batchSizes = [16, 32, 64, 128, 256]
+    paramGrid = dict(batch_size = batchSizes)
+    model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
+    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_batch_sizes")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
