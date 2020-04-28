@@ -25,19 +25,22 @@ def saveScore(score, fname):
         pickle.dump(score, writeFile)
         writeFile.close()
 
-def evalModel(mainPath, modelType, modelName, input, YTest, fusionType, scoreName):
-    model = loadModel(mainPath, modelType, modelName)
+def evalModel(isDecision, mainPath, modelType, modelName, input, YTest, fusionType, scoreName):
+    if isDecision is True:
+        textModel = loadModel(mainPath, textModelType, textModelName)
+        model = dFusionModel(mainPath, textModel)
+    else:
+        model = loadModel(mainPath, modelType, modelName)
     score = model.evaluate(input, to_categorical(YTest))
     print(f"The loss and accuracy for {fusionType} fusion is: {score}")
     saveScore(score, scoreName)
 
-def evalDecisionModel(mainPath, modelType, modelName, textModelType, textModelName, input, YTest, fusionType, scoreName):
-    filePath = path.join(mainPath, "models", modelType, modelName + ".h5")
-    textModel = loadModel(mainPath, textModelType, textModelName)
-    model = dFusionModel(mainPath, textModel)
-    score = model.evaluate(input, to_categorical(YTest))
-    print(f"The loss and accuracy for {fusionType} is: {score}")
-    saveScore(score, scoreName)
+# def evalDecisionModel(mainPath, textModelType, textModelName, input, YTest, fusionType, scoreName):
+#     textModel = loadModel(mainPath, textModelType, textModelName)
+#     model = dFusionModel(mainPath, textModel)
+#     score = model.evaluate(input, to_categorical(YTest))
+#     print(f"The loss and accuracy for {fusionType} is: {score}")
+#     saveScore(score, scoreName)
 
 def main():
     awsDir = "/media/Data3/sewell"
@@ -61,9 +64,9 @@ def main():
     #tModel = loadModel("text_model")
 
     #print(dModel.predict([[XTest[0]], [testImgClass[0]]]))
-    evalModel(mainPath, "", "text_lr0001", XTest, YTest, "no fusion (text only)", "text_model_score_2")
-    evalDecisionModel(mainPath, "", "decision_model", "", "text_lr0001", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st")
-    evalModel(mainPath, "", "sntmt_ftr-lvl_model_lr0001_", [XTest, testImgCategories], YTest, "image category feature-level fusion", "sntmt_ftr-lvl_model_lr0001_model_score")
+    evalModel(False, mainPath, "", "text_lr0001", XTest, YTest, "no fusion (text only)", "text_model_score_2")
+    evalModel(True, mainPath, "", "text_lr0001", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st")
+    evalModel(False, mainPath, "", "sntmt_ftr-lvl_model_lr0001_", [XTest, testImgCategories], YTest, "image category feature-level fusion", "sntmt_ftr-lvl_model_lr0001_model_score")
 
 if __name__ == "__main__":
     main()
