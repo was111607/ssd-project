@@ -6,10 +6,10 @@ import numpy as np
 import os
 from os import path
 from keras.callbacks import CSVLogger, EarlyStopping, LearningRateScheduler
-from keras.models import Model, Sequential, load_model, model_from_json
+from keras.models import Model, load_model
 from keras.preprocessing.image import load_img, img_to_array, ImageDataGenerator
-from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Flatten, Dropout, RepeatVector, Conv2D, MaxPooling2D
-from keras.layers.merge import add, concatenate
+from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Flatten, Dropout, Conv2D, MaxPooling2D
+from keras.layers.merge import concatenate
 from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.utils import to_categorical, plot_model
 from keras import regularizers
@@ -17,18 +17,12 @@ from keras.optimizers import SGD
 from ast import literal_eval
 from io import BytesIO
 from urllib.request import urlopen
-#from keras.wrappers.scikit_learn import KerasClassifier # for grid search for multi-input models
-import keras.wrappers.scikit_learn
+from keras.wrappers.scikit_learn import KerasClassifier
+# import keras.wrappers.scikit_learn
 #import sklearn.model_selection
-from slms_search import GridSearchCV
-#from sklearn.model_selection import GridSearchCV
-import types
-import copy
-from keras import losses
-from keras.utils.generic_utils import has_arg
-from keras import backend as K
+import slms_search
+from sklearn import model_selection # gridSearchCV
 from runai import ga
-import traceback
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -61,6 +55,7 @@ import traceback
 
 # Skimage to retrieve and resize from tweet links
 # Maybe have to run all programs in succession to be able to run?
+
 counter = 1
 
 def loadImage(path):
@@ -253,7 +248,7 @@ def t4saVGG(mainPath, saveName):
     saveModel(model, mainPath, saveName, overWrite = False)
     return model
 
-def sentimentVGG(extend):
+def sentimentVGG():
     vgg19 = VGG19(weights = None, include_top = False)
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
@@ -408,23 +403,7 @@ def sentimentVGG(extend):
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-def initCatVGG():
-    vgg19 = VGG19(weights = "imagenet")
-    model = Sequential()
-    for layer in vgg19.layers:
-        model.add(layer)
-    model.add(Dense(512, activation = "relu"))
-#    visualiseModel(model, "decision_vgg.png")
-    return model
-
 def initFtrVGG(mainPath, modelName):
-#     vgg19 = VGG19(weights = "imagenet")
-#     model = Sequential()
-#     for layer in vgg19.layers[:-1]: # Output of FC2 layer
-#         model.add(layer)
-#     model.add(Dense(512, activation = "relu"))
-# #    visualiseModel(model, "feature_vgg.png")
-#     return model
     imgModel = loadModel(mainPath, modelName)
     features = Dense(512, activation = "relu")(imgModel.layers[-2].output)
     model = Model(inputs = imgModel.input, outputs = features)
@@ -472,23 +451,6 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     return model
 
 def dFusionModel(mainPath, textModel):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
-        readFile.close()
-    # seqLength = 30
-    # embedDim = 512
-    # input = Input(shape=(seqLength,))
-    # textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-    # #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
-    # #print(textFtrs.output)
-    # lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
-    # hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
-    # x1 = Dropout(0.6)(hidden1)
-    # hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
-    # x2 = Dropout(0.3)(hidden2)
-    # textClass = Dense(3, activation = "softmax")(x2)
-    # textModel = loadModel(mainPath, "text_model")
     imageSntmts = Input(shape=(3,), name = "input_2")
     output = Lambda(lambda inputs: (inputs[0] / 2) + (inputs[1] / 2))([textModel.output, imageSntmts])
     model = Model(input = [textModel.input, imageSntmts], output = output)
@@ -517,15 +479,6 @@ def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     x1 = Dropout(0.2)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
     x2 = Dropout(0.3)(hidden2)
-    #if extraHLayers == 1:
-    # for i in range(extraHLayers):
-    #     hidden3 = Dense(128, activation = "relu")(x2)
-    #     x2 = Dropout(0.3)(hidden3)
-    # elif extraHLayers == 2:
-    #     hidden3 = Dense(128, activation = "relu")(x2)
-    #     x3 = Dropout(0.3)(hidden3)
-    #     hidden4 = Dense(64, activation = "relu")(x3)
-    #     x2 = Dropout(0.3)(hidden4)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
     optimiser = SGD(lr = 0.0001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
@@ -533,32 +486,6 @@ def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
 #    visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
     # print(model.summary())
     return model
-
-# def cmpFtrModel(): #(dRate): # (dRate):
-#     with open("./training_counter.pickle", "rb") as readFile:
-#         tokeniser = pickle.load(readFile)
-#         maxVocabSize = len(tokeniser) + 1 # ~ 120k
-#         readFile.close()
-#     seqLength = 30
-#     embedDim = 512
-#     input = Input(shape=(seqLength,))
-#     textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-#     imageFtrs = Input(shape=(embedDim,))
-#     repeated = RepeatVector(seqLength)(imageFtrs)
-#     #print(textFtrs.output)
-#     concat = concatenate([textFtrs, repeated], axis = -1)
-#     lstm = Bidirectional(LSTM(embedDim, dropout = 0.8))(concat) # 0.8, 0.0
-#     hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
-#     x1 = Dropout(0.5)(hidden1)
-#     hidden2 = Dense(256, activation = "relu")(x1)
-#     x2 = Dropout(0.5)(hidden2)
-#     output = Dense(3, activation = "softmax")(x2)
-#     model = Model(inputs = [input, imageFtrs], output = output)
-#     optimiser = SGD(lr = 0.001, momentum = 0.9)
-#     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-#     # visualiseModel(model, "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
-#     # print(model.summary())
-#     return model
 
 def saveData(list, fname):
     with open(fname, "w") as writeFile:
@@ -613,24 +540,6 @@ def toArray(list):
 def toURL(path): # ENABLE IN PATHS DF
     return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
-# def batchImgReps(df, noPartitions, isAws):
-#     global awsDir
-#     global curDir
-#     pCounter = 0
-#     updatedPartitions = np.empty((0, 224, 224, 3))
-#     partitions = np.array_split(df, noPartitions)
-#     for partition in partitions:
-#         updatedPartitions = np.concatenate((updatedPartitions, getImgReps(partition)), axis = 0)
-#         if (pCounter % 150 == 0):
-#             if isAws is True:
-#                 dir = np.save(path.join(awsDir, "backup_data"), updatedPartitions)
-#             else:
-#                 dir = np.save(path.join(curDir, "backup_data"), updatedPartitions)
-#             print("Saved backup")
-#         #saveData(updatedPartitions.tolist(), "backupData.csv")
-#         pCounter += 1
-#     return updatedPartitions
-
 def batchPredict(df, model, noPartitions, mainPath, backupName):
     # df = df.sample(n = 20)
     updatedPartitions = np.empty((0, 512))
@@ -638,38 +547,14 @@ def batchPredict(df, model, noPartitions, mainPath, backupName):
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
         np.save(path.join(mainPath, backupName), updatedPartitions)
-        # np.save("backup_data", updatedPartitions)
         print("Saved backup")
     return updatedPartitions
 
-# def imgRepsAndSave(df, noPartitions, saveName, isAws):
-#     print("Predicting for " + saveName)
-#     predictions = batchImgReps(df, noPartitions, isAws)
-#     np.save(saveName, predictions)
-#     #saveData(predictions.tolist(), saveName + ".csv")
-#     print("Saved to " + saveName + ".npy")
-
 def predictAndSave(df, model, noPartitions, saveName, mainPath, backupName):
     print("Predicting for " + saveName)
-    predictions = batchPredict(df, model, noPartitions, mainPath, backupName)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
+    predictions = batchPredict(df, model, noPartitions, mainPath, backupName)
     np.save(saveName, predictions)
     print("Saved to " + saveName + ".npy")
-
-# def recoverImgRepsAndSave(df, noPartitions, saveName, backupName, backupName2, isAws):
-#     global counter
-#     print("Predicting for " + saveName)
-#     backup = np.load(backupName + ".npy")
-#     backup2 = np.load(backupName2 + ".npy")
-#     backupLen = backup.shape[0] + backup2.shape[0] ##########
-#     counter = backupLen ######
-#     backup = np.concatenate((backup, backup2), axis = 0)
-#     print(f"The backup length is {counter}")
-#     print("backup will only store the data remainder")
-#     predictions = batchImgReps(df.tail(-backupLen), noPartitions, isAws)
-#     totalData = np.concatenate((backup, predictions), axis = 0)
-#     np.save(saveName, totalData)
-#     #saveData(predictions.tolist(), saveName + ".csv")
-#     print("Saved to " + saveName + ".npy")
 
 def recoverPredictAndSave(df, model, noPartitions, saveName, mainPath, backupLoadName, backupSaveName):
     global counter
@@ -679,8 +564,7 @@ def recoverPredictAndSave(df, model, noPartitions, saveName, mainPath, backupLoa
     counter = backupLen
     print(f"The backup length is {counter}")
     print(backupSaveName + ".npy will only back up the data remainder")
-#    predictions = batchPredict(df.tail(-backupLen), model, noPartitions)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
-    predictions = batchPredict(df.tail(-backupLen), model, noPartitions, mainPath, backupSaveName)#getImgPredict(trainPaths, featureVGG)#getImgReps(trainPaths) #batchPredict
+    predictions = batchPredict(df.tail(-backupLen), model, noPartitions, mainPath, backupSaveName)
     totalData = np.concatenate((backup, predictions), axis = 0)
     np.save(saveName, totalData)
     #saveData(predictions.tolist(), saveName + ".csv")
@@ -722,6 +606,13 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName, overWrite = True)
 
+def predictSntmtFeatures(dir, mainPath, trainPaths, valPaths, testPaths, modelName):
+    featureVGG = initFtrVGG(mainPath, modelName)
+    predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_sntmt_features_training"), mainPath, "backup_data")
+    predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_validation"), mainPath, "backup_data")
+    predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_testing"), mainPath, "backup_data")
+    print("Predicting and saving feature data completed")
+
 def main():
     awsDir = "/media/Data3/sewell"
     curDir = "."
@@ -750,31 +641,13 @@ def main():
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
-    #         #recoverPredictAndSave(trainPaths, featureVGG, 20, dir + "/image_features_training", "backup_data")
-    #         #input("Predicting and saving feature data completed")
     if not path.exists(dir):
         os.makedirs(dir)
-        featureVGG = initFtrVGG(mainPath, "img_model_st")
-        predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_sntmt_features_training"), mainPath, "backup_data")
-        predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_validation"), mainPath, "backup_data")
-        predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_testing"), mainPath, "backup_data")
-        input("Predicting and saving feature data completed")
+        predictSntmtFeatures(dir, mainPath, trainPaths, valPaths, testPaths, "img_model_st")
+
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
     valImgFeatures = np.load(path.join(dir, "image_sntmt_features_validation.npy"))
     testImgFeatures = np.load(path.join(dir, "image_sntmt_features_testing.npy"))
-    dir = path.join(mainPath, "b-t4sa", "image categories")
-    #         #recoverpredictOrBatchAndSave(trainPaths, decisionVGG, 20, dir + "/image_classifications_training", "backup_data")
-    #         #input("Predicting and saving classification data completed")
-    if not path.exists(dir):
-        os.makedirs(dir)
-        categoryVGG = initCatVGG()
-        predictAndSave(trainPaths, categoryVGG, 30, path.join(dir, "image_categories_training"), mainPath, "backup_data") # Remove recover, change 10 to 20, remove backupNam
-        predictAndSave(valPaths, categoryVGG, 10, path.join(dir, "image_categories_validation"), mainPath, "backup_data")
-        predictAndSave(testPaths, categoryVGG, 10, path.join(dir, "image_categories_testing"), mainPath, "backup_data")
-        input("Predicting and saving categories data completed")
-    trainImgCategories = np.load(path.join(dir, "image_categories_training.npy")) # 50 FOR TUNING
-    valImgCategories = np.load(path.join(dir, "image_categories_validation.npy"))
-    testImgCategories = np.load(path.join(dir, "image_categories_testing.npy"))
 
     logDir = "./logs"
     if not path.exists(logDir):
@@ -824,48 +697,37 @@ def main():
     #     "text_model",
     #     mainPath)
 
-    # trainMainModel(catFtrModel(),
-    #     logDir,
-    #     "cat_sntmt_ftr-lvl_log",
-    #     [XTrain, trainImgCategories],
-    #     YTrain,
-    #     [XVal, valImgCategories],
-    #     YVal,
-    #     "cat_sntmt_ftr-lvl_model_history",
-    #     "cat_sntmt_ftr-lvl_model",
-    #     mainPath)
-
-    # trainMainModel(ftrModel(),
-    #     logDir,
-    #     "sntmt_ftr-lvl_lr0001_log",
-    #     [XTrain, trainImgFeatures],
-    #     YTrain,
-    #     [XVal, valImgFeatures],
-    #     YVal,
-    #     "sntmt_ftr-lvl_model_lr0001_history",
-    #     "sntmt_ftr-lvl_model_lr0001_",
-    #     mainPath)
+    trainMainModel(ftrModel(),
+        logDir,
+        "sntmt_ftr-lvl_lr001_log",
+        [XTrain, trainImgFeatures],
+        YTrain,
+        [XVal, valImgFeatures],
+        YVal,
+        "sntmt_ftr-lvl_model_lr001_history",
+        "sntmt_ftr-lvl_model_lr001_",
+        mainPath)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
-    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
-    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
+    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # results = grid.fit(XTrain, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("batch_sizes", results)
 
     # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # results = grid.fit(XTrain, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("dropouts", results)
 
     # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # results = grid.fit(XTrain, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("dropouts", results)
@@ -873,32 +735,32 @@ def main():
     # lrs = [0.05]
     # moms = [0.0, 0.2, 0.4, 0.6, 0.8]
     # paramGrid = dict(lr = lrs, mom = moms)
-    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # results = grid.fit(XTrain, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("dropouts_005", results)
 
     # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
     # paramGrid = dict(dRate = dropout)
-    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # results = grid.fit(XTrain, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("lstm_dropouts", results, isAws)
 
     # dropout = [0.6, 0.7, 0.8, 0.9]# [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
     # paramGrid = dict(dRate = dropout)
-    # tModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # results = grid.fit(XTrain, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("lstm_rec_dropouts_2h", results, isAws)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5)
-    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # dModel = KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5)
+    # grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
@@ -906,8 +768,8 @@ def main():
 
     # hiddenLayers = [0, 1]
     # paramGrid = dict(extraHLayers = hiddenLayers)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # dModel = KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
@@ -916,8 +778,8 @@ def main():
     # lrs = [0.09]
     # moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
     # paramGrid = dict(lr = lrs, mom = moms)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # dModel = KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
@@ -925,50 +787,12 @@ def main():
 
     # dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # dModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    # dModel = KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
+    # grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
     # results = grid.fit(XCombined, to_categorical(YTrain))
     # summariseResults(results)
     # saveResults("d_h3_dropout_2h", results, isAws)
-
-    # batchSizes = [16, 32, 64, 128, 256]
-    # paramGrid = dict(batch_size = batchSizes)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = compFtrModel, verbose = 1, epochs = 5)
-    # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("f_batch_sizes", results, isAws)
-
-    # dropout = [0.6, 0.7, 0.8, 0.9]
-    # paramGrid = dict(dRate = dropout)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = compFtrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("f_lstm_dropouts_2h", results, isAws)
-
-
-    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    # paramGrid = dict(dRate = dropout)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = compFtrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("f_lstm_rec_dropouts_2", results, isAws)
-
-    # lrs = [0.075]
-    # moms = [0.0, 0.2, 0.4, 0.6, 0.8]
-    # paramGrid = dict(lr = lrs, mom = moms)
-    # fModel = keras.wrappers.scikit_learn.KerasClassifier(build_fn = compFtrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = GridSearchCV(estimator = fModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("f_lr_0075", results, isAws)
 
 if __name__ == "__main__":
     main()
