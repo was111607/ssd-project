@@ -809,8 +809,8 @@ def main():
         YTrain,
         XVal,
         YVal,
-        "text_lr0002_history",
-        "text_lr0002",
+        "text_lr0001_history",
+        "text_lr0001",
         mainPath)
 
     # trainMainModel(dFusionModel(),
