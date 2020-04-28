@@ -727,7 +727,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -802,16 +802,16 @@ def main():
     #     batchSize = 16,
     #     epochs = 50)
 
-    trainMainModel(textModel(),
-        logDir,
-        "text__lr0001_log",
-        XTrain,
-        YTrain,
-        XVal,
-        YVal,
-        "text_lr0001_history",
-        "text_lr0001",
-        mainPath)
+    # trainMainModel(textModel(),
+    #     logDir,
+    #     "text__lr0001_log",
+    #     XTrain,
+    #     YTrain,
+    #     XVal,
+    #     YVal,
+    #     "text_lr0001_history",
+    #     "text_lr0001",
+    #     mainPath)
 
     # trainMainModel(dFusionModel(),
     #     logDir,
@@ -835,16 +835,16 @@ def main():
     #     "cat_sntmt_ftr-lvl_model",
     #     mainPath)
 
-    # trainMainModel(ftrModel(),
-    #     logDir,
-    #     "sntmt_ftr-lvl_log",
-    #     [XTrain, trainImgFeatures],
-    #     YTrain,
-    #     [XVal, valImgFeatures],
-    #     YVal,
-    #     "sntmt_ftr-lvl_model_history",
-    #     "sntmt_ftr-lvl_model",
-    #     mainPath)
+    trainMainModel(ftrModel(),
+        logDir,
+        "sntmt_ftr-lvl_lr0001_log",
+        [XTrain, trainImgFeatures],
+        YTrain,
+        [XVal, valImgFeatures],
+        YVal,
+        "sntmt_ftr-lvl_model_lr0001_history",
+        "sntmt_ftr-lvl_model_lr0001_",
+        mainPath)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
