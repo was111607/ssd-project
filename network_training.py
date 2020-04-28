@@ -804,7 +804,7 @@ def main():
 
     trainMainModel(textModel(),
         logDir,
-        "text__lr0002_log",
+        "text__lr0001_log",
         XTrain,
         YTrain,
         XVal,
