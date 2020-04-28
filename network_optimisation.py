@@ -118,17 +118,17 @@ def summariseResults(results):
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
-def gridSearch(isMultiInput, mainPath, params, model, input, YTrain, saveName):
-    if isMultiInput is True:
-        XTrain = input[0]
-        imageFtrs = input[1]
-        grid = slms_search.GridSearchCV(estimator = model, param_grid = params, n_jobs = 1, cv = 3)
-        input = np.array([[XTrain[i], imageFtrs[i]] for i in range(XTrain.shape[0])])
-    else:
-        grid = model_selection.GridSearchCV(estimator = model, param_grid = params, n_jobs = 1, cv = 3)
-    results = grid.fit(input, to_categorical(YTrain))
-    summariseResults(results)
-    saveResults(saveName, results, mainPath)
+# def gridSearch(isMultiInput, mainPath, params, model, input, YTrain, saveName):
+#     if isMultiInput is True:
+#         XTrain = input[0]
+#         imageFtrs = input[1]
+#         grid = slms_search.GridSearchCV(estimator = model, param_grid = params, n_jobs = 1, cv = 3)
+#         input = np.array([[XTrain[i], imageFtrs[i]] for i in range(XTrain.shape[0])])
+#     else:
+#         grid = model_selection.GridSearchCV(estimator = model, param_grid = params, n_jobs = 1, cv = 3)
+#     results = grid.fit(input, to_categorical(YTrain))
+#     summariseResults(results)
+#     saveResults(saveName, results, mainPath)
 
 def main():
     awsDir = "/media/Data3/sewell"
@@ -170,10 +170,10 @@ def main():
     # model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_batch_sizes")
 
-    batchSizes = [16, 32, 64, 128, 256]
-    paramGrid = dict(batch_size = batchSizes)
-    model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
-    gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_batch_sizes")
+    # batchSizes = [16, 32, 64, 128, 256]
+    # paramGrid = dict(batch_size = batchSizes)
+    # model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_batch_sizes")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
@@ -224,14 +224,14 @@ def main():
     # summariseResults(results)
     # saveResults("lstm_rec_dropouts_2h", results, isAws)
 
-    # batchSizes = [16, 32, 64, 128, 256]
-    # paramGrid = dict(batch_size = batchSizes)
-    # dModel = KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5)
-    # grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("d_batch_sizes", results, isAws)
+    batchSizes = [16, 32, 64, 128, 256]
+    paramGrid = dict(batch_size = batchSizes)
+    dModel = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
+    grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
+    results = grid.fit(XCombined, to_categorical(YTrain))
+    summariseResults(results)
+    saveResults("d_batch_sizes", results, mainPath)
 
     # hiddenLayers = [0, 1]
     # paramGrid = dict(extraHLayers = hiddenLayers)
