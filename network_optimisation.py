@@ -174,7 +174,7 @@ def main():
     optimisers = [SGD(lr = 0.0001, momentum = 0.9),  Adam(learning_rate = 0.0001)]
     paramGrid = dict(optimiser = optimisers)
     model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
-    gridSearch(True, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser")
+    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser")
 
     # optimisers = [SGD(lr = 0.0001, momentum = 0.9),  Adam(learning_rate = 0.0001)]
     # paramGrid = dict(optimiser = optimisers)
