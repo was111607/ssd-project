@@ -804,13 +804,13 @@ def main():
 
     trainMainModel(textModel(),
         logDir,
-        "text__lr0005_log",
+        "text__lr0002_log",
         XTrain,
         YTrain,
         XVal,
         YVal,
-        "text_lr0005_history",
-        "text_lr0005",
+        "text_lr0002_history",
+        "text_lr0002",
         mainPath)
 
     # trainMainModel(dFusionModel(),
