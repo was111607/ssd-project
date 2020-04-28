@@ -173,7 +173,7 @@ def main():
     batchSizes = [16, 32, 64, 128, 256]
     paramGrid = dict(batch_size = batchSizes)
     model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
-    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_batch_sizes")
+    gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_batch_sizes")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
