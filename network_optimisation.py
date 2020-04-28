@@ -10,7 +10,7 @@ from keras.layers.merge import concatenate
 from keras.applications.vgg19 import VGG19
 from keras.utils import to_categorical
 from keras import regularizers
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 from ast import literal_eval
 from keras.wrappers.scikit_learn import KerasClassifier # for grid search for multi-input models
 #import keras.wrappers.scikit_learn
@@ -26,7 +26,7 @@ def scheduledLr(epoch, lr):
         return lr / divStep
     return lr
 
-def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+def textModel(optimiser):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -44,12 +44,12 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+#    optimiser = SGD(lr = 0.0001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
     print(model.summary())
     return model
 
-def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+def ftrModel(optimiser): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -69,7 +69,7 @@ def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
+    # optimiser = SGD(lr = 0.0001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     print(model.summary())
     return model
@@ -140,26 +140,22 @@ def main():
     else:
         mainPath = curDir
     trainFile = path.join(mainPath, "b-t4sa/model_input_training.csv")
-    valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
-    testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
     pd.set_option('display.max_colwidth', -1)
     dfTrain = pd.read_csv(trainFile, header = 0)
-    dfVal = pd.read_csv(valFile, header = 0)
-    dfTest = pd.read_csv(testFile, header = 0)
     XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray)) # CONVERT THIS TO NUMPY ARRAY OF LISTS
-    XVal = np.stack(dfVal["TOKENISED"].apply(toArray))
-    XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
-    YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
-    YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
 
-    trainPaths = dfTrain["IMG"].apply(toURL)#.to_numpy("str")
-    valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
-    testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     if not path.exists(dir):
         os.makedirs(dir)
+        valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
+        testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
+        dfVal = pd.read_csv(valFile, header = 0)
+        dfTest = pd.read_csv(testFile, header = 0)
+        trainPaths = dfTrain["IMG"].apply(toURL)#.to_numpy("str")
+        valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
+        testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
         predictSntmtFeatures(dir, mainPath, trainPaths, valPaths, testPaths, "img_model_st")
 
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
@@ -169,11 +165,21 @@ def main():
     # paramGrid = dict(batch_size = batchSizes)
     # model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_batch_sizes")
+    #
+    # batchSizes = [16, 32, 64, 128, 256]
+    # paramGrid = dict(batch_size = batchSizes)
+    # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_batch_sizes")
 
-    batchSizes = [16, 32, 64, 128, 256]
-    paramGrid = dict(batch_size = batchSizes)
-    model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
-    gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_batch_sizes")
+    optimisers = [SGD(lr = 0.0001, momentum = 0.9),  Adam(learning_rate = 0.0001)]
+    paramGrid = dict(optimiser = optimisers)
+    model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
+    gridSearch(True, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser")
+
+    # optimisers = [SGD(lr = 0.0001, momentum = 0.9),  Adam(learning_rate = 0.0001)]
+    # paramGrid = dict(optimiser = optimisers)
+    # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
