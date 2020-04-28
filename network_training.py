@@ -465,7 +465,7 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.0005, momentum = 0.9)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
 #    print(model.summary())
@@ -492,7 +492,7 @@ def dFusionModel(mainPath, textModel):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): 
     imageSntmts = Input(shape=(3,), name = "input_2")
     output = Lambda(lambda inputs: (inputs[0] / 2) + (inputs[1] / 2))([textModel.output, imageSntmts])
     model = Model(input = [textModel.input, imageSntmts], output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.8)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
 #    print(model.summary())
@@ -528,7 +528,7 @@ def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     #     x2 = Dropout(0.3)(hidden4)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = 0.0005, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
 #    visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
     # print(model.summary())
