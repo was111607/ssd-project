@@ -23,6 +23,7 @@ def loadModel(mainPath, modelName):
 def saveScore(score, fname):
     with open(fname + ".pickle", "wb") as writeFile:
         pickle.dump(score, writeFile)
+        print("Score saved for filename: " + fname)
         writeFile.close()
 
 def evalModel(isDecision, mainPath, modelName, input, YTest, fusionType, scoreName):
