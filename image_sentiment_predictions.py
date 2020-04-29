@@ -225,11 +225,11 @@ def getImgFtrs(mainPath, testLen, model, isFt, batchSize = 32):
     dir = path.join(mainPath, "b-t4sa", "data")
     testGen = dataGen.flow_from_directory(path.join(dir, "test"), target_size=(224, 224), batch_size = batchSize, class_mode = None, shuffle = False)
     testGen.reset()
-    probs = model.predict_generator(testGen, steps = -(-testLen // batchSize), verbose = 1)
+    ftrs = model.predict_generator(testGen, steps = -(-testLen // batchSize), verbose = 1)
     inputOrder = testGen.filenames
     for imagePath, ftr in zip(inputOrder, ftrs):
         fileName = re.search(r"(?<=/)[0-9]+-[0-9].jpg", imagePath).group(0)
-        matchings[fileName] = prob.tolist()
+        matchings[fileName] = ftr.tolist()
     saveResults(matchings, mainPath)
     return matchings
 
