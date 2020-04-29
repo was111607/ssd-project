@@ -168,7 +168,7 @@ def t4saVGG(mainPath): # Import to image_sentiment_creation?
     model.compile(optimizer = gaOptimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     #saveModel(model, mainPath, saveName, overWrite = False)
-    print(model.summary())
+    #print(model.summary())
     return model
 
 def saveResults(dict, mainPath):
