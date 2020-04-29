@@ -244,7 +244,7 @@ def predictAndSave(dir, file, mainPath, saveName, split, modelName, predictSntmt
     pd.set_option('display.max_colwidth', -1)
     df = pd.read_csv(file, header = 0)
     len = df.shape[0]
-    matchings = imgPredict(mainPath, trainLen, split, modelName, predictSntmt, firstTime, batchSize)
+    matchings = imgPredict(mainPath, len, split, modelName, predictSntmt, firstTime, batchSize)
     predictions = matchPreds(matchings, df)
     savePredictions(predictions, path.join(dir, saveName))
 
