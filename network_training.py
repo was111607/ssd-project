@@ -651,6 +651,7 @@ def main():
         os.makedirs(dir)
         predictSntmtFeatures(dir, mainPath, trainPaths, trainSubPaths, valPaths, testPaths, "img_model_st")
 
+    featureVGG = initFtrVGG(mainPath, modelName)
     predictAndSave(trainSubPaths, featureVGG, 15, path.join(dir, "image_sntmt_features_training_50"), mainPath, "backup_data")
 
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
