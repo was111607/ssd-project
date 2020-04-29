@@ -22,7 +22,6 @@ from keras.wrappers.scikit_learn import KerasClassifier
 #import sklearn.model_selection
 import slms_search
 from sklearn import model_selection # gridSearchCV
-from image_sentiment_predictions import t4saVGG
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -505,17 +504,6 @@ def main():
     logDir = "./logs"
     if not path.exists(logDir):
         os.makedirs(logDir)
-
-    # imageSntmtTrain(t4saVGG(),
-    #     "img_model",
-    #     "img_history",
-    #     logDir,
-    #     mainPath,
-    #     dfTrain.shape[0],
-    #     dfVal.shape[0],
-    #     True,
-    #     batchSize = 32,
-    #     epochs = 15)
 
     # imageSntmtTrain(sentimentVGG(),
     #     "img_model_st",
