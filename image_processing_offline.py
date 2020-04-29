@@ -217,6 +217,22 @@ def ftrConvert(mainPath, imgModel):
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
+def saveModel(model, mainPath, fname, overWrite = False):
+    dir = path.join(mainPath, "models")
+    if not path.exists(dir):
+        os.makedirs(dir)
+    filePath = path.join(dir, fname + ".h5")
+    if path.exists(filePath):
+        if overWrite is True:
+            msg = "Saved, replacing existing file of same name"
+            model.save(filePath)
+        else:
+            msg = "Not saved, model already exists"
+    else:
+        msg = "Saved"
+        model.save(filePath)
+    print(fname + " - " + msg)
+
 def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, batchSize):
     matchings = {}
     if firstTime is True:
@@ -226,7 +242,7 @@ def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, bat
         else:
             print("Modifying model to output features")
             model = ftrConvert(mainPath, t4saVGG(mainPath))
-        saveModel(model, mainPath, modelName, overWrite = True)
+        saveModel(model, mainPath, modelName, overWrite = False)
     else:
         model = loadModel(mainPath, modelName)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
