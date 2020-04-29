@@ -301,7 +301,7 @@ def main():
     ### Self-trained image model predictions here
     # (path.exists(path.join(mainPath, "models", modelName + ".h5")))
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
-    predictAndSave(dir, testFile, "image_sntmt_features_test_st", mainPath, testLen, "test", "bt4sa_img_model_class", False, firstTime, batchSize = 16)
+    predictAndSave(dir, testFile, "image_sntmt_features_test_st", mainPath, testLen, "test", "bt4sa_img_model_ftrs", False, firstTime, batchSize = 16)
 
     # sntmtMatchings = imgPredict(mainPath, testLen, "test", "bt4sa_img_model_ftrs", False, firstTime, batchSize = 16)
     # matchings = getImgFtrs(mainPath, testLen, firstTime = False, batchSize = 16)
