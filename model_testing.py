@@ -22,7 +22,7 @@ def loadModel(mainPath, modelName):
 
 def saveScore(score, fname):
     if not path.exists("scores"):
-        mkdir("scores")
+        os.mkdir("scores")
     with open(path.join("scores", fname + ".pickle"), "wb") as writeFile:
         pickle.dump(score, writeFile)
         print("Score saved for filename: " + fname)
