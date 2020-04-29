@@ -10,7 +10,7 @@ from keras.applications.vgg19 import preprocess_input
 from keras import regularizers
 import pickle
 from keras.models import Model
-from network_training import t4saVGG, loadModel, initFtrVGG
+from network_training import loadModel, initFtrVGG
 from runai import ga
 
 def t4saVGG(mainPath): # Import to image_sentiment_creation?
