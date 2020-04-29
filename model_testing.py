@@ -21,7 +21,9 @@ def loadModel(mainPath, modelName):
         exit()
 
 def saveScore(score, fname):
-    with open(fname + ".pickle", "wb") as writeFile:
+    if not path.exists("scores"):
+        mkdir("scores")
+    with open(path.join("scores", fname + ".pickle"), "wb") as writeFile:
         pickle.dump(score, writeFile)
         print("Score saved for filename: " + fname)
         writeFile.close()
@@ -69,8 +71,8 @@ def main():
     # evalModel(False, mainPath, "text_model", XTest, YTest, "no fusion (text only)", "text_model_score_lr001")
     # evalModel(True, mainPath, "text_lr0001", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st_lr0001")
     # evalModel(True, mainPath, "text_model", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st_lr001")
-    evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrs], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_model_score")
-    evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_model_score")
-
+    evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrs], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_score")
+    evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_score")
+    evalModel(False, mainPath, "sntmt_ftr-lvl_model_adam", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_adam_score")
 if __name__ == "__main__":
     main()
