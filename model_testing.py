@@ -48,13 +48,18 @@ def main():
         mainPath = curDir
     testFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st.csv")
     dfTest = pd.read_csv(testFile, header = 0)
+
+    newTestFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st_FTRS.csv")
+    newDfTest = pd.read_csv(newTestFile, header = 0)
+
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
     testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing.npy"))
     if "IMG_PREDS" in dfTest.columns:
         testImgSntmtProbs = np.stack(dfTest["IMG_PREDS"].apply(toArray))
+        
     if "IMG_FTRS" in dfTest.columns:
-        testImgFtrsCSV = np.stack(dfTest["IMG_FTRS"].apply(toArray))
+        testImgFtrsCSV = np.stack(newDfTest["IMG_FTRS"].apply(toArray))
     # fModel = loadModel("training_all", "feature_model")
     # dModel = loadModel("training_all", "decision_model")
     #tModel = loadModel("text_model")
