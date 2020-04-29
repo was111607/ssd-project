@@ -227,7 +227,7 @@ def getImgFtrs(mainPath, testLen, model, isFt, batchSize = 32):
     testGen.reset()
     probs = model.predict_generator(testGen, steps = -(-testLen // batchSize), verbose = 1)
     inputOrder = testGen.filenames
-    for imagePath, ftrs in zip(inputOrder, ftrs):
+    for imagePath, ftr in zip(inputOrder, ftrs):
         fileName = re.search(r"(?<=/)[0-9]+-[0-9].jpg", imagePath).group(0)
         matchings[fileName] = prob.tolist()
     saveResults(matchings, mainPath)
