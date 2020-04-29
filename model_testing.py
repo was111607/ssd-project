@@ -57,8 +57,8 @@ def main():
     testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing.npy"))
     if "IMG_PREDS" in dfTest.columns:
         testImgSntmtProbs = np.stack(dfTest["IMG_PREDS"].apply(toArray))
-        
-    if "IMG_FTRS" in dfTest.columns:
+
+    if "IMG_FTRS" in newDfTest.columns:
         testImgFtrsCSV = np.stack(newDfTest["IMG_FTRS"].apply(toArray))
     # fModel = loadModel("training_all", "feature_model")
     # dModel = loadModel("training_all", "decision_model")
