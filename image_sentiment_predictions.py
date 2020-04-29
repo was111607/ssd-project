@@ -10,7 +10,7 @@ from keras.applications.vgg19 import preprocess_input
 from keras import regularizers
 import pickle
 from keras.models import Model
-from network_training import loadModel, initFtrVGG
+from network_training import initFtrVGG
 from runai import ga
 
 def t4saVGG(mainPath): # Import to image_sentiment_creation?
@@ -175,6 +175,16 @@ def saveResults(dict, mainPath):
     with open(path.join(mainPath, "image_predictions.pickle"), "wb") as writeFile:
         pickle.dump(dict, writeFile)
         writeFile.close()
+
+def loadModel(mainPath, fname):
+    try:
+        modelPath = path.join(mainPath, "models", fname + ".h5")
+        model = load_model(modelPath)
+        print(fname + " successfully loaded")
+        return model
+    except OSError:
+        print("Cannot find model: " + modelPath + " to load.")
+        exit()
 
 def saveDataFrame(df, fname):
     with open (fname, "w") as writeFile:
