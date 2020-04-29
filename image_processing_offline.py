@@ -7,6 +7,7 @@ from os import path
 from keras.preprocessing.image import ImageDataGenerator
 from keras.layers import Dense, Input, Flatten, Dropout, Conv2D, MaxPooling2D
 from keras.applications.vgg19 import preprocess_input
+from keras.optimizers import SGD
 from keras import regularizers
 import pickle
 from keras.models import Model
