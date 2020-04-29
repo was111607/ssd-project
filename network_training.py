@@ -422,11 +422,14 @@ def summariseResults(results):
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
-def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath, batchSize = 16, epochs = 15):
+def trainMainModel(model, logDir, scheduleLr = True, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath, batchSize = 16, epochs = 15):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, logName + ".csv"), append = False, separator = ",")
-    lrScheduler = LearningRateScheduler(scheduledLr, verbose = 1)
-    modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = epochs, batch_size = batchSize, callbacks = [logger, earlyStoppage, lrScheduler])
+    callbacks = [earlyStoppage, logger]
+    if scheduleLr is True:
+        lrScheduler = LearningRateScheduler(scheduledLr, verbose = 1)
+        callbacks.append(lrScheduler)
+    modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = epochs, batch_size = batchSize, callbacks = callbacks)
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName, overWrite = True)
 
