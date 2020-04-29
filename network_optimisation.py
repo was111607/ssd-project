@@ -26,7 +26,7 @@ def scheduledLr(epoch, lr):
         return lr / divStep
     return lr
 
-def textModel(optimiser):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+def textModel(optimiserChoice):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -45,6 +45,10 @@ def textModel(optimiser):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
 #    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    if optimiserChoice == 1:
+        optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    else:
+        optimiser = Adam(learning_rate = 0.0001)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
     print(model.summary())
     return model
