@@ -13,7 +13,7 @@ from keras.layers.merge import concatenate
 from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.utils import to_categorical, plot_model
 from keras import regularizers
-from keras.optimizers import SGD
+from keras.optimizers import SGD. Adam
 from ast import literal_eval
 from io import BytesIO
 from urllib.request import urlopen
@@ -22,7 +22,7 @@ from keras.wrappers.scikit_learn import KerasClassifier
 #import sklearn.model_selection
 import slms_search
 from sklearn import model_selection # gridSearchCV
-from runai import ga
+from image_sentiment_predictions import t4saVGG
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -90,163 +90,6 @@ def scheduledLr(epoch, lr):
     if (epoch % epochStep == 0) and (epoch != 0):
         return lr / divStep
     return lr
-
-def t4saVGG(mainPath, saveName): # Import to image_sentiment_creation?
-    reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
-    input = Input(shape = (224, 224, 3))
-    x = Conv2D(64, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv1_1",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(input)
-    x = Conv2D(64, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv1_2",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block1_pool")(x)
-
-    # Block 2
-    x = Conv2D(128, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv2_1",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(128, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv2_2",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block2_pool")(x)
-
-    # Block 3
-    x = Conv2D(256, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv3_1",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(256, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv3_2",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(256, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv3_3",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(256, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv3_4",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block3_pool")(x)
-
-    # Block 4
-    x = Conv2D(512, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv4_1",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(512, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv4_2",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(512, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv4_3",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(512, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv4_4",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block4_pool")(x)
-
-    # Block 5
-    x = Conv2D(512, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv5_1",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(512, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv5_2",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(512, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv5_3",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = Conv2D(512, (3, 3),
-            activation = "relu",
-            padding = "same",
-            name = "conv5_4",
-            bias_regularizer = reg,
-            kernel_regularizer = reg,
-            trainable = False)(x)
-    x = MaxPooling2D((2, 2), strides = (2, 2), name = "block5_pool")(x)
-    flatten = Flatten(name = "flatten")(x)
-    hidden1 = Dense(4096,
-        activation = "relu",
-        name = "fc6",
-        bias_regularizer = reg,
-        kernel_regularizer = reg,
-        trainable = True)(flatten)
-    dropout1 = Dropout(0.5)(hidden1)
-    hidden2 = Dense(4096,
-        activation = "relu",
-        name = "fc7",
-        bias_regularizer = reg,
-        kernel_regularizer = reg,
-        trainable = True)(dropout1)
-    dropout2 = Dropout(0.5)(hidden2)
-    output = Dense(3,
-        activation = "softmax",
-        name = "fc8-retrain",
-        bias_regularizer = reg,
-        kernel_regularizer = reg,
-        trainable = True)(dropout2)
-    model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
-    gaOptimiser = ga.keras.optimizers.Optimizer(optimiser, steps = 2)
-    model.compile(optimizer = gaOptimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
-    saveModel(model, mainPath, saveName, overWrite = False)
-    return model
 
 def sentimentVGG():
     vgg19 = VGG19(weights = None, include_top = False)
@@ -444,7 +287,8 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    #optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    optimiser = Adam(learning_rate = 0.0001)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
 #    visualiseModel(model, "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
 #    print(model.summary())
@@ -481,7 +325,8 @@ def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = 0.001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
+    #optimiser = SGD(lr = 0.001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
+    optimiser = Adam(learning_rate = 0.0001)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
 #    visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
     # print(model.summary())
@@ -619,7 +464,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -651,8 +496,8 @@ def main():
         os.makedirs(dir)
         predictSntmtFeatures(dir, mainPath, trainPaths, trainSubPaths, valPaths, testPaths, "img_model_st")
 
-    featureVGG = initFtrVGG(mainPath, "img_model_st")
-    predictAndSave(trainSubPaths, featureVGG, 15, path.join(dir, "image_sntmt_features_training_50"), mainPath, "backup_data")
+    # featureVGG = initFtrVGG(mainPath, "img_model_st")
+    # predictAndSave(trainSubPaths, featureVGG, 15, path.join(dir, "image_sntmt_features_training_50"), mainPath, "backup_data")
 
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
     valImgFeatures = np.load(path.join(dir, "image_sntmt_features_validation.npy"))
@@ -661,7 +506,7 @@ def main():
     if not path.exists(logDir):
         os.makedirs(logDir)
 
-    # imageSntmtTrain(t4saVGG(mainPath, "img_model_ft"),
+    # imageSntmtTrain(t4saVGG(),
     #     "img_model",
     #     "img_history",
     #     logDir,
@@ -683,16 +528,16 @@ def main():
     #     batchSize = 16,
     #     epochs = 50)
 
-    # trainMainModel(textModel(),
-    #     logDir,
-    #     "text__lr0001_log",
-    #     XTrain,
-    #     YTrain,
-    #     XVal,
-    #     YVal,
-    #     "text_lr0001_history",
-    #     "text_lr0001",
-    #     mainPath)
+    trainMainModel(textModel(),
+        logDir,
+        "text__adam_log",
+        XTrain,
+        YTrain,
+        XVal,
+        YVal,
+        "text_model_adam_history",
+        "text_model_adam",
+        mainPath)
 
     # trainMainModel(dFusionModel(mainPath, loadModel(mainPath, "text_lr0001")), # NO NEED TO TRAIN SO REMOVE
     #     logDir,
@@ -705,16 +550,16 @@ def main():
     #     "text_model",
     #     mainPath)
 
-    trainMainModel(ftrModel(),
-        logDir,
-        "sntmt_ftr-lvl_lr001_log",
-        [XTrain, trainImgFeatures],
-        YTrain,
-        [XVal, valImgFeatures],
-        YVal,
-        "sntmt_ftr-lvl_model_lr001_history",
-        "sntmt_ftr-lvl_model_lr001_",
-        mainPath)
+    # trainMainModel(ftrModel(),
+    #     logDir,
+    #     "sntmt_ftr-lvl_adam_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     "sntmt_ftr-lvl_model_adam_history",
+    #     "sntmt_ftr-lvl_model_adam",
+    #     mainPath)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
