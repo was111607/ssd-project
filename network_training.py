@@ -422,7 +422,7 @@ def summariseResults(results):
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
-def trainMainModel(model, logDir, scheduleLr = True, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath, batchSize = 16, epochs = 15):
+def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath, scheduleLr = True, batchSize = 16, epochs = 15):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, logName + ".csv"), append = False, separator = ",")
     callbacks = [earlyStoppage, logger]
@@ -522,14 +522,14 @@ def main():
     trainMainModel(textModel(),
         logDir,
         "text__adam_log",
-        scheduleLr = False,
         XTrain,
         YTrain,
         XVal,
         YVal,
         "text_model_adam_history",
         "text_model_adam",
-        mainPath)
+        mainPath,
+        scheduleLr = False)
 
     # trainMainModel(dFusionModel(mainPath, loadModel(mainPath, "text_lr0001")), # NO NEED TO TRAIN SO REMOVE
     #     logDir,
