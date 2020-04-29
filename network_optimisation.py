@@ -49,7 +49,7 @@ def textModel(optimiser):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.
     print(model.summary())
     return model
 
-def ftrModel(optimiser): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+def ftrModel(optimiserChoice): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -70,8 +70,12 @@ def ftrModel(optimiser): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
     # optimiser = SGD(lr = 0.0001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
+    if optimiserChoice == 1:
+        optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    else:
+        optimiser = Adam(learning_rate = 0.0001)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    print(model.summary())
+    #print(model.summary())
     return model
 
 def saveResults(dname, results, mainPath):
@@ -135,7 +139,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -171,15 +175,15 @@ def main():
     # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
     # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_batch_sizes")
 
-    # optimisers = [SGD(lr = 0.0001, momentum = 0.9),  Adam(learning_rate = 0.0001)]
-    # paramGrid = dict(optimiser = optimisers)
-    # model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
-    # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser")
+    optimisers = [1, 2]
+    paramGrid = dict(optimiserChoice = optimisers)
+    model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
+    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser")
 
-    optimisers = [SGD(lr = 0.0001, momentum = 0.9),  Adam(learning_rate = 0.0001)]
-    paramGrid = dict(optimiser = optimisers)
-    model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
-    gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser")
+    # optimisers = [1, 2]
+    # paramGrid = dict(optimiserChoice = optimisers)
+    # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
