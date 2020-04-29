@@ -13,7 +13,7 @@ from keras.layers.merge import concatenate
 from keras.applications.vgg19 import VGG19, preprocess_input
 from keras.utils import to_categorical, plot_model
 from keras import regularizers
-from keras.optimizers import SGD. Adam
+from keras.optimizers import SGD, Adam
 from ast import literal_eval
 from io import BytesIO
 from urllib.request import urlopen
