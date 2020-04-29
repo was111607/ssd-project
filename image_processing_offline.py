@@ -257,9 +257,9 @@ def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, bat
     backupResults(matchings, mainPath, "image_predictions_backup")
     return matchings
 
-def predictAndSave(dir, file, mainPath, saveName, split, modelName, predictSntmt, firstTime, batchSize):
+def predictAndSave(dir, filePath, mainPath, saveName, split, modelName, predictSntmt, firstTime, batchSize):
     pd.set_option('display.max_colwidth', -1)
-    df = pd.read_csv(file, header = 0)
+    df = pd.read_csv(filePath, header = 0)
     len = df.shape[0]
     matchings = imgPredict(mainPath, len, split, modelName, predictSntmt, firstTime, batchSize)
     predictions = matchPreds(matchings, df)
@@ -283,23 +283,31 @@ def main():
     valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
 
-    if firstTime is True:
-        dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
+    dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
+    if (firstTime is True) and (not path.exists(dir)):
+        os.makedirs(dir)
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_probs_training", "train", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_training_subset", "train_subset", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_val", "val", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_test", "test", "bt4sa_img_model_class", True, firstTime, 16)
+    else:
+        print(dir + " already exists, exiting")
+        exit()
 
+    dir = path.join(mainPath, "b-t4sa", "image sentiment features")
+    if (firstTime is True) and (not path.exists(dir)):
+        os.makedirs(dir)
         dir = path.join(mainPath, "b-t4sa", "image sentiment features")
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_features_training", "train", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_features_subset", "train_subset", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, valFile, mainPath, "image_sntmt_features_val", "val", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
     else:
-        predictSntmt = False
+        print(dir + " already exists, exiting")
+        exit()
 
     ### Self-trained image model predictions here
-    # (path.exists(path.join(mainPath, "models", modelName + ".h5")))
+    firstTime = False
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     predictAndSave(dir, testFile, "image_sntmt_features_test_st", mainPath, testLen, "test", "bt4sa_img_model_ftrs", False, firstTime, batchSize = 16)
 
