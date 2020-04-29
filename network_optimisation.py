@@ -135,7 +135,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -171,15 +171,15 @@ def main():
     # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
     # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_batch_sizes")
 
-    optimisers = [SGD(lr = 0.0001, momentum = 0.9),  Adam(learning_rate = 0.0001)]
-    paramGrid = dict(optimiser = optimisers)
-    model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
-    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser")
-
     # optimisers = [SGD(lr = 0.0001, momentum = 0.9),  Adam(learning_rate = 0.0001)]
     # paramGrid = dict(optimiser = optimisers)
-    # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
-    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser")
+    # model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
+    # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser")
+
+    optimisers = [SGD(lr = 0.0001, momentum = 0.9),  Adam(learning_rate = 0.0001)]
+    paramGrid = dict(optimiser = optimisers)
+    model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
+    gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
