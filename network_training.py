@@ -522,6 +522,7 @@ def main():
     trainMainModel(textModel(),
         logDir,
         "text__adam_log",
+        scheduleLr = False,
         XTrain,
         YTrain,
         XVal,
