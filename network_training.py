@@ -519,17 +519,17 @@ def main():
     #     batchSize = 16,
     #     epochs = 50)
 
-    trainMainModel(textModel(),
-        logDir,
-        "text__adam_log",
-        XTrain,
-        YTrain,
-        XVal,
-        YVal,
-        "text_model_adam_history",
-        "text_model_adam",
-        mainPath,
-        scheduleLr = False)
+    # trainMainModel(textModel(),
+    #     logDir,
+    #     "text__adam_log",
+    #     XTrain,
+    #     YTrain,
+    #     XVal,
+    #     YVal,
+    #     "text_model_adam_history",
+    #     "text_model_adam",
+    #     mainPath,
+    #     scheduleLr = False)
 
     # trainMainModel(dFusionModel(mainPath, loadModel(mainPath, "text_lr0001")), # NO NEED TO TRAIN SO REMOVE
     #     logDir,
@@ -542,16 +542,16 @@ def main():
     #     "text_model",
     #     mainPath)
 
-    # trainMainModel(ftrModel(),
-    #     logDir,
-    #     "sntmt_ftr-lvl_adam_log",
-    #     [XTrain, trainImgFeatures],
-    #     YTrain,
-    #     [XVal, valImgFeatures],
-    #     YVal,
-    #     "sntmt_ftr-lvl_model_adam_history",
-    #     "sntmt_ftr-lvl_model_adam",
-    #     mainPath)
+    trainMainModel(ftrModel(),
+        logDir,
+        "sntmt_ftr-lvl_adam_log",
+        [XTrain, trainImgFeatures],
+        YTrain,
+        [XVal, valImgFeatures],
+        YVal,
+        "sntmt_ftr-lvl_model_adam_history",
+        "sntmt_ftr-lvl_model_adam",
+        mainPath)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
