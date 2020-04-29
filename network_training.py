@@ -91,7 +91,7 @@ def scheduledLr(epoch, lr):
         return lr / divStep
     return lr
 
-def t4saVGG(mainPath, saveName):
+def t4saVGG(mainPath, saveName): # Import to image_sentiment_creation?
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
     x = Conv2D(64, (3, 3),
@@ -394,7 +394,7 @@ def sentimentVGG():
     dropout2 = Dropout(0.5)(hidden2)
     output = Dense(3,
         activation = "softmax",
-        name = "fc9",
+        name = "fc8",
         bias_regularizer = reg,
         kernel_regularizer = reg,
         trainable = True)(dropout2)
@@ -606,9 +606,10 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName, overWrite = True)
 
-def predictSntmtFeatures(dir, mainPath, trainPaths, valPaths, testPaths, modelName):
+def predictSntmtFeatures(dir, mainPath, trainPaths, trainSubPaths, valPaths, testPaths, modelName):
     featureVGG = initFtrVGG(mainPath, modelName)
     predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_sntmt_features_training"), mainPath, "backup_data")
+    predictAndSave(trainSubPaths, featureVGG, 15, path.join(dir, "image_sntmt_features_training_50"), mainPath, "backup_data")
     predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_validation"), mainPath, "backup_data")
     predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_testing"), mainPath, "backup_data")
     print("Predicting and saving feature data completed")
@@ -618,36 +619,42 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
     trainFile = path.join(mainPath, "b-t4sa/model_input_training.csv")
+    trainSubFile = path.join(mainPath, "b-t4sa/model_input_training_subset.csv")
     valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
     pd.set_option('display.max_colwidth', -1)
     dfTrain = pd.read_csv(trainFile, header = 0)
+    dfTrainSub = pd.read_csv(trainSubFile, header = 0)
     dfVal = pd.read_csv(valFile, header = 0)
     dfTest = pd.read_csv(testFile, header = 0)
     XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray)) # CONVERT THIS TO NUMPY ARRAY OF LISTS
+    XTrainSub = np.stack(dfTrainSub["TOKENISED"].apply(toArray))
     XVal = np.stack(dfVal["TOKENISED"].apply(toArray))
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
+    YTrainSub = dfTrainSub["TXT_SNTMT"].to_numpy("int32")
     YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
 
     trainPaths = dfTrain["IMG"].apply(toURL)#.to_numpy("str")
+    trainSubPaths = dfTrainSub["IMG"].apply(toURL)#.to_numpy("str")
     valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
     testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
 
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     if not path.exists(dir):
         os.makedirs(dir)
-        predictSntmtFeatures(dir, mainPath, trainPaths, valPaths, testPaths, "img_model_st")
+        predictSntmtFeatures(dir, mainPath, trainPaths, trainSubPaths, valPaths, testPaths, "img_model_st")
+
+    predictAndSave(trainSubPaths, featureVGG, 15, path.join(dir, "image_sntmt_features_training_50"), mainPath, "backup_data")
 
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
     valImgFeatures = np.load(path.join(dir, "image_sntmt_features_validation.npy"))
-    testImgFeatures = np.load(path.join(dir, "image_sntmt_features_testing.npy"))
 
     logDir = "./logs"
     if not path.exists(logDir):
