@@ -260,7 +260,7 @@ def predictAndSave(dir, filePath, mainPath, modelName, noPartitions, saveName, p
         model = loadModel(mainPath, modelName)
     print("Predicting for " + saveName)
     predictions = batchPredict(paths, model, noPartitions, mainPath, backupName)
-    np.save(saveName, predictions)
+    np.save(path.join(dir, saveName), predictions)
     print("Saved to " + saveName + ".npy")
     counter = 0
 
@@ -287,7 +287,7 @@ def recoverPredictAndSave(dir, filePath, mainPath, modelName, noPartitions, save
     print(backupSaveName + ".npy will only back up the data remainder")
     predictions = batchPredict(paths.tail(-backupLen), model, noPartitions, mainPath, backupSaveName)
     totalData = np.concatenate((backup, predictions), axis = 0)
-    np.save(saveName, totalData)
+    np.save(path.join(dir, saveName), totalData)
     print("Saved to " + saveName + ".npy")
     counter = 0
 
@@ -297,7 +297,7 @@ def main():
     isAws = True
     firstTime = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -312,8 +312,8 @@ dir, filePath, mainPath, modelName, noPartitions, saveName, predictSntmt, firstT
     dir = path.join(mainPath, "b-t4sa", "online image sentiment scores")
     if (firstTime is True) and (not path.exists(dir)):
         os.makedirs(dir) # bt4sa_img_model_class
-        # predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_class", 30, "image_sntmt_probs_training", True, firstTime)
-        # predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_class", 15, "image_sntmt_probs_training_subset", True, firstTime)
+        predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_class", 30, "image_sntmt_probs_training", True, firstTime)
+        predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_class", 15, "image_sntmt_probs_training_subset", True, firstTime)
         predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_class", 10, "image_sntmt_probs_validation", True, firstTime)
         predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_class", 10, "image_sntmt_probs_testing", True, firstTime)
     else:
@@ -323,14 +323,13 @@ dir, filePath, mainPath, modelName, noPartitions, saveName, predictSntmt, firstT
     dir = path.join(mainPath, "b-t4sa", "online image sentiment features")
     if (firstTime is True) and (not path.exists(dir)):
         os.makedirs(dir) # bt4sa_img_model_ftrs
-        # predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_ftrs", 30 "image_sntmt_ftrs_training", False, firstTime)
-        # predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_ftrs", 15, "image_sntmt_probs_training_subset", False, firstTime)
+        predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_ftrs", 30 "image_sntmt_ftrs_training", False, firstTime)
+        predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_ftrs", 15, "image_sntmt_probs_training_subset", False, firstTime)
         predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_ftrs", 10, "image_sntmt_ftrs_validation", False, firstTime)
         predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_ftrs", 10, "image_sntmt_ftrs_testing", False, firstTime)
     else:
         print(dir + " already exists, exiting")
         exit()
-
 
 if __name__ == "__main__":
     main()
