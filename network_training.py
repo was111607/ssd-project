@@ -1,5 +1,3 @@
-import csv
-import re
 import pandas as pd
 import pickle
 import numpy as np
@@ -7,21 +5,14 @@ import os
 from os import path
 from keras.callbacks import CSVLogger, EarlyStopping, LearningRateScheduler
 from keras.models import Model, load_model
-from keras.preprocessing.image import load_img, img_to_array, ImageDataGenerator
+from keras.preprocessing.image import ImageDataGenerator
 from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Flatten, Dropout, Conv2D, MaxPooling2D
 from keras.layers.merge import concatenate
-from keras.applications.vgg19 import VGG19, preprocess_input
+from keras.applications.vgg19 import preprocess_input
 from keras.utils import to_categorical, plot_model
 from keras import regularizers
 from keras.optimizers import SGD, Adam
 from ast import literal_eval
-from io import BytesIO
-from urllib.request import urlopen
-from keras.wrappers.scikit_learn import KerasClassifier
-# import keras.wrappers.scikit_learn
-#import sklearn.model_selection
-import slms_search
-from sklearn import model_selection # gridSearchCV
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
 # Pad data - find out best pad as it's not 55 - PREPAD, pad as long as longest sequence
@@ -55,35 +46,8 @@ from sklearn import model_selection # gridSearchCV
 # Skimage to retrieve and resize from tweet links
 # Maybe have to run all programs in succession to be able to run?
 
-counter = 1
-
-def loadImage(path):
-    with urlopen(path) as url:
-        img = load_img(BytesIO(url.read()), target_size=(224, 224))
-    return img
-
-def getImageRep(path):
-    global counter
-    if (counter % 100 == 0):
-        print(counter)
-    img = loadImage(path)
-    img = img_to_array(img)
-    img = np.expand_dims(img, axis = 0)
-    img = preprocess_input(img)
-    counter += 1
-    return img
-
-def getImgReps(df):
-    df["REPRESENTATION"] = df.apply(getImageRep)
-    imageReps = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
-    return imageReps
-
-def getImgPredict(df, model): # pathList old arg
-    imageReps = getImgReps(df)
-    return model.predict(imageReps, batch_size = 16)
-
 # initialise using LearningRateScheduler and add as callback to training if required
-def scheduledLr(epoch, lr):
+def lrScheduler(epoch, lr):
     epochStep = 4
     divStep = 10
     if (epoch % epochStep == 0) and (epoch != 0):
@@ -91,7 +55,6 @@ def scheduledLr(epoch, lr):
     return lr
 
 def sentimentVGG():
-    vgg19 = VGG19(weights = None, include_top = False)
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
     x = Conv2D(64, (3, 3),
@@ -245,14 +208,6 @@ def sentimentVGG():
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-def initFtrVGG(mainPath, modelName):
-    imgModel = loadModel(mainPath, modelName)
-    features = Dense(512, activation = "relu")(imgModel.layers[-2].output)
-    model = Model(inputs = imgModel.input, outputs = features)
-    optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    return model
-
 def loadModel(mainPath, fname):
     try:
         modelPath = path.join(mainPath, "models", fname + ".h5")
@@ -330,14 +285,14 @@ def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
 #    visualiseModel(model, "decision_model.png") ### Uncomment to visualise, requires pydot and graphviz
     # print(model.summary())
     return model
-
-def saveData(list, fname):
-    with open(fname, "w") as writeFile:
-        writer = csv.writer(writeFile, delimiter=",", quotechar='"', quoting=csv.QUOTE_ALL)
-        for i in list:
-            writer.writerow(i)
-        writeFile.close()
-    print(fname + " saved")
+#
+# def saveData(list, fname):
+#     with open(fname, "w") as writeFile:
+#         writer = csv.writer(writeFile, delimiter=",", quotechar='"', quoting=csv.QUOTE_ALL)
+#         for i in list:
+#             writer.writerow(i)
+#         writeFile.close()
+#     print(fname + " saved")
 
 def saveHistory(fname, history, mainPath):
     dir = path.join(mainPath, "model histories")
@@ -347,20 +302,6 @@ def saveHistory(fname, history, mainPath):
         pickle.dump(history.history, writeFile)
         writeFile.close()
     print("Saved history for " + fname)
-
-def saveResults(dname, results, mainPath):
-    dir = path.join(mainPath, "grid search results", dname)
-    os.makedirs(dir)
-    with open(path.join(dir, "results.pickle"), "wb") as writeResult, open(path.join(dir, "dict.pickle"), "wb") as writeDict, open(path.join(dir, "best_score.pickle"), "wb") as writeScore, open(path.join(dir, "best_params.pickle"), "wb") as writeParams:
-        pickle.dump(results, writeResult)
-        pickle.dump(results.cv_results_, writeDict)
-        pickle.dump(results.best_score_, writeScore)
-        pickle.dump(results.best_params_, writeParams)
-        writeResult.close()
-        writeDict.close()
-        writeScore.close()
-        writeParams.close()
-    print("Saved grid search results for " + dname)
 
 def saveModel(model, mainPath, fname, overWrite = False):
     dir = path.join(mainPath, "models")
@@ -381,39 +322,6 @@ def saveModel(model, mainPath, fname, overWrite = False):
 def toArray(list):
     return np.array(literal_eval(str(list)))
 
-def toURL(path): # ENABLE IN PATHS DF
-    return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
-
-def batchPredict(df, model, noPartitions, mainPath, backupName):
-    # df = df.sample(n = 20)
-    updatedPartitions = np.empty((0, 512))
-    partitions = np.array_split(df, noPartitions)
-    for partition in partitions:
-        updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
-        np.save(path.join(mainPath, backupName), updatedPartitions)
-        print("Saved backup")
-    return updatedPartitions
-
-def predictAndSave(df, model, noPartitions, saveName, mainPath, backupName):
-    print("Predicting for " + saveName)
-    predictions = batchPredict(df, model, noPartitions, mainPath, backupName)
-    np.save(saveName, predictions)
-    print("Saved to " + saveName + ".npy")
-
-def recoverPredictAndSave(df, model, noPartitions, saveName, mainPath, backupLoadName, backupSaveName):
-    global counter
-    print("Predicting for " + saveName)
-    backup = np.load(path.join(mainPath, backupLoadName + ".npy"))
-    backupLen = backup.shape[0]
-    counter = backupLen
-    print(f"The backup length is {counter}")
-    print(backupSaveName + ".npy will only back up the data remainder")
-    predictions = batchPredict(df.tail(-backupLen), model, noPartitions, mainPath, backupSaveName)
-    totalData = np.concatenate((backup, predictions), axis = 0)
-    np.save(saveName, totalData)
-    #saveData(predictions.tolist(), saveName + ".csv")
-    print("Saved to " + saveName + ".npy")
-
 def summariseResults(results):
     means = results.cv_results_["mean_test_score"]
     stds = results.cv_results_["std_test_score"]
@@ -422,24 +330,24 @@ def summariseResults(results):
     for mean, std, parameter in zip(means, stds, parameters):
         print("Score of %f with std of %f with parameters %r" % (mean, std, parameter))
 
-def trainMainModel(model, logDir, logName, trainInput, YTrain, valInput, YVal, historyName, modelName, mainPath, scheduleLr = True, batchSize = 16, epochs = 15):
+def getCallbacks(scheduleLr, logDir, logName):
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
     logger = CSVLogger(path.join(logDir, logName + ".csv"), append = False, separator = ",")
     callbacks = [earlyStoppage, logger]
     if scheduleLr is True:
-        lrScheduler = LearningRateScheduler(scheduledLr, verbose = 1)
-        callbacks.append(lrScheduler)
+        callbacks.append(LearningRateScheduler(lrScheduler, verbose = 1))
+    return callbacks
+
+# Train a text only or decision model
+def trainMainModel(model, modelName, historyName, logDir, logName, trainInput, YTrain, valInput, YVal, mainPath, scheduleLr = True, batchSize = 16, epochs = 15):
+    callbacks = getCallbacks(scheduleLr, logDir, logName)
     modelHistory = model.fit(trainInput, to_categorical(YTrain), validation_data = (valInput, to_categorical(YVal)), epochs = epochs, batch_size = batchSize, callbacks = callbacks)
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName, overWrite = True)
 
-def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, valLen, isFt, batchSize = 16, epochs = 15):
-    earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
-    logger = CSVLogger(path.join(logDir, "image_sentiments_log.csv"), append = False, separator = ",")
-    cb = [earlyStoppage, logger]
-    #if isFt is True:
-    lrScheduler = LearningRateScheduler(scheduledLr, verbose = 1)
-    cb.append(lrScheduler)
+# Train image model to improve from bt4sa fine tune
+def trainImgModel(model, modelName, historyName, logDir, logName, trainLen, valLen, mainPath, scheduleLr = True, batchSize = 16, epochs = 15):
+    callbacks = getCallbacks(scheduleLr, logDir, logName)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
     trainGen = dataGen.flow_from_directory(path.join(dir, "train"), target_size=(224, 224), batch_size = batchSize)
@@ -449,17 +357,9 @@ def imageSntmtTrain(model, modelName, historyName, logDir, mainPath, trainLen, v
         validation_data = valGen,
         validation_steps = -(-valLen // batchSize),
         epochs = epochs,
-        callbacks = cb)
+        callbacks = callbacks)
     saveHistory(historyName, modelHistory, mainPath)
     saveModel(model, mainPath, modelName, overWrite = True)
-
-def predictSntmtFeatures(dir, mainPath, trainPaths, trainSubPaths, valPaths, testPaths, modelName):
-    featureVGG = initFtrVGG(mainPath, modelName)
-    predictAndSave(trainPaths, featureVGG, 30, path.join(dir, "image_sntmt_features_training"), mainPath, "backup_data")
-    predictAndSave(trainSubPaths, featureVGG, 15, path.join(dir, "image_sntmt_features_training_50"), mainPath, "backup_data")
-    predictAndSave(valPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_validation"), mainPath, "backup_data")
-    predictAndSave(testPaths, featureVGG, 10, path.join(dir, "image_sntmt_features_testing"), mainPath, "backup_data")
-    print("Predicting and saving feature data completed")
 
 def main():
     awsDir = "/media/Data3/sewell"
@@ -470,34 +370,27 @@ def main():
         mainPath = awsDir
     else:
         mainPath = curDir
+
     trainFile = path.join(mainPath, "b-t4sa/model_input_training.csv")
     trainSubFile = path.join(mainPath, "b-t4sa/model_input_training_subset.csv")
     valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
-    testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
     pd.set_option('display.max_colwidth', -1)
     dfTrain = pd.read_csv(trainFile, header = 0)
     dfTrainSub = pd.read_csv(trainSubFile, header = 0)
     dfVal = pd.read_csv(valFile, header = 0)
-    dfTest = pd.read_csv(testFile, header = 0)
+
     XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray)) # CONVERT THIS TO NUMPY ARRAY OF LISTS
     XTrainSub = np.stack(dfTrainSub["TOKENISED"].apply(toArray))
     XVal = np.stack(dfVal["TOKENISED"].apply(toArray))
-    XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
     YTrainSub = dfTrainSub["TXT_SNTMT"].to_numpy("int32")
     YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
-    YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
 
-    trainPaths = dfTrain["IMG"].apply(toURL)#.to_numpy("str")
-    trainSubPaths = dfTrainSub["IMG"].apply(toURL)#.to_numpy("str")
-    valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
-    testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
-
+    # Validation on loading from csv or npy directly.
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     if not path.exists(dir):
-        os.makedirs(dir)
-        predictSntmtFeatures(dir, mainPath, trainPaths, trainSubPaths, valPaths, testPaths, "img_model_st")
-
+        print("No image data found, please run image_processing.py")
+        exit()
     # featureVGG = initFtrVGG(mainPath, "img_model_st")
     # predictAndSave(trainSubPaths, featureVGG, 15, path.join(dir, "image_sntmt_features_training_50"), mainPath, "backup_data")
 
@@ -508,50 +401,37 @@ def main():
     if not path.exists(logDir):
         os.makedirs(logDir)
 
-    # imageSntmtTrain(sentimentVGG(),
+    # trainImgModel(sentimentVGG(),
     #     "img_model_st",
-    #     "img_model_st",
+    #     "img_model_st_history",
     #     logDir,
-    #     mainPath,
+    #     "sntmt_ftr-lvl_adam_log",
     #     dfTrain.shape[0],
     #     dfVal.shape[0],
-    #     False,
-    #     batchSize = 16,
-    #     epochs = 50)
-
-    # trainMainModel(textModel(),
-    #     logDir,
-    #     "text__adam_log",
-    #     XTrain,
-    #     YTrain,
-    #     XVal,
-    #     YVal,
-    #     "text_model_adam_history",
-    #     "text_model_adam",
-    #     mainPath,
-    #     scheduleLr = False)
-
-    # trainMainModel(dFusionModel(mainPath, loadModel(mainPath, "text_lr0001")), # NO NEED TO TRAIN SO REMOVE
-    #     logDir,
-    #     "text_log",
-    #     XTrain,
-    #     YTrain,
-    #     XVal,
-    #     YVal,
-    #     "text_model_history",
-    #     "text_model",
     #     mainPath)
 
-    trainMainModel(ftrModel(),
+    trainMainModel(textModel(),
+        "text_model_adam",
+        "text_model_adam_history",
         logDir,
-        "sntmt_ftr-lvl_adam_log",
-        [XTrain, trainImgFeatures],
+        "text__adam_log",
+        XTrain,
         YTrain,
-        [XVal, valImgFeatures],
+        XVal,
         YVal,
-        "sntmt_ftr-lvl_model_adam_history",
-        "sntmt_ftr-lvl_model_adam",
-        mainPath)
+        mainPath,
+        scheduleLr = False)
+
+    # trainMainModel(ftrModel(),
+    #     "sntmt_ftr-lvl_model_adam",
+    #     "sntmt_ftr-lvl_model_adam_history",
+    #     logDir,
+    #     "sntmt_ftr-lvl_adam_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     mainPath)
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)

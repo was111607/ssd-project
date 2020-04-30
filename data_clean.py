@@ -104,10 +104,10 @@ def lowerCase(text):
             checkSurname = False
             if (word in placeList) or (re.match(r"\w*[A-Z]\w*[A-Z]\w*", word)):
                 normalisedTweet.append(word)
-            elif (word in nameList) or (word[:-1] in nameList and word[len(word) - 1] is "s"):
+            elif (word in nameList) or (word[:-1] in nameList and word[len(word) - 1] == "s"):
                 normalisedTweet.append(word)
                 checkSurname = True
-            elif (word[:-1] in placeList) and word[len(word) - 1] is "s":
+            elif (word[:-1] in placeList) and (word[len(word) - 1] == "s"):
                 normalisedTweet.append(word[:-1])
             else:
                 normalisedTweet.append(word.lower())
@@ -134,7 +134,7 @@ def avgWordCount(df, isBefore):
         print(f"Average word count after stop-word removal: {avg}") # Find mean word count of text
 
 # Method to find average length of review before stopword removal and after to figure out (Maybe run multiple times??)
-def cleanData(df):
+def preProcess(df):
     df["NEW_TEXT"] = df["TEXT"]
     df["NEW_TEXT"] = df["NEW_TEXT"].apply(removeRTs).apply(removeMentions) # Remove @ mentions and 'RT' text
     df["NEW_TEXT"] = df["NEW_TEXT"].replace(r"\n"," ", regex=True) # Newlines converted into whitespace
@@ -189,7 +189,7 @@ def main():
     #file = "./existing_text_shuffled.csv"
     pd.set_option('display.max_colwidth', -1)
     df = pd.read_csv(file, header = 0)
-    df = cleanData(df)
+    df = preProcess(df)
     df = df.sample(frac = 1).reset_index(drop = True) # Shuffles data
     ## FUNCTION THAT READS B-T4SA TEST SET
     #train, test, val = randomSplit(df)

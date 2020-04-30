@@ -1,4 +1,3 @@
-import os
 import csv
 import re
 import math
@@ -113,18 +112,6 @@ def main():
     addInputs(trainDf, allDf, "./b-t4sa/model_input_training.csv")
     addInputs(valDf, allDf, "./b-t4sa/model_input_validation.csv")
     addInputs(testDf, allDf, "./b-t4sa/model_input_testing.csv")
-    # dfTok = pd.read_csv(trainFile, header = 0, lineterminator = "\n")
-    # dfAll = pd.read_csv(allFile, header = 0, lineterminator = "\n")
-    # totalRows = dfAll.shape[0]
-    # dfTok = dfTok.drop("TEXT", 1)
-    # dfTok = dfTok.drop("NEW_TEXT", 1)
-    # dfTok["IMG"] = dfTok["TWID"].apply(lambda x: getImgPath(2, totalRows + 1, int(x)))
-    # dfTok["IMG_SNTMT"] = dfTok["IMG"].apply(lambda x: getImgSntmt(2, totalRows + 1, str(x)))
-    # dfTok.insert(4, "TXT_SNTMT", None)
-    # dfTok["TXT_SNTMT"] = dfTok.apply(lambda x: getTextSntmt(x["NEG"], x["NEU"], x["POS"]), axis = 1)
-    # dfTok["SNTMT_MATCH"] = dfTok.apply(lambda x: matchSntmts(x["TXT_SNTMT"], x["IMG_SNTMT"]), axis = 1)
-    #print(dfTok)
-#    saveData(dfTok)
 
 if __name__ == "__main__":
     main()

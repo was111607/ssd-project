@@ -1,16 +1,17 @@
 import pandas as pd
 import numpy as np
 import re
-import csv
 import os
 from os import path
-from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import load_img, img_to_array
+from keras.models import Model, load_model
 from keras.layers import Dense, Input, Flatten, Dropout, Conv2D, MaxPooling2D
 from keras.applications.vgg19 import preprocess_input
+from keras.optimizers import SGD
 from keras import regularizers
-import pickle
-from keras.models import Model
 from runai import ga
+from io import BytesIO
+from urllib.request import urlopen
 
 counter = 1
 def t4saVGG(mainPath): # Import to image_sentiment_creation?
@@ -281,9 +282,10 @@ def recoverPredictAndSave(dir, filePath, mainPath, modelName, noPartitions, save
     backup = np.load(path.join(mainPath, backupLoadName + ".npy"))
     backupLen = backup.shape[0]
     counter = backupLen
+    backupSaveName = backupLoadName + "2"
     print(f"The backup length is {counter}")
     print(backupSaveName + ".npy will only back up the data remainder")
-    predictions = batchPredict(paths.tail(-backupLen), model, noPartitions, mainPath, backupLoadName + "2")
+    predictions = batchPredict(paths.tail(-backupLen), model, noPartitions, mainPath, backupSaveName)
     totalData = np.concatenate((backup, predictions), axis = 0)
     np.save(saveName, totalData)
     print("Saved to " + saveName + ".npy")

@@ -1,16 +1,16 @@
 import pandas as pd
 import numpy as np
 import re
-import csv
 import os
 from os import path
 from keras.preprocessing.image import ImageDataGenerator
+from keras.models import Model, load_model
 from keras.layers import Dense, Input, Flatten, Dropout, Conv2D, MaxPooling2D
 from keras.applications.vgg19 import preprocess_input
 from keras.optimizers import SGD
 from keras import regularizers
 import pickle
-from keras.models import Model
+from ast import literal_eval
 from runai import ga
 
 def t4saVGG(mainPath): # Import to image_sentiment_creation?
@@ -180,11 +180,14 @@ def ftrConvert(mainPath, imgModel):
     optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
-    
+
 def backupResults(dict, mainPath, saveName):
     with open(path.join(mainPath, saveName + ".pickle"), "wb") as writeFile:
         pickle.dump(dict, writeFile)
         writeFile.close()
+
+def toArray(list):
+    return np.array(literal_eval(str(list)))
 
 def loadModel(mainPath, fname):
     try:
@@ -201,7 +204,7 @@ def loadModel(mainPath, fname):
 #         df.to_csv(writeFile, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
 #         writeFile.close()
 
-def savePredictions(predictions, saveName):
+def savePredictions(saveName, predictions):
     np.save(saveName, np.stack(predictions.apply(toArray)))
     print("Predictions saved")
 
@@ -264,7 +267,7 @@ def predictAndSave(dir, filePath, mainPath, saveName, split, modelName, predictS
     len = df.shape[0]
     matchings = imgPredict(mainPath, len, split, modelName, predictSntmt, firstTime, batchSize)
     predictions = matchPreds(matchings, df)
-    savePredictions(predictions, path.join(dir, saveName))
+    savePredictions(path.join(dir, saveName), predictions)
 
 def main():
     awsDir = "/media/Data3/sewell"
@@ -309,7 +312,7 @@ def main():
     ### Self-trained image model predictions here
     firstTime = False
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
-    predictAndSave(dir, testFile, "image_sntmt_features_test_st", mainPath, testLen, "test", "bt4sa_img_model_ftrs", False, firstTime, batchSize = 16)
+    predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test_st", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
 
     # sntmtMatchings = imgPredict(mainPath, testLen, "test", "bt4sa_img_model_ftrs", False, firstTime, batchSize = 16)
     # matchings = getImgFtrs(mainPath, testLen, firstTime = False, batchSize = 16)

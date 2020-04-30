@@ -5,18 +5,15 @@ import numpy as np
 import os
 from os import path
 from keras.models import Model
-from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Flatten, Dropout, Conv2D, MaxPooling2D
+from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
 from keras.layers.merge import concatenate
-from keras.applications.vgg19 import VGG19
 from keras.utils import to_categorical
-from keras import regularizers
 from keras.optimizers import SGD, Adam
 from ast import literal_eval
 from keras.wrappers.scikit_learn import KerasClassifier # for grid search for multi-input models
 #import keras.wrappers.scikit_learn
 import slms_search
 from sklearn import model_selection # gridSearchCV
-from network_training import predictSntmtFeatures, loadModel, scheduledLr
 
 # initialise using LearningRateScheduler and add as callback to training if required
 def scheduledLr(epoch, lr):
@@ -156,18 +153,10 @@ def main():
 
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     if not path.exists(dir):
-        os.makedirs(dir)
-        valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
-        testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
-        dfVal = pd.read_csv(valFile, header = 0)
-        dfTest = pd.read_csv(testFile, header = 0)
-        trainPaths = dfTrain["IMG"].apply(toURL)#.to_numpy("str")
-        valPaths = dfVal["IMG"].apply(toURL)#.to_numpy("str")
-        testPaths = dfTest["IMG"].apply(toURL)#.to_numpy("str")
-        predictSntmtFeatures(dir, mainPath, trainPaths, valPaths, testPaths, "img_model_st")
+        print("No image data found, please run image_processing.py")
+        exit()
 
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
-    valImgFeatures = np.load(path.join(dir, "image_sntmt_features_validation.npy"))
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
