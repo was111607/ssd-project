@@ -307,13 +307,15 @@ def main():
     valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
 
-    dir = path.join(mainPath, "b-t4sa", "online image sentiment classifications")
+dir, filePath, mainPath, modelName, noPartitions, saveName, predictSntmt, firstTime, backupName = "backup_data")
+
+    dir = path.join(mainPath, "b-t4sa", "online image sentiment scores")
     if (firstTime is True) and (not path.exists(dir)):
         os.makedirs(dir) # bt4sa_img_model_class
-        predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_class", 30, "image_sntmt_probs_training", "backup_data", True, firstTime)
-        predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_class", 15, "image_sntmt_probs_training_subset", "backup_data", True, firstTime)
-        predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_class", 10, "image_sntmt_probs_validation", "backup_data", True, firstTime)
-        predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_class", 10, "image_sntmt_probs_testing", "backup_data", True, firstTime)
+        # predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_class", 30, "image_sntmt_probs_training", True, firstTime)
+        # predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_class", 15, "image_sntmt_probs_training_subset", True, firstTime)
+        predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_class", 10, "image_sntmt_probs_validation", True, firstTime)
+        predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_class", 10, "image_sntmt_probs_testing", True, firstTime)
     else:
         print(dir + " already exists, exiting")
         exit()
@@ -321,10 +323,10 @@ def main():
     dir = path.join(mainPath, "b-t4sa", "online image sentiment features")
     if (firstTime is True) and (not path.exists(dir)):
         os.makedirs(dir) # bt4sa_img_model_ftrs
-        predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_ftrs")
-        predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_ftrs")
-        predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_ftrs")
-        predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_ftrs")
+        # predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_ftrs", 30 "image_sntmt_ftrs_training", False, firstTime)
+        # predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_ftrs", 15, "image_sntmt_probs_training_subset", False, firstTime)
+        predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_ftrs", 10, "image_sntmt_ftrs_validation", False, firstTime)
+        predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_ftrs", 10, "image_sntmt_ftrs_testing", False, firstTime)
     else:
         print(dir + " already exists, exiting")
         exit()
