@@ -10,7 +10,6 @@ from keras.applications.vgg19 import preprocess_input
 from keras import regularizers
 import pickle
 from keras.models import Model
-from network_training import initFtrVGG
 from runai import ga
 
 counter = 1
@@ -169,6 +168,15 @@ def t4saVGG(mainPath): # Import to image_sentiment_creation?
     model.compile(optimizer = gaOptimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
     #print(model.summary())
+    return model
+
+# Converts a model to output features instead of classifications
+def ftrConvert(mainPath, imgModel):
+    #    imgModel = loadModel(mainPath, modelName)
+    features = Dense(512, activation = "relu")(imgModel.layers[-2].output)
+    model = Model(inputs = imgModel.input, outputs = features)
+    optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
 def saveModel(model, mainPath, fname, overWrite = False):
