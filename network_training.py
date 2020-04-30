@@ -402,10 +402,10 @@ def main():
         os.makedirs(logDir)
 
     # trainImgModel(sentimentVGG(),
-    #     "img_model_st",
-    #     "img_model_st_history",
+    #     "bt4sa_img_model_ftrs_st",
+    #     "bt4sa_img_model_ftrs_st_history",
     #     logDir,
-    #     "sntmt_ftr-lvl_adam_log",
+    #     "bt4sa_img_model_ftrs_st_log",
     #     dfTrain.shape[0],
     #     dfVal.shape[0],
     #     mainPath)
@@ -414,7 +414,7 @@ def main():
         "text_model_adam",
         "text_model_adam_history",
         logDir,
-        "text__adam_log",
+        "text_adam_log",
         XTrain,
         YTrain,
         XVal,
