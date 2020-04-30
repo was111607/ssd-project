@@ -48,20 +48,21 @@ def main():
         mainPath = awsDir
     else:
         mainPath = curDir
-    testFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st.csv")
-    dfTest = pd.read_csv(testFile, header = 0)
-
-    newTestFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st_FTRS.csv")
-    newDfTest = pd.read_csv(newTestFile, header = 0)
+    # testFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st.csv")
+    # dfTest = pd.read_csv(testFile, header = 0)
+    #
+    # newTestFile = path.join(mainPath, "b-t4sa/model_input_testing_updated_st_FTRS.csv")
+    # newDfTest = pd.read_csv(newTestFile, header = 0)
 
     XTest = np.stack(dfTest["TOKENISED"].apply(toArray))
     YTest = dfTest["TXT_SNTMT"].to_numpy("int32")
-    testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing.npy"))
-    if "IMG_PREDS" in dfTest.columns: # CHANGE TO ABOVE LINE BUT WITH PROBABILITIES
-        testImgSntmtProbs = np.stack(dfTest["IMG_PREDS"].apply(toArray))
+    testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_test.npy"))
+    testImgProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_test.npy"))
+    # if "IMG_PREDS" in dfTest.columns: # CHANGE TO ABOVE LINE BUT WITH PROBABILITIES
+    #     testImgSntmtProbs = np.stack(dfTest["IMG_PREDS"].apply(toArray))
 
-    if "IMG_FTRS" in newDfTest.columns:
-        testImgFtrsCSV = np.stack(newDfTest["IMG_FTRS"].apply(toArray))
+    # if "IMG_FTRS" in newDfTest.columns:
+    #     testImgFtrsCSV = np.stack(newDfTest["IMG_FTRS"].apply(toArray))
     # fModel = loadModel("training_all", "feature_model")
     # dModel = loadModel("training_all", "decision_model")
     #tModel = loadModel("text_model")
@@ -70,8 +71,8 @@ def main():
     evalModel(False, mainPath, "text_lr0001", XTest, YTest, "no fusion (text only) 0.0001", "text_model_score_lr0001")
     evalModel(False, mainPath, "text_model", XTest, YTest, "no fusion (text only)", "text_model_score_lr001")
     #evalModel(False, mainPath, "text_model_adam", XTest, YTest, "no fusion (text only) Adam", "text_model_score_adam")
-    evalModel(True, mainPath, "text_lr0001", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st_lr0001")
-    evalModel(True, mainPath, "text_model", [XTest, testImgSntmtProbs], YTest, "decision-level fusion", "decision_model_score_st_lr001")
+    evalModel(True, mainPath, "text_lr0001", [XTest, testImgProbs], YTest, "decision-level fusion", "decision_model_score_st_lr0001")
+    evalModel(True, mainPath, "text_model", [XTest, testImgProbs], YTest, "decision-level fusion", "decision_model_score_st_lr001")
     #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrs], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_score")
     #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_score")
     # evalModel(False, mainPath, "sntmt_ftr-lvl_model_adam", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (Adam)", "sntmt_ftr-lvl_model_adam_score")
