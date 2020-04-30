@@ -234,9 +234,12 @@ def getImgPredict(df, model): # pathList old arg
     imageReps = getImgReps(df)
     return model.predict(imageReps, batch_size = 16)
 
-def batchPredict(df, model, noPartitions, mainPath, backupName):
+def batchPredict(df, model, noPartitions, mainPath, backupName, predictSntmt):
     # df = df.sample(n = 20)
-    updatedPartitions = np.empty((0, 512))
+    if predictSntmt is True:
+        updatedPartitions = np.empty((0, 3))
+    else:
+        updatedPartitions = np.empty((0, 512))
     partitions = np.array_split(df, noPartitions)
     for partition in partitions:
         updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
