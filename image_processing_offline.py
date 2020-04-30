@@ -276,7 +276,7 @@ def main():
     isAws = True
 
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
