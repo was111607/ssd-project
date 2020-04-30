@@ -171,7 +171,6 @@ def t4saVGG(mainPath): # Import to image_sentiment_creation?
     #print(model.summary())
     return model
 
-
 # Converts a model to output features instead of classifications
 def ftrConvert(mainPath, imgModel):
     #    imgModel = loadModel(mainPath, modelName)
@@ -294,21 +293,19 @@ def main():
         predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_val", "val", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_test", "test", "bt4sa_img_model_class", True, firstTime, 16)
     else:
-        print(dir + " already exists, exiting")
-        exit()
+        print(dir + " already exists, skipping first time creation")
 
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     if (firstTime is True) and (not path.exists(dir)):
         os.makedirs(dir)
         dir = path.join(mainPath, "b-t4sa", "image sentiment features")
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_features_training", "train", "bt4sa_img_model_ftrs", False, firstTime, 16)
-        predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_features_subset", "train_subset", "bt4sa_img_model_ftrs", False, firstTime, 16)
+        predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_features_subset", "train_subset", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, valFile, mainPath, "image_sntmt_features_val", "val", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
     else:
-        print(dir + " already exists, exiting")
-        exit()
-
+        print(dir + " already exists, skipping first time creation")
+        
     ### Self-trained image model predictions here
     firstTime = False
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")

@@ -1,83 +1,15 @@
-import re
 import pandas as pd
 import pickle
 import numpy as np
 import os
 from os import path
-from keras.models import Model
-from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
-from keras.layers.merge import concatenate
 from keras.utils import to_categorical
-from keras.optimizers import SGD, Adam
 from ast import literal_eval
 from keras.wrappers.scikit_learn import KerasClassifier # for grid search for multi-input models
 #import keras.wrappers.scikit_learn
 import slms_search
 from sklearn import model_selection # gridSearchCV
-
-# initialise using LearningRateScheduler and add as callback to training if required
-def scheduledLr(epoch, lr):
-    epochStep = 4
-    divStep = 10
-    if (epoch % epochStep == 0) and (epoch != 0):
-        return lr / divStep
-    return lr
-
-def textModel(optimiserChoice):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
-        readFile.close()
-    seqLength = 30
-    embedDim = 512
-    input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
-    #print(textFtrs.output)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
-    hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
-    x1 = Dropout(0.6)(hidden1)
-    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
-    x2 = Dropout(0.3)(hidden2)
-    output = Dense(3, activation = "softmax")(x2)
-    model = Model(input = input, output = output)
-#    optimiser = SGD(lr = 0.0001, momentum = 0.9)
-    if optimiserChoice == 1:
-        optimiser = SGD(lr = 0.0001, momentum = 0.9)
-    else:
-        optimiser = Adam(learning_rate = 0.0001)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
-    print(model.summary())
-    return model
-
-def ftrModel(optimiserChoice): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
-        readFile.close()
-    seqLength = 30
-    embedDim = 512
-    input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
-    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
-    #print(textFtrs.output)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.4))(textFtrs)
-    imageFtrs = Input(shape=(embedDim,))
-    concat = concatenate([lstm, imageFtrs])
-    hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
-    x1 = Dropout(0.2)(hidden1)
-    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
-    x2 = Dropout(0.3)(hidden2)
-    output = Dense(3, activation = "softmax")(x2)
-    model = Model(inputs = [input, imageFtrs], output = output)
-    # optimiser = SGD(lr = 0.0001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
-    if optimiserChoice == 1:
-        optimiser = SGD(lr = 0.0001, momentum = 0.9)
-    else:
-        optimiser = Adam(learning_rate = 0.0001)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    #print(model.summary())
-    return model
+from grid_search_models import textModel_Optimiser, ftrModel_Optimiser, textModel_lstmDropout, ftrModel_lstmDropout
 
 def saveResults(dname, results, mainPath):
     dir = path.join(mainPath, "grid search results", dname)
@@ -111,9 +43,6 @@ def saveModel(model, mainPath, fname, overWrite = False):
 
 def toArray(list):
     return np.array(literal_eval(str(list)))
-
-def toURL(path): # ENABLE IN PATHS DF
-    return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
 def summariseResults(results):
     means = results.cv_results_["mean_test_score"]
@@ -156,7 +85,18 @@ def main():
         print("No image data found, please run image_processing.py")
         exit()
 
-    trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
+    trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training_subset.npy")) # getInputArray # 50 FOR TUNING
+
+    dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
+    paramGrid = dict(dRate = dropout)
+    model = KerasClassifier(build_fn = textModel_lstmDropout, verbose = 1, epochs = 5, batch_size = 16)
+    grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
+    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_lstm_dropout")
+
+    # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
+    # paramGrid = dict(dRate = dropout)
+    # model = KerasClassifier(build_fn = ftrModel_lstmDropout, verbose = 1, epochs = 5, batch_size = 16)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_lstm_dropout")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
@@ -170,13 +110,17 @@ def main():
 
     # optimisers = [1, 2]
     # paramGrid = dict(optimiserChoice = optimisers)
-    # model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
+    # model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser")
 
-    optimisers = [1, 2]
-    paramGrid = dict(optimiserChoice = optimisers)
-    model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
-    gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser")
+    # optimisers = [1, 2]
+    # paramGrid = dict(optimiserChoice = optimisers)
+    # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5, batch_size = 16)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser")
+
+
+
+
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
