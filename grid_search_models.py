@@ -22,7 +22,7 @@ def textModel_lstmDropout(dRate = 0.0):
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.0001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
-    print(model.summary())
+    # print(model.summary())
     return model
 
 def ftrModel_lstmDropout(dRate = 0.0):
@@ -70,7 +70,7 @@ def textModel_Optimiser(optimiserChoice):# (dRate = 0.0): # (lr = 0.0, mom = 0.0
     else:
         optimiser = Adam(learning_rate = 0.0001)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
-    print(model.summary())
+    # print(model.summary())
     return model
 
 def ftrModel_Optimiser(optimiserChoice): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
