@@ -307,8 +307,6 @@ def main():
     valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
 
-dir, filePath, mainPath, modelName, noPartitions, saveName, predictSntmt, firstTime, backupName = "backup_data")
-
     dir = path.join(mainPath, "b-t4sa", "online image sentiment scores")
     if (firstTime is True) and (not path.exists(dir)):
         os.makedirs(dir) # bt4sa_img_model_class
