@@ -172,6 +172,15 @@ def t4saVGG(mainPath): # Import to image_sentiment_creation?
     return model
 
 
+# Converts a model to output features instead of classifications
+def ftrConvert(mainPath, imgModel):
+    #    imgModel = loadModel(mainPath, modelName)
+    features = Dense(512, activation = "relu")(imgModel.layers[-2].output)
+    model = Model(inputs = imgModel.input, outputs = features)
+    optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    return model
+    
 def backupResults(dict, mainPath, saveName):
     with open(path.join(mainPath, saveName + ".pickle"), "wb") as writeFile:
         pickle.dump(dict, writeFile)
@@ -208,14 +217,6 @@ def matchPreds(matchings, df):
 #     df["IMG_FTRS"] = df["IMG"].apply(getFilename).map(matchings)
 #     return df
 
-# Converts a model to output features instead of classifications
-def ftrConvert(mainPath, imgModel):
-    #    imgModel = loadModel(mainPath, modelName)
-    features = Dense(512, activation = "relu")(imgModel.layers[-2].output)
-    model = Model(inputs = imgModel.input, outputs = features)
-    optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
-    return model
 
 def saveModel(model, mainPath, fname, overWrite = False):
     dir = path.join(mainPath, "models")
