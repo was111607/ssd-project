@@ -387,7 +387,7 @@ def main():
     YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
 
     # Validation on loading from csv or npy directly.
-    dir = path.join(mainPath, "b-t4sa", "image sentiment features")
+    dir = path.join(mainPath, "b-t4sa", "old image sentiment features")
     if not path.exists(dir):
         print("No image data found, please run image_processing.py")
         exit()
