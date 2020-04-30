@@ -262,7 +262,7 @@ def predictAndSave(dir, filePath, mainPath, modelName, noPartitions, saveName, p
     else:
         model = loadModel(mainPath, modelName)
     print("Predicting for " + saveName)
-    predictions = batchPredict(paths, model, noPartitions, mainPath, backupName)
+    predictions = batchPredict(paths, model, noPartitions, mainPath, backupName, predictSntmt)
     np.save(path.join(dir, saveName), predictions)
     print("Saved to " + saveName + ".npy")
     counter = 0
@@ -288,7 +288,7 @@ def recoverPredictAndSave(dir, filePath, mainPath, modelName, noPartitions, save
     backupSaveName = backupLoadName + "2"
     print(f"The backup length is {counter}")
     print(backupSaveName + ".npy will only back up the data remainder")
-    predictions = batchPredict(paths.tail(-backupLen), model, noPartitions, mainPath, backupSaveName)
+    predictions = batchPredict(paths.tail(-backupLen), model, noPartitions, mainPath, backupSaveName, predictSntmt)
     totalData = np.concatenate((backup, predictions), axis = 0)
     np.save(path.join(dir, saveName), totalData)
     print("Saved to " + saveName + ".npy")
