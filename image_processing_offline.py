@@ -305,11 +305,15 @@ def main():
         predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
     else:
         print(dir + " already exists, skipping first time creation")
-        
+
     ### Self-trained image model predictions here
     firstTime = False
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
-    predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test_st", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
+    # predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test_st", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
+
+
+    dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
+    predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_test_st", "test", "bt4sa_img_model_class_st", True, firstTime, 16)
 
     # sntmtMatchings = imgPredict(mainPath, testLen, "test", "bt4sa_img_model_ftrs", False, firstTime, batchSize = 16)
     # matchings = getImgFtrs(mainPath, testLen, firstTime = False, batchSize = 16)
