@@ -70,6 +70,7 @@ def main():
     evalModel(False, mainPath, "text_model", XTest, YTest, "no fusion (text only) (lr 0.001)", "text_model_score_lr001")
     #evalModel(False, mainPath, "text_model_adam", XTest, YTest, "no fusion (text only) Adam", "text_model_score_adam")
     evalModel(True, mainPath, "text_lr0001", [XTest, testImgProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_lr0001")
+    evalModel(True, mainPath, "text_lr0001", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.001)", "decision_model_score_st_lr0001")
     evalModel(True, mainPath, "text_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.001)", "decision_model_score_st_lr001")
     #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrs], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_score")
     #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_score")
