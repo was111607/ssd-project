@@ -90,7 +90,6 @@ def main():
     dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
     paramGrid = dict(dRate = dropout)
     model = KerasClassifier(build_fn = textModel_lstmDropout, verbose = 1, epochs = 5, batch_size = 16)
-    grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
     gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_lstm_dropout")
 
     # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]

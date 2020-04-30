@@ -300,7 +300,7 @@ def main():
         os.makedirs(dir)
         dir = path.join(mainPath, "b-t4sa", "image sentiment features")
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_features_training", "train", "bt4sa_img_model_ftrs", False, firstTime, 16)
-        predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_features_subset", "train_subset", "bt4sa_img_model_ftrs", False, firstTime, 16)
+        predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_features_training_subset", "train_subset", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, valFile, mainPath, "image_sntmt_features_val", "val", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
     else:
