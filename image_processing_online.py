@@ -13,6 +13,7 @@ from keras.models import Model
 from network_training import initFtrVGG
 from runai import ga
 
+counter = 1
 def t4saVGG(mainPath): # Import to image_sentiment_creation?
     reg = regularizers.l2(0.000005) # / t4sa stated decay / 2
     input = Input(shape = (224, 224, 3))
@@ -167,14 +168,24 @@ def t4saVGG(mainPath): # Import to image_sentiment_creation?
     gaOptimiser = ga.keras.optimizers.Optimizer(optimiser, steps = 2)
     model.compile(optimizer = gaOptimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True)
-    #saveModel(model, mainPath, saveName, overWrite = False)
     #print(model.summary())
     return model
 
-def saveResults(dict, mainPath):
-    with open(path.join(mainPath, "image_predictions.pickle"), "wb") as writeFile:
-        pickle.dump(dict, writeFile)
-        writeFile.close()
+def saveModel(model, mainPath, fname, overWrite = False):
+    dir = path.join(mainPath, "models")
+    if not path.exists(dir):
+        os.makedirs(dir)
+    filePath = path.join(dir, fname + ".h5")
+    if path.exists(filePath):
+        if overWrite is True:
+            msg = "Saved, replacing existing file of same name"
+            model.save(filePath)
+        else:
+            msg = "Not saved, model already exists"
+    else:
+        msg = "Saved"
+        model.save(filePath)
+    print(fname + " - " + msg)
 
 def loadModel(mainPath, fname):
     try:
@@ -186,80 +197,128 @@ def loadModel(mainPath, fname):
         print("Cannot find model: " + modelPath + " to load.")
         exit()
 
-def saveDataFrame(df, fname):
-    with open (fname, "w") as writeFile:
-        df.to_csv(writeFile, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
-        writeFile.close()
+def toURL(path): # ENABLE IN PATHS DF
+    return "https://b-t4sa-images.s3.eu-west-2.amazonaws.com" + re.sub("data", "", str(path))
 
-def getFilename(path):
-    return re.search(r"(?<=/)[0-9]+-[0-9].jpg", path).group(0)
+def loadImage(path):
+    with urlopen(path) as url:
+        img = load_img(BytesIO(url.read()), target_size=(224, 224))
+    return img
 
-def matchMainModelInput(matchings, df):
-    # PErform actions within a dataframe
-    df["IMG_PREDS"] = df["IMG"].apply(getFilename).map(matchings)
-    return df
+def getImageRep(path):
+    global counter
+    if (counter % 100 == 0):
+        print(counter)
+    img = loadImage(path)
+    img = img_to_array(img)
+    img = np.expand_dims(img, axis = 0)
+    img = preprocess_input(img)
+    counter += 1
+    return img
 
-def matchMainModelInputFTR(matchings, df):
-    # PErform actions within a dataframe
-    df["IMG_FTRS"] = df["IMG"].apply(getFilename).map(matchings)
-    return df
+def getImgReps(df):
+    df["REPRESENTATION"] = df.apply(getImageRep)
+    imageReps = np.concatenate(df["REPRESENTATION"].to_numpy()) # new with df
+    return imageReps
 
-def getImgSntmts(mainPath, testLen, modelName, isFt, batchSize = 32):
-    matchings = {}
-    if (isFt is True) and not (path.exists(path.join(mainPath, "models", fname + ".h5"))):
-        model = t4saVGG(mainPath)
+def getImgPredict(df, model): # pathList old arg
+    imageReps = getImgReps(df)
+    return model.predict(imageReps, batch_size = 16)
+
+def batchPredict(df, model, noPartitions, mainPath, backupName):
+    # df = df.sample(n = 20)
+    updatedPartitions = np.empty((0, 512))
+    partitions = np.array_split(df, noPartitions)
+    for partition in partitions:
+        updatedPartitions = np.concatenate((updatedPartitions, getImgPredict(partition, model)), axis = 0)
+        np.save(path.join(mainPath, backupName), updatedPartitions)
+        print("Saved backup")
+    return updatedPartitions
+
+def predictAndSave(dir, filePath, mainPath, modelName, noPartitions, saveName, predictSntmt, firstTime, backupName = "backup_data"):
+    global counter
+    df = pd.read_csv(filePath, header = 0)
+    paths = df["IMG"].apply(toURL)
+    if firstTime is True:
+        print("Initialising t4sa-vgg")
+        if predictSntmt is True:
+            model = t4saVGG(mainPath)
+        else:
+            print("Modifying model to output features")
+            model = ftrConvert(mainPath, t4saVGG(mainPath))
         saveModel(model, mainPath, modelName, overWrite = False)
     else:
         model = loadModel(mainPath, modelName)
-    dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
-    dir = path.join(mainPath, "b-t4sa", "data")
-    testGen = dataGen.flow_from_directory(path.join(dir, "test"), target_size=(224, 224), batch_size = batchSize, class_mode = None, shuffle = False)
-    testGen.reset()
-    probs = model.predict_generator(testGen, steps = -(-testLen // batchSize), verbose = 1)
-    inputOrder = testGen.filenames
-    for imagePath, prob in zip(inputOrder, probs):
-        fileName = re.search(r"(?<=/)[0-9]+-[0-9].jpg", imagePath).group(0)
-        matchings[fileName] = prob.tolist()
-    saveResults(matchings, mainPath)
-    return matchings
+    print("Predicting for " + saveName)
+    predictions = batchPredict(paths, model, noPartitions, mainPath, backupName)
+    np.save(saveName, predictions)
+    print("Saved to " + saveName + ".npy")
+    counter = 0
 
-#TEST FEATURES
-def getImgFtrs(mainPath, testLen, model, isFt, batchSize = 32):
-    matchings = {}
-    # if (isFt is True) and not (path.exists(path.join(mainPath, "models", fname + ".h5"))):
-    #     model = t4saVGG(mainPath)
-    #     saveModel(model, mainPath, modelName, overWrite = False)
-    # else:
-    #     model = loadModel(mainPath, modelName)
-    dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
-    dir = path.join(mainPath, "b-t4sa", "data")
-    testGen = dataGen.flow_from_directory(path.join(dir, "test"), target_size=(224, 224), batch_size = batchSize, class_mode = None, shuffle = False)
-    testGen.reset()
-    ftrs = model.predict_generator(testGen, steps = -(-testLen // batchSize), verbose = 1)
-    inputOrder = testGen.filenames
-    for imagePath, ftr in zip(inputOrder, ftrs):
-        fileName = re.search(r"(?<=/)[0-9]+-[0-9].jpg", imagePath).group(0)
-        matchings[fileName] = ftr.tolist()
-    saveResults(matchings, mainPath)
-    return matchings
+def recoverPredictAndSave(dir, filePath, mainPath, modelName, noPartitions, saveName, predictSntmt, firstTime, backupLoadName = "backup_data"):
+    global counter
+    df = pd.read_csv(filePath, header = 0)
+    paths = df["IMG"].apply(toURL)
+    if firstTime is True:
+        print("Initialising t4sa-vgg")
+        if predictSntmt is True:
+            model = t4saVGG(mainPath)
+        else:
+            print("Modifying model to output features")
+            model = ftrConvert(mainPath, t4saVGG(mainPath))
+        saveModel(model, mainPath, modelName, overWrite = False)
+    else:
+        model = loadModel(mainPath, modelName)
+    print("Predicting for " + saveName)
+    backup = np.load(path.join(mainPath, backupLoadName + ".npy"))
+    backupLen = backup.shape[0]
+    counter = backupLen
+    print(f"The backup length is {counter}")
+    print(backupSaveName + ".npy will only back up the data remainder")
+    predictions = batchPredict(paths.tail(-backupLen), model, noPartitions, mainPath, backupLoadName + "2")
+    totalData = np.concatenate((backup, predictions), axis = 0)
+    np.save(saveName, totalData)
+    print("Saved to " + saveName + ".npy")
+    counter = 0
 
 def main():
     awsDir = "/media/Data3/sewell"
     curDir = "."
     isAws = True
+    firstTime = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
+
+    trainFile = path.join(mainPath, "b-t4sa/model_input_training.csv")
+    trainSubFile = path.join(mainPath, "b-t4sa/model_input_training_subset.csv")
+    valFile = path.join(mainPath, "b-t4sa/model_input_validation.csv")
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
-    pd.set_option('display.max_colwidth', -1)
-    dfTest = pd.read_csv(testFile, header = 0)
-    testLen = dfTest.shape[0]
-    #matchings = getImgSntmts(mainPath, testLen, "img_model_st", False, batchSize = 16)
-    matchings = getImgFtrs(mainPath, testLen, initFtrVGG(mainPath, "img_model_st"), False, batchSize = 16)
-    updatedDf = matchMainModelInputFTR(matchings, dfTest) #matchMainModelInput(matchings, dfTest)
-    saveDataFrame(updatedDf, path.join(mainPath, "b-t4sa/model_input_testing_updated_st_FTRS.csv"))
+
+    dir = path.join(mainPath, "b-t4sa", "online image sentiment classifications")
+    if (firstTime is True) and (not path.exists(dir)):
+        os.makedirs(dir) # bt4sa_img_model_class
+        predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_class", 30, "image_sntmt_probs_training", "backup_data", True, firstTime)
+        predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_class", 15, "image_sntmt_probs_training_subset", "backup_data", True, firstTime)
+        predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_class", 10, "image_sntmt_probs_validation", "backup_data", True, firstTime)
+        predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_class", 10, "image_sntmt_probs_testing", "backup_data", True, firstTime)
+    else:
+        print(dir + " already exists, exiting")
+        exit()
+
+    dir = path.join(mainPath, "b-t4sa", "online image sentiment features")
+    if (firstTime is True) and (not path.exists(dir)):
+        os.makedirs(dir) # bt4sa_img_model_ftrs
+        predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_ftrs")
+        predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_ftrs")
+        predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_ftrs")
+        predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_ftrs")
+    else:
+        print(dir + " already exists, exiting")
+        exit()
+
 
 if __name__ == "__main__":
     main()

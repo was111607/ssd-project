@@ -199,7 +199,7 @@ def savePredictions(predictions, saveName):
 def getFilename(path):
     return re.search(r"(?<=/)[0-9]+-[0-9].jpg", path).group(0)
 
-def matchPreds(matchings, df, isPreds):
+def matchPreds(matchings, df):
     # PErform actions within a dataframe
     return df["IMG"].apply(getFilename).map(matchings)
 
@@ -270,10 +270,9 @@ def main():
     curDir = "."
     firstTime = True
     isAws = True
-    predictOnline = False
 
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
