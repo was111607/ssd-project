@@ -71,14 +71,14 @@ def main():
     optimisers = [1, 2]
     lRates = [0.0001, 0.001]
     paramGrid = dict(optimiserChoice = optimisers, lRate = lRates)
-    model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser_dropout")
+    model = KerasClassifier(build_fn = textModel_Optimiser, verbose = 1, epochs = 5, batch_size = 16)
+    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser_and_lRate")
 
     # optimisers = [1, 2]
     # lRates = [0.0001, 0.001]
     # paramGrid = dict(optimiserChoice = optimisers, lRate = lRates)
-    # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser_dropout")
+    # model = KerasClassifier(build_fn = ftrModel_Optimiser, verbose = 1, epochs = 5, batch_size = 16)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser_and_lRate")
 
     # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
