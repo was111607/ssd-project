@@ -9,7 +9,7 @@ from keras.wrappers.scikit_learn import KerasClassifier # for grid search for mu
 #import keras.wrappers.scikit_learn
 import slms_search
 from sklearn import model_selection # gridSearchCV
-from grid_search_models import textModel_Optimiser, ftrModel_Optimiser, textModel_lstmDropout, ftrModel_lstmDropout
+from grid_search_models import textModel_Optimiser, ftrModel_Optimiser, textModel_lstmDropout, ftrModel_lstmDropout, textModel_recDropout, ftrModel_recDropout
 
 def saveResults(dname, results, mainPath):
     dir = path.join(mainPath, "grid search results", dname)
@@ -24,22 +24,6 @@ def saveResults(dname, results, mainPath):
         writeScore.close()
         writeParams.close()
     print("Saved grid search results for " + dname)
-
-def saveModel(model, mainPath, fname, overWrite = False):
-    dir = path.join(mainPath, "models")
-    if not path.exists(dir):
-        os.makedirs(dir)
-    filePath = path.join(dir, fname + ".h5")
-    if path.exists(filePath):
-        if overWrite is True:
-            msg = "Saved, replacing existing file of same name"
-            model.save(filePath)
-        else:
-            msg = "Not saved, model already exists"
-    else:
-        msg = "Saved"
-        model.save(filePath)
-    print(fname + " - " + msg)
 
 def toArray(list):
     return np.array(literal_eval(str(list)))
