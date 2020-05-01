@@ -53,7 +53,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -68,7 +68,17 @@ def main():
     XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray)) # CONVERT THIS TO NUMPY ARRAY OF LISTS
     YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
 
+    optimisers = [1, 2]
+    lRates = [0.0001, 0.001]
+    paramGrid = dict(optimiserChoice = optimisers, lRate = lRates)
+    model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
+    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser_dropout")
 
+    # optimisers = [1, 2]
+    # lRates = [0.0001, 0.001]
+    # paramGrid = dict(optimiserChoice = optimisers, lRate = lRates)
+    # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5, batch_size = 16)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser_dropout")
 
     # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
@@ -85,10 +95,10 @@ def main():
     # model = KerasClassifier(build_fn = textModel_recDropout, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_rec_dropout")
 
-    dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
-    paramGrid = dict(dRate = dropout)
-    model = KerasClassifier(build_fn = ftrModel_recDropout, verbose = 1, epochs = 5, batch_size = 16)
-    gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_rec_dropout")
+    # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
+    # paramGrid = dict(dRate = dropout)
+    # model = KerasClassifier(build_fn = ftrModel_recDropout, verbose = 1, epochs = 5, batch_size = 16)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_rec_dropout")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
