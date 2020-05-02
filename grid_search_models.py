@@ -20,7 +20,7 @@ def textModel_lstmDropout(dRate = 0.0):
     x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.001, momentum = 0.9)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
     # print(model.summary())
     return model
@@ -43,7 +43,7 @@ def ftrModel_lstmDropout(dRate = 0.0):
     x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = 0.001, momentum = 0.9)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
@@ -155,7 +155,7 @@ def textModel_x1Dropout(dRate = 0.0):
     x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.001, momentum = 0.9)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
     # print(model.summary())
     return model
@@ -178,7 +178,7 @@ def ftrModel_x1Dropout(dRate = 0.0):
     x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = 0.001, momentum = 0.9)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
