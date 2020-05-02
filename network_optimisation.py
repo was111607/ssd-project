@@ -9,8 +9,7 @@ from keras.wrappers.scikit_learn import KerasClassifier # for grid search for mu
 #import keras.wrappers.scikit_learn
 import slms_search
 from sklearn import model_selection # gridSearchCV
-from grid_search_models import textModel_Optimiser, ftrModel_Optimiser, textModel_lstmDropout, ftrModel_lstmDropout, textModel_recDropout, ftrModel_recDropout, textModel_x1Dropout, ftrModel_x1Dropout
-
+import gs_models
 def saveResults(dname, results, mainPath):
     dir = path.join(mainPath, "grid search results", dname)
     os.makedirs(dir)
@@ -53,7 +52,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -71,44 +70,54 @@ def main():
     # optimisers = [1, 2]
     # lRates = [0.0001, 0.001]
     # paramGrid = dict(optimiserChoice = optimisers, lRate = lRates)
-    # model = KerasClassifier(build_fn = textModel_Optimiser, verbose = 1, epochs = 5, batch_size = 16)
+    # model = KerasClassifier(build_fn = gs_models.textModel_Optimiser, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser_and_lRate")
 
     # optimisers = [1, 2]
     # lRates = [0.0001, 0.001]
     # paramGrid = dict(optimiserChoice = optimisers, lRate = lRates)
-    # model = KerasClassifier(build_fn = ftrModel_Optimiser, verbose = 1, epochs = 5, batch_size = 16)
+    # model = KerasClassifier(build_fn = gs_models.ftrModel_Optimiser, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser_and_lRate")
 
     # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # model = KerasClassifier(build_fn = textModel_lstmDropout, verbose = 1, epochs = 5, batch_size = 16)
+    # model = KerasClassifier(build_fn = gs_models.textModel_lstmDropout, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_lstm_dropout")
 
     # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # model = KerasClassifier(build_fn = ftrModel_lstmDropout, verbose = 1, epochs = 5, batch_size = 16)
+    # model = KerasClassifier(build_fn = gs_models.ftrModel_lstmDropout, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_lstm_dropout")
 
     # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # model = KerasClassifier(build_fn = textModel_recDropout, verbose = 1, epochs = 5, batch_size = 16)
+    # model = KerasClassifier(build_fn = gs_models.textModel_recDropout, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_rec_dropout")
 
     # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # model = KerasClassifier(build_fn = ftrModel_recDropout, verbose = 1, epochs = 5, batch_size = 16)
+    # model = KerasClassifier(build_fn = gs_models.ftrModel_recDropout, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_rec_dropout")
 
     # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
     # paramGrid = dict(dRate = dropout)
-    # model = KerasClassifier(build_fn = textModel_x1Dropout, verbose = 1, epochs = 5, batch_size = 16)
+    # model = KerasClassifier(build_fn = gs_models.textModel_x1Dropout, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_x1_dropout")
+
+    # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
+    # paramGrid = dict(dRate = dropout)
+    # model = KerasClassifier(build_fn = gs_models.ftrModel_x1Dropout, verbose = 1, epochs = 5, batch_size = 16)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_x1_dropout")
 
     dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
     paramGrid = dict(dRate = dropout)
-    model = KerasClassifier(build_fn = ftrModel_x1Dropout, verbose = 1, epochs = 5, batch_size = 16)
-    gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_x1_dropout")
+    model = KerasClassifier(build_fn = gs_models.textModel_x2Dropout, verbose = 1, epochs = 5, batch_size = 16)
+    gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_x2_dropout")
+
+    # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
+    # paramGrid = dict(dRate = dropout)
+    # model = KerasClassifier(build_fn = gs_models.ftrModel_x2Dropout, verbose = 1, epochs = 5, batch_size = 16)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_x2_dropout")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
