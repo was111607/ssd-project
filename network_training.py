@@ -153,8 +153,9 @@ def main():
         exit()
     # featureVGG = initFtrVGG(mainPath, "img_model_st")
     # predictAndSave(trainSubPaths, featureVGG, 15, path.join(dir, "image_sntmt_features_training_50"), mainPath, "backup_data")
-
+    print("Loading training features")
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy")) # getInputArray # 50 FOR TUNING
+    print("Loading validation features")
     valImgFeatures = np.load(path.join(dir, "image_sntmt_features_validation.npy"))
 
     logDir = "./logs"
@@ -225,8 +226,7 @@ def main():
         YTrain,
         XVal,
         YVal,
-        mainPath,
-        scheduleLr = False)
+        mainPath)
 
     # trainMainModel(models.ftrModelOpt(),
     #     "sntmt_ftr-lvl_model_optimised",
