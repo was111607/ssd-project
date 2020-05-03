@@ -71,6 +71,7 @@ def main():
 
     # evalModel(False, mainPath, "text_lr0001", XTest, YTest, "no fusion (text only) (lr 0.0001)", "text_model_score_lr0001")
 
+    evalModel(False, mainPath, "text_model_optimised", XTest, YTest, "no fusion (text only) optimised", "text_model_opt_score")
     evalModel(True, mainPath, "text_model_optimised", [XTest, testImgProbs], YTest, "decision-level fusion optimised", "decision_model_opt_score")
     evalModel(False, mainPath, "sntmt_ftr-lvl_model_optimised", [XTest, testImgFtrs], YTest, "feature-level fusion optimised", "sntmt_ftr-lvl_model_opt_score")
     evalModel(True, mainPath, "text_model_optimised", [XTest, testImgStProbs], YTest, "decision-level fusion optimised (st)", "decision_model_st_opt_score")
