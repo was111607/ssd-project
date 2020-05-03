@@ -7,7 +7,7 @@ from keras.models import load_model
 from keras.utils import to_categorical
 from keras.optimizers import SGD
 from ast import literal_eval
-from network_training import dFusionModel
+from models import dFusionModel
 
 def toArray(list):
     return np.array(literal_eval(str(list)))
@@ -68,7 +68,7 @@ def main():
     #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrs], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_score")
     #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_score")
     # evalModel(False, mainPath, "sntmt_ftr-lvl_model_adam", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (Adam)", "sntmt_ftr-lvl_model_adam_score")
-    
+
     # evalModel(False, mainPath, "text_lr0001", XTest, YTest, "no fusion (text only) (lr 0.0001)", "text_model_score_lr0001")
 
     evalModel(True, mainPath, "text_model_optimised", [XTest, testImgProbs], YTest, "decision-level fusion optimised", "decision_model_opt_score")
