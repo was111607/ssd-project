@@ -126,7 +126,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -217,27 +217,27 @@ def main():
     #     YVal,
     #     mainPath)
 
-    trainMainModel(models.textModelOpt(),
-        "text_model_optimised",
-        "text_model_optimised_history",
-        logDir,
-        "text_optimised_log",
-        XTrain,
-        YTrain,
-        XVal,
-        YVal,
-        mainPath)
-
-    # trainMainModel(models.ftrModelOpt(),
-    #     "sntmt_ftr-lvl_model_optimised",
-    #     "sntmt_ftr-lvl_model_optimised_history",
+    # trainMainModel(models.textModelOpt(),
+    #     "text_model_optimised",
+    #     "text_model_optimised_history",
     #     logDir,
-    #     "sntmt_ftr-lvl_optimised_log",
-    #     [XTrain, trainImgFeatures],
+    #     "text_optimised_log",
+    #     XTrain,
     #     YTrain,
-    #     [XVal, valImgFeatures],
+    #     XVal,
     #     YVal,
     #     mainPath)
+
+    trainMainModel(models.ftrModelOpt(),
+        "sntmt_ftr-lvl_model_optimised",
+        "sntmt_ftr-lvl_model_optimised_history",
+        logDir,
+        "sntmt_ftr-lvl_optimised_log",
+        [XTrain, trainImgFeatures],
+        YTrain,
+        [XVal, valImgFeatures],
+        YVal,
+        mainPath)
 
 if __name__ == "__main__":
     main()
