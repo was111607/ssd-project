@@ -241,7 +241,7 @@ def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, bat
         else:
             print("Modifying model to output features")
             model = ftrConvert(mainPath, loadModel(mainPath, modelName))
-            saveModel(model, mainPath, modelName + "converted_to_features", overWrite = False)
+            saveModel(model, mainPath, modelName + "_converted_to_features", overWrite = False)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
     gen = dataGen.flow_from_directory(path.join(dir, split), target_size=(224, 224), batch_size = batchSize, class_mode = None, shuffle = False)
@@ -284,8 +284,8 @@ def main():
         os.makedirs(dir)
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_probs_training", "train", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_training_subset", "train_subset", "bt4sa_img_model_class", True, firstTime, 16)
-        predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_val", "val", "bt4sa_img_model_class", True, firstTime, 16)
-        predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_test", "test", "bt4sa_img_model_class", True, firstTime, 16)
+        predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_validation", "val", "bt4sa_img_model_class", True, firstTime, 16)
+        predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
     else:
         print(dir + " already exists, skipping first time creation")
 
@@ -295,8 +295,8 @@ def main():
         dir = path.join(mainPath, "b-t4sa", "image sentiment features")
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_features_training", "train", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_features_training_subset", "train_subset", "bt4sa_img_model_ftrs", False, firstTime, 16)
-        predictAndSave(dir, valFile, mainPath, "image_sntmt_features_val", "val", "bt4sa_img_model_ftrs", False, firstTime, 16)
-        predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
+        predictAndSave(dir, valFile, mainPath, "image_sntmt_features_validation", "val", "bt4sa_img_model_ftrs", False, firstTime, 16)
+        predictAndSave(dir, testFile, mainPath, "image_sntmt_features_testing", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
     else:
         print(dir + " already exists, skipping first time creation")
 
