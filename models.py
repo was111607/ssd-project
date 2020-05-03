@@ -324,6 +324,7 @@ def ftrModelOpt(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
 
 
 def main():
+    return None
     # visualiseModel(dFusionModel(textModel()), "decision_model.png")
     # visualiseModel(model, "image_model_st.png")
     # visualiseModel(ftrModel(), "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
