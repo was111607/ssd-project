@@ -124,7 +124,7 @@ def trainImgModel(model, modelName, historyName, logDir, logName, trainLen, valL
 def main():
     awsDir = "/media/Data3/sewell"
     curDir = "."
-    isAws = False
+    isAws = True
     if isAws is True:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
