@@ -31,7 +31,7 @@ def saveScore(score, fname):
 def evalModel(isDecision, mainPath, modelName, input, YTest, fusionType, scoreName):
     if isDecision is True:
         textModel = loadModel(mainPath, modelName)
-        model = dFusionModel(mainPath, textModel)
+        model = dFusionModel(textModel)
     else:
         model = loadModel(mainPath, modelName)
     score = model.evaluate(input, to_categorical(YTest))
