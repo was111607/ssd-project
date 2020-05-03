@@ -295,7 +295,7 @@ def textModelOpt():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     x2 = Dropout(0.6)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    optimiser = SGD(lr = 0.001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
     # print(model.summary())
     return model
@@ -318,16 +318,16 @@ def ftrModelOpt(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     x2 = Dropout(0.4)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    optimiser = SGD(lr = 0.001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
 
 def main():
-    visualiseModel(dFusionModel(textModel()), "decision_model.png")
+    # visualiseModel(dFusionModel(textModel()), "decision_model.png")
     # visualiseModel(model, "image_model_st.png")
-    visualiseModel(ftrModel(), "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
-    visualiseModel(textModel(), "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
+    # visualiseModel(ftrModel(), "feature_model.png") ### Uncomment to visualise, requires pydot and graphviz
+    # visualiseModel(textModel(), "text_only_model.png") ### Uncomment to visualise, requires pydot and graphviz
 
 if __name__ == "__main__":
     main()
