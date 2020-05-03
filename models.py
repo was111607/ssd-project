@@ -170,6 +170,17 @@ def sentimentVGG():
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
+
+def dFusionModel(textModel):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+    imageSntmts = Input(shape=(3,), name = "input_2")
+    output = Lambda(lambda inputs: (inputs[0] / 2) + (inputs[1] / 2))([textModel.output, imageSntmts])
+    model = Model(input = [textModel.input, imageSntmts], output = output)
+    optimiser = SGD(lr = 0.001, momentum = 0.9)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
+    return model
+
+###################################
+
 def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
@@ -188,16 +199,7 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
-    #optimiser = SGD(lr = 0.0001, momentum = 0.9)
-    optimiser = Adam(learning_rate = 0.0001)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
-    return model
-
-def dFusionModel(textModel):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
-    imageSntmts = Input(shape=(3,), name = "input_2")
-    output = Lambda(lambda inputs: (inputs[0] / 2) + (inputs[1] / 2))([textModel.output, imageSntmts])
-    model = Model(input = [textModel.input, imageSntmts], output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    optimiser = SGD(lr = 0.001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
     return model
 
@@ -221,10 +223,105 @@ def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
+    optimiser = SGD(lr = 0.001, momentum = 0.9)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    return model
+
+#######################
+
+def textModelAdam():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
+    hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
+    x1 = Dropout(0.6)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    x2 = Dropout(0.3)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
+    model = Model(input = input, output = output)
+    #optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    optimiser = Adam(learning_rate = 0.0001)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
+    return model
+
+def ftrModelAdam(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.4))(textFtrs)
+    imageFtrs = Input(shape=(embedDim,))
+    concat = concatenate([lstm, imageFtrs])
+    hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
+    x1 = Dropout(0.2)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    x2 = Dropout(0.3)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
+    model = Model(inputs = [input, imageFtrs], output = output)
     #optimiser = SGD(lr = 0.001, momentum = 0.9) #(lr = 0.075, momentum = 0.6)
     optimiser = Adam(learning_rate = 0.0001)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
+
+##########################################
+
+def textModelOpt():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    lstm = Bidirectional(LSTM(embedDim, recurrent_dropout = 0.4))(textFtrs)
+    hidden1 = Dense(512, activation = "relu")(lstm)
+    x1 = Dropout(0.6)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1)
+    x2 = Dropout(0.6)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
+    model = Model(input = input, output = output)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
+    # print(model.summary())
+    return model
+
+def ftrModelOpt(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.6))(textFtrs)
+    imageFtrs = Input(shape=(embedDim,))
+    concat = concatenate([lstm, imageFtrs])
+    hidden1 = Dense(512, activation = "relu")(concat)
+    x1 = Dropout(0.2)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1)
+    x2 = Dropout(0.4)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
+    model = Model(inputs = [input, imageFtrs], output = output)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    return model
+
 
 def main():
     visualiseModel(dFusionModel(textModel()), "decision_model.png")

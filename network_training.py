@@ -9,7 +9,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.vgg19 import preprocess_input
 from keras.utils import to_categorical
 from ast import literal_eval
-from models import sentimentVGG, ftrModel, dFusionModel, textModel
+import models
 
 # Load in data as pandas - process images?
 # Look into encoding data with one_hot or hashing_trick
@@ -161,16 +161,39 @@ def main():
     if not path.exists(logDir):
         os.makedirs(logDir)
 
-    # trainImgModel(sentimentVGG(),
-    #     "bt4sa_img_model_ftrs_st",
-    #     "bt4sa_img_model_ftrs_st_history",
+    # trainImgModel(models.sentimentVGG(),
+    #     "bt4sa_img_model_class_st",
+    #     "bt4sa_img_model_probs_st_history",
     #     logDir,
     #     "bt4sa_img_model_ftrs_st_log",
     #     dfTrain.shape[0],
     #     dfVal.shape[0],
     #     mainPath)
 
-    # trainMainModel(textModel(),
+    # trainMainModel(models.textModelArb(),
+    #     "text_model,
+    #     "text_model_history",
+    #     logDir,
+    #     "text_log",
+    #     XTrain,
+    #     YTrain,
+    #     XVal,
+    #     YVal,
+    #     mainPath,
+    #     scheduleLr = False)
+    #
+    # trainMainModel(models.ftrModelArb(),
+    #     "sntmt_ftr-lvl_model",
+    #     "sntmt_ftr-lvl_model_history",
+    #     logDir,
+    #     "sntmt_ftr-lvl_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     mainPath)
+
+    # trainMainModel(models.textModelAdam(),
     #     "text_model_adam",
     #     "text_model_adam_history",
     #     logDir,
@@ -182,11 +205,34 @@ def main():
     #     mainPath,
     #     scheduleLr = False)
 
-    # trainMainModel(ftrModel(),
+    # trainMainModel(models.ftrModelAdam(),
     #     "sntmt_ftr-lvl_model_adam",
     #     "sntmt_ftr-lvl_model_adam_history",
     #     logDir,
     #     "sntmt_ftr-lvl_adam_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     mainPath)
+
+    trainMainModel(models.textModelOpt(),
+        "text_model_optimised",
+        "text_model_optimised_history",
+        logDir,
+        "text_optimised_log",
+        XTrain,
+        YTrain,
+        XVal,
+        YVal,
+        mainPath,
+        scheduleLr = False)
+
+    # trainMainModel(models.ftrModelOpt(),
+    #     "sntmt_ftr-lvl_model_optimised",
+    #     "sntmt_ftr-lvl_model_optimised_history",
+    #     logDir,
+    #     "sntmt_ftr-lvl_optimised_log",
     #     [XTrain, trainImgFeatures],
     #     YTrain,
     #     [XVal, valImgFeatures],

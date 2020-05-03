@@ -198,11 +198,6 @@ def loadModel(mainPath, fname):
         print("Cannot find model: " + modelPath + " to load.")
         exit()
 
-# def saveDataFrame(df, fname):
-#     with open (fname, "w") as writeFile:
-#         df.to_csv(writeFile, index = False, quotechar = '"', quoting = csv.QUOTE_ALL)
-#         writeFile.close()
-
 def savePredictions(saveName, predictions):
     np.save(saveName, np.stack(predictions.apply(toArray)))
     print("Predictions saved")
@@ -213,12 +208,6 @@ def getFilename(path):
 def matchPreds(matchings, df):
     # PErform actions within a dataframe
     return df["IMG"].apply(getFilename).map(matchings)
-
-# def matchFtrs(matchings, df):
-#     # PErform actions within a dataframe
-#     df["IMG_FTRS"] = df["IMG"].apply(getFilename).map(matchings)
-#     return df
-
 
 def saveModel(model, mainPath, fname, overWrite = False):
     dir = path.join(mainPath, "models")
@@ -247,7 +236,12 @@ def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, bat
             model = ftrConvert(mainPath, t4saVGG(mainPath))
         saveModel(model, mainPath, modelName, overWrite = False)
     else:
-        model = loadModel(mainPath, modelName)
+        if predictSntmt is True:
+            model = loadModel(mainPath, modelName)
+        else:
+            print("Modifying model to output features")
+            model = ftrConvert(mainPath, loadModel(mainPath, modelName))
+            saveModel(model, mainPath, modelName + "converted_to_features", overWrite = False)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "data")
     gen = dataGen.flow_from_directory(path.join(dir, split), target_size=(224, 224), batch_size = batchSize, class_mode = None, shuffle = False)
@@ -306,19 +300,14 @@ def main():
     else:
         print(dir + " already exists, skipping first time creation")
 
-    ### Self-trained image model predictions here
+    ### Self-trained image model feature predictions here, TEST ONLY
     firstTime = False
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
-    # predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test_st", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
+    predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test_st", "test", "bt4sa_img_model_class_st", False, firstTime, 16)
 
-
-    dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
-    predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_test_st", "test", "bt4sa_img_model_class_st", True, firstTime, 16)
-
-    # sntmtMatchings = imgPredict(mainPath, testLen, "test", "bt4sa_img_model_ftrs", False, firstTime, batchSize = 16)
-    # matchings = getImgFtrs(mainPath, testLen, firstTime = False, batchSize = 16)
-    # updatedDf = matchFtrs(matchings, dfTest) #matchSntmts(matchings, dfTest)
-    #saveDataFrame(updatedDf, path.join(mainPath, "b-t4sa/model_input_testing_updated_st_FTRS.csv"))
+    ### Self-trained image model sentiment predictions here, TEST ONLY
+    # dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
+    # predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_test_st", "test", "bt4sa_img_model_class_st", True, firstTime, 16)
 
 if __name__ == "__main__":
     main()

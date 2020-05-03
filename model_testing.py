@@ -56,14 +56,6 @@ def main():
     testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_test.npy"))
     testImgProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_test.npy"))
     testImgStProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_test_st.npy"))
-    # if "IMG_PREDS" in dfTest.columns: # CHANGE TO ABOVE LINE BUT WITH PROBABILITIES
-    #     testImgSntmtProbs = np.stack(dfTest["IMG_PREDS"].apply(toArray))
-
-    # if "IMG_FTRS" in newDfTest.columns:
-    #     testImgFtrsCSV = np.stack(newDfTest["IMG_FTRS"].apply(toArray))
-    # fModel = loadModel("training_all", "feature_model")
-    # dModel = loadModel("training_all", "decision_model")
-    #tModel = loadModel("text_model")
 
     #print(dModel.predict([[XTest[0]], [testImgClass[0]]]))
     evalModel(False, mainPath, "text_lr0001", XTest, YTest, "no fusion (text only) (lr 0.0001)", "text_model_score_lr0001")

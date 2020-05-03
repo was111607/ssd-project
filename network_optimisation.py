@@ -114,10 +114,10 @@ def main():
     # model = KerasClassifier(build_fn = gs_models.textModel_x2Dropout, verbose = 1, epochs = 5, batch_size = 16)
     # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_x2_dropout")
 
-    dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
-    paramGrid = dict(dRate = dropout)
-    model = KerasClassifier(build_fn = gs_models.ftrModel_x2Dropout, verbose = 1, epochs = 5, batch_size = 16)
-    gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_x2_dropout")
+    # dropout = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]
+    # paramGrid = dict(dRate = dropout)
+    # model = KerasClassifier(build_fn = gs_models.ftrModel_x2Dropout, verbose = 1, epochs = 5, batch_size = 16)
+    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_x2_dropout")
 
     # batchSizes = [16, 32, 64, 128, 256]
     # paramGrid = dict(batch_size = batchSizes)
