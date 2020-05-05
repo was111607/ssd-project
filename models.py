@@ -178,10 +178,10 @@ def dFusionModel(textModel):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate =
     optimiser = SGD(lr = 0.001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
     return model
-
+    
 ###################################
 
-def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+def textModelArb():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -192,18 +192,18 @@ def textModel():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
     #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
     #print(textFtrs.output)
-    lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.5))(textFtrs)
     hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
-    x1 = Dropout(0.6)(hidden1)
+    x1 = Dropout(0.5)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
-    x2 = Dropout(0.3)(hidden2)
+    x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
     return model
 
-def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+def ftrModelArb(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     with open("./training_counter.pickle", "rb") as readFile:
         tokeniser = pickle.load(readFile)
         maxVocabSize = len(tokeniser) + 1 # ~ 120k
@@ -218,16 +218,16 @@ def ftrModel(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     imageFtrs = Input(shape=(embedDim,))
     concat = concatenate([lstm, imageFtrs])
     hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
-    x1 = Dropout(0.2)(hidden1)
+    x1 = Dropout(0.5)(hidden1)
     hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
-    x2 = Dropout(0.3)(hidden2)
+    x2 = Dropout(0.5)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
     optimiser = SGD(lr = 0.001, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-#######################
+###################################
 
 def textModelAdam():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
     with open("./training_counter.pickle", "rb") as readFile:
@@ -322,6 +322,101 @@ def ftrModelOpt(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
+########################################
+
+def textModelSelf():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
+    hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
+    x1 = Dropout(0.6)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    x2 = Dropout(0.3)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
+    model = Model(input = input, output = output)
+    optimiser = SGD(lr = 0.001, momentum = 0.9)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
+    return model
+
+def ftrModelSelf(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.4))(textFtrs)
+    imageFtrs = Input(shape=(embedDim,))
+    concat = concatenate([lstm, imageFtrs])
+    hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
+    x1 = Dropout(0.2)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    x2 = Dropout(0.3)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
+    model = Model(inputs = [input, imageFtrs], output = output)
+    optimiser = SGD(lr = 0.001, momentum = 0.9)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    return model
+
+########################################
+
+def textModelSelfLr0001():# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.1, recurrent_dropout = 0.4))(textFtrs)
+    hidden1 = Dense(512, activation = "relu")(lstm) # Make similar to feature??
+    x1 = Dropout(0.6)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    x2 = Dropout(0.3)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
+    model = Model(input = input, output = output)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
+    return model
+
+def ftrModelSelfLr0001(): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+    with open("./training_counter.pickle", "rb") as readFile:
+        tokeniser = pickle.load(readFile)
+        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+        readFile.close()
+    seqLength = 30
+    embedDim = 512
+    input = Input(shape=(seqLength,))
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    #textFtrs = Dense(embedDim, use_bias = False)(textFtrs)
+    #print(textFtrs.output)
+    lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.4))(textFtrs)
+    imageFtrs = Input(shape=(embedDim,))
+    concat = concatenate([lstm, imageFtrs])
+    hidden1 = Dense(512, activation = "relu")(concat) # Make similar to feature??
+    x1 = Dropout(0.2)(hidden1)
+    hidden2 = Dense(256, activation = "relu")(x1) # Make similar to feature??
+    x2 = Dropout(0.3)(hidden2)
+    output = Dense(3, activation = "softmax")(x2)
+    model = Model(inputs = [input, imageFtrs], output = output)
+    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    return model
 
 def main():
     return None

@@ -171,11 +171,57 @@ def main():
     #     dfVal.shape[0],
     #     mainPath)
 
-    # trainMainModel(models.textModelArb(),
-    #     "text_model,
-    #     "text_model_history",
+    trainMainModel(models.textModelArb(),
+        "textArb_model,
+        "textArb_model_history",
+        logDir,
+        "textArb_log",
+        XTrain,
+        YTrain,
+        XVal,
+        YVal,
+        mainPath,
+        scheduleLr = False)
+    #
+    # trainMainModel(models.ftrModelArb(),
+    #     "featureArb_model",
+    #     "featureArb_model_history",
     #     logDir,
-    #     "text_log",
+    #     "featureArb_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     mainPath)
+
+
+    # trainMainModel(models.textModelOpt(),
+    #     "textOptimised_model",
+    #     "textOptimised_history",
+    #     logDir,
+    #     "textOptimised_log",
+    #     XTrain,
+    #     YTrain,
+    #     XVal,
+    #     YVal,
+    #     mainPath)
+
+    trainMainModel(models.ftrModelOpt(),
+        "featureOptimised_model",
+        "featureOptimised_model_history",
+        logDir,
+        "featureOptimised_log",
+        [XTrain, trainImgFeatures],
+        YTrain,
+        [XVal, valImgFeatures],
+        YVal,
+        mainPath)
+
+    # trainMainModel(models.textModelSelf(),
+    #     "textSelf_model,
+    #     "textSelf_model_history",
+    #     logDir,
+    #     "textSelf_log",
     #     XTrain,
     #     YTrain,
     #     XVal,
@@ -183,11 +229,11 @@ def main():
     #     mainPath,
     #     scheduleLr = False)
     #
-    # trainMainModel(models.ftrModelArb(),
-    #     "sntmt_ftr-lvl_model",
-    #     "sntmt_ftr-lvl_model_history",
+    # trainMainModel(models.ftrModelSelf(),
+    #     "featureSelf_model",
+    #     "featureSelf_model_history",
     #     logDir,
-    #     "sntmt_ftr-lvl_log",
+    #     "featureSelf_log",
     #     [XTrain, trainImgFeatures],
     #     YTrain,
     #     [XVal, valImgFeatures],
@@ -195,10 +241,10 @@ def main():
     #     mainPath)
 
     # trainMainModel(models.textModelAdam(),
-    #     "text_model_adam",
-    #     "text_model_adam_history",
+    #     "textAdam_model",
+    #     "textAdam_model_history",
     #     logDir,
-    #     "text_adam_log",
+    #     "textAdam_log",
     #     XTrain,
     #     YTrain,
     #     XVal,
@@ -207,37 +253,37 @@ def main():
     #     scheduleLr = False)
 
     # trainMainModel(models.ftrModelAdam(),
-    #     "sntmt_ftr-lvl_model_adam",
-    #     "sntmt_ftr-lvl_model_adam_history",
+    #     "featureAdam_model",
+    #     "featureAdam_model_history",
     #     logDir,
-    #     "sntmt_ftr-lvl_adam_log",
+    #     "featureAdam_log",
     #     [XTrain, trainImgFeatures],
     #     YTrain,
     #     [XVal, valImgFeatures],
     #     YVal,
     #     mainPath)
 
-    # trainMainModel(models.textModelOpt(),
-    #     "text_model_optimised",
-    #     "text_model_optimised_history",
+    # trainMainModel(models.textModelSelfLr0001(),
+    #     "textLr0001_model,
+    #     "textLr0001_model_history",
     #     logDir,
-    #     "text_optimised_log",
+    #     "textLr0001_log",
     #     XTrain,
     #     YTrain,
     #     XVal,
     #     YVal,
+    #     mainPath,
+    #     scheduleLr = False)
+    #
+    # trainMainModel(models.ftrModelSelfLr0001(),
+    #     "featureLr0001_model",
+    #     "featureLr0001_model_history",
+    #     logDir,
+    #     #  "sntmt_ftr-lvl_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
     #     mainPath)
-
-    trainMainModel(models.ftrModelOpt(),
-        "sntmt_ftr-lvl_model_optimised",
-        "sntmt_ftr-lvl_model_optimised_history",
-        logDir,
-        "sntmt_ftr-lvl_optimised_log",
-        [XTrain, trainImgFeatures],
-        YTrain,
-        [XVal, valImgFeatures],
-        YVal,
-        mainPath)
-
 if __name__ == "__main__":
     main()

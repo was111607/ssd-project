@@ -21,9 +21,10 @@ def loadModel(mainPath, modelName):
         exit()
 
 def saveScore(score, fname):
-    if not path.exists("scores"):
-        os.mkdir("scores")
-    with open(path.join("scores", fname + ".pickle"), "wb") as writeFile:
+    dirName = "new_scores"
+    if not path.exists(dirName):
+        os.mkdir(dirName)
+    with open(path.join(dirName, fname + ".pickle"), "wb") as writeFile:
         pickle.dump(score, writeFile)
         print("Score saved for filename: " + fname)
         writeFile.close()
@@ -37,6 +38,7 @@ def evalModel(isDecision, mainPath, modelName, input, YTest, fusionType, scoreNa
     score = model.evaluate(input, to_categorical(YTest))
     print(f"The loss for {fusionType} is: {score[0]}")
     print(f"The accuracy for {fusionType} is: {score[1]}")
+    print("\n")
     saveScore(score, scoreName)
 
 def main():
@@ -58,24 +60,54 @@ def main():
     testImgProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing.npy"))
     testImgStProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing_st.npy"))
 
-    #print(dModel.predict([[XTest[0]], [testImgClass[0]]]))
+    # ST, Non-st
+    # Arb, Adam, Opt, Self, Lr0001
+
     # evalModel(False, mainPath, "text_lr0001", XTest, YTest, "no fusion (text only) (lr 0.0001)", "text_model_score_lr0001")
     # evalModel(False, mainPath, "text_model", XTest, YTest, "no fusion (text only) (lr 0.001)", "text_model_score_lr001")
-    #evalModel(False, mainPath, "text_model_adam", XTest, YTest, "no fusion (text only) Adam", "text_model_score_adam")
+    #evalModel(False, mainPath, "text_model_Adam", XTest, YTest, "no fusion (text only) Adam", "text_model_score_adam")
     # evalModel(True, mainPath, "text_lr0001", [XTest, testImgProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_lr0001")
     # evalModel(True, mainPath, "text_lr0001", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.001)", "decision_model_score_st_lr0001")
     # evalModel(True, mainPath, "text_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.001)", "decision_model_score_st_lr001")
-    #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrs], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_score")
-    #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001_", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_score")
+
+    #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001", [XTest, testImgFtrs], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_score")
+    #evalModel(False, mainPath, "sntmt_ftr-lvl_model_lr001", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_score")
     # evalModel(False, mainPath, "sntmt_ftr-lvl_model_adam", [XTest, testImgFtrsCSV], YTest, "feature-level fusion (Adam)", "sntmt_ftr-lvl_model_adam_score")
 
     # evalModel(False, mainPath, "text_lr0001", XTest, YTest, "no fusion (text only) (lr 0.0001)", "text_model_score_lr0001")
+################################## ST, non-st - DO FOR ARB
 
-    evalModel(False, mainPath, "text_model_optimised", XTest, YTest, "no fusion (text only) optimised", "text_model_opt_score")
-    evalModel(True, mainPath, "text_model_optimised", [XTest, testImgProbs], YTest, "decision-level fusion optimised", "decision_model_opt_score")
-    evalModel(False, mainPath, "sntmt_ftr-lvl_model_optimised", [XTest, testImgFtrs], YTest, "feature-level fusion optimised", "sntmt_ftr-lvl_model_opt_score")
-    evalModel(True, mainPath, "text_model_optimised", [XTest, testImgStProbs], YTest, "decision-level fusion optimised (st)", "decision_model_st_opt_score")
-    evalModel(False, mainPath, "sntmt_ftr-lvl_model_optimised", [XTest, testImgStFtrs], YTest, "feature-level fusion optimised (st)", "sntmt_ftr-lvl_model_st_opt_score")
+    # evalModel(True, mainPath, "text_lr0001_model", [XTest, testImgProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_lr0001")
+    # evalModel(True, mainPath, "text_lr0001_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_st_lr0001") REPLACE WITH ARBS
+
+    # evalModel(True, mainPath, "textSelf_model", [XTest, testImgProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_lr0001")
+    # evalModel(True, mainPath, "text_lr0001_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_st_lr0001")
+
+    #evalModel(False, mainPath, "featureSelf_model", [XTest, testImgFtrs], YTest, "feature-level fusion", "sntmt_ftr-lvl_model_lr001_score")
+    #evalModel(False, mainPath, "featureSelf_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_score")
+
+################################# <Arb>, Opt, Self, Adam, Lr0001
+
+    # - ARB
+
+    # evalModel(False, mainPath, "textOptimised_model", XTest, YTest, "no fusion (text only) optimised", "text_model_opt_score")
+    # evalModel(True, mainPath, "textOptimised_model", [XTest, testImgProbs], YTest, "decision-level fusion optimised", "decision_model_opt_score")
+    # evalModel(False, mainPath, "featureOptimised_model", [XTest, testImgFtrs], YTest, "feature-level fusion optimised", "sntmt_ftr-lvl_model_opt_score")
+    # evalModel(True, mainPath, "textOptimised_model", [XTest, testImgStProbs], YTest, "decision-level fusion optimised (st)", "decision_model_st_opt_score")
+    # evalModel(False, mainPath, "featureOptimised_model", [XTest, testImgStFtrs], YTest, "feature-level fusion optimised (st)", "sntmt_ftr-lvl_model_st_opt_score")
+
+    # evalModel(False, mainPath, "textSelf_model", XTest, YTest, "no fusion (text only) (lr 0.001)", "text_model_score_lr001")
+    # evalModel(True, mainPath, "textSelf_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.001)", "decision_model_score_st_lr001")
+    #evalModel(False, mainPath, "featureSelf_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_score")
+
+    #evalModel(False, mainPath, "textAdam_model", XTest, YTest, "no fusion (text only) Adam", "text_model_score_adam")
+    #evalModel(True, mainPath, "textAdam_model", [XTest, testImgStProbs], YTest, "decision-level fusion (Adam)", "decision_model_score_adam")
+    ### not required - show evidence using text model evalModel(False, mainPath, "featureAdam_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (Adam)", "sntmt_ftr-lvl_model_adam_score")
+
+    # evalModel(False, mainPath, "textLr0001_model", XTest, YTest, "no fusion (text only) (lr 0.0001)", "text_model_score_lr0001")
+    # evalModel(True, mainPath, "textLr0001_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_st_lr0001") REPLACE WITH ARBS
+    #evalModel(False, mainPath, "featureLr0001_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (new)", "sntmt_ftr-lvl_model_lr001_flow_score")
+
 
 if __name__ == "__main__":
     main()
