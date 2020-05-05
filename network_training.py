@@ -180,7 +180,7 @@ def main():
         YTrain,
         XVal,
         YVal,
-        mainPath,)
+        mainPath)
     #
     # trainMainModel(models.ftrModelArb(),
     #     "featureArb_model",
@@ -225,8 +225,7 @@ def main():
     #     YTrain,
     #     XVal,
     #     YVal,
-    #     mainPath,
-    #     scheduleLr = False)
+    #     mainPath)
     #
     # trainMainModel(models.ftrModelSelf(),
     #     "featureSelf_model",
@@ -260,7 +259,8 @@ def main():
     #     YTrain,
     #     [XVal, valImgFeatures],
     #     YVal,
-    #     mainPath)
+    #     mainPath.
+    #     scheduleLr = False)
 
     # trainMainModel(models.textModelSelfLr0001(),
     #     "textLr0001_model,
@@ -283,6 +283,7 @@ def main():
     #     YTrain,
     #     [XVal, valImgFeatures],
     #     YVal,
-    #     mainPath)
+    #     mainPath,
+    #     scheduleLr = False)
 if __name__ == "__main__":
     main()
