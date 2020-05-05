@@ -180,8 +180,7 @@ def main():
         YTrain,
         XVal,
         YVal,
-        mainPath,
-        scheduleLr = False)
+        mainPath,)
     #
     # trainMainModel(models.ftrModelArb(),
     #     "featureArb_model",
