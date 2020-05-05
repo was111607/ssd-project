@@ -172,7 +172,7 @@ def main():
     #     mainPath)
 
     trainMainModel(models.textModelArb(),
-        "textArb_model,
+        "textArb_model",
         "textArb_model_history",
         logDir,
         "textArb_log",
@@ -206,16 +206,16 @@ def main():
     #     YVal,
     #     mainPath)
 
-    trainMainModel(models.ftrModelOpt(),
-        "featureOptimised_model",
-        "featureOptimised_model_history",
-        logDir,
-        "featureOptimised_log",
-        [XTrain, trainImgFeatures],
-        YTrain,
-        [XVal, valImgFeatures],
-        YVal,
-        mainPath)
+    # trainMainModel(models.ftrModelOpt(),
+    #     "featureOptimised_model",
+    #     "featureOptimised_model_history",
+    #     logDir,
+    #     "featureOptimised_log",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     mainPath)
 
     # trainMainModel(models.textModelSelf(),
     #     "textSelf_model,
