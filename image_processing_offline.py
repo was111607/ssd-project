@@ -269,7 +269,7 @@ def main():
     isAws = True
 
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -280,34 +280,34 @@ def main():
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
 
     dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
-    if (firstTime is True) and (not path.exists(dir)):
-        os.makedirs(dir)
+    if (firstTime is True): #and (not path.exists(dir)):
+        #os.makedirs(dir)
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_probs_training", "train", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_training_subset", "train_subset", "bt4sa_img_model_class", True, firstTime, 16)
-        predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_validation", "val", "bt4sa_img_model_class", True, firstTime, 16)
-        predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
+        # predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_validation", "val", "bt4sa_img_model_class", True, firstTime, 16)
+        # predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
     else:
         print(dir + " already exists, skipping first time creation")
 
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
-    if (firstTime is True) and (not path.exists(dir)):
-        os.makedirs(dir)
+    if (firstTime is True): # and (not path.exists(dir)):
+        #os.makedirs(dir)
         dir = path.join(mainPath, "b-t4sa", "image sentiment features")
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_features_training", "train", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_features_training_subset", "train_subset", "bt4sa_img_model_ftrs", False, firstTime, 16)
-        predictAndSave(dir, valFile, mainPath, "image_sntmt_features_validation", "val", "bt4sa_img_model_ftrs", False, firstTime, 16)
-        predictAndSave(dir, testFile, mainPath, "image_sntmt_features_testing", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
+        # predictAndSave(dir, valFile, mainPath, "image_sntmt_features_validation", "val", "bt4sa_img_model_ftrs", False, firstTime, 16)
+        # predictAndSave(dir, testFile, mainPath, "image_sntmt_features_testing", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
     else:
         print(dir + " already exists, skipping first time creation")
 
     ### Self-trained image model feature predictions here, TEST ONLY
     firstTime = False
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
-    predictAndSave(dir, testFile, mainPath, "image_sntmt_features_test_st", "test", "bt4sa_img_model_class_st", False, firstTime, 16)
+    # predictAndSave(dir, testFile, mainPath, "image_sntmt_features_testing_st", "test", "bt4sa_img_model_class_st", False, firstTime, 16)
 
     ### Self-trained image model sentiment predictions here, TEST ONLY
     # dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
-    # predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_test_st", "test", "bt4sa_img_model_class_st", True, firstTime, 16)
+    # predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing_st", "test", "bt4sa_img_model_class_st", True, firstTime, 16)
 
 if __name__ == "__main__":
     main()
