@@ -79,8 +79,8 @@ def main():
     # evalModel(True, mainPath, "textLr0001r_model", [XTest, testImgProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_lr0001")
     # evalModel(True, mainPath, "textLr0001_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_st_lr0001")
 ################################## ST, non-st - DO FOR ARB
-     evalModel(False, mainPath, "textArb_model", XTest, YTest, "text-only fusion (Non-ST images)", "textArb_NonST_model_score")
-     evalModel(False, mainPath, "textArb_model", XTest, YTest, "text-only fusion (ST images)", "textArb_ST_model_score")
+    evalModel(False, mainPath, "textArb_model", XTest, YTest, "text-only fusion (Non-ST images)", "textArb_NonST_model_score")
+    evalModel(False, mainPath, "textArb_model", XTest, YTest, "text-only fusion (ST images)", "textArb_ST_model_score")
 #
     # evalModel(True, mainPath, "textArb_model", [XTest, testImgProbs], YTest, "decision-level fusion (Non-ST images)", "decisionArb_NonST_model_score")
     # evalModel(True, mainPath, "textArb_model", [XTest, testImgStProbs], YTest, "decision-level fusion (ST images)", "decisionArb_ST_model_score")
