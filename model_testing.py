@@ -81,7 +81,7 @@ def main():
 ################################## ST, non-st - DO FOR ARB
 
     evalModel(True, mainPath, "textArb_model", [XTest, testImgProbs], YTest, "decision-level fusion (Non-ST images)", "decisionArb_NonST_model_score")
-    evalModel(True, mainPath, "textArb_model", [XTest, testImgStProbs], YTest, "decision-level fusion (ST images)", "decisioArb_ST_model_score") REPLACE WITH ARBS
+    evalModel(True, mainPath, "textArb_model", [XTest, testImgStProbs], YTest, "decision-level fusion (ST images)", "decisioArb_ST_model_score")
 
     evalModel(False, mainPath, "featureArb_model", [XTest, testImgFtrs], YTest, "feature-level fusion (Non-ST images)", "featureArb_model_NonST_score")
     evalModel(False, mainPath, "featureArb_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (ST images)", "featureArb_model_ST_score")
