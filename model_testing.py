@@ -27,6 +27,7 @@ def saveScore(score, fname):
     with open(path.join(dirName, fname + ".pickle"), "wb") as writeFile:
         pickle.dump(score, writeFile)
         print("Score saved for filename: " + fname)
+        print("\n")
         writeFile.close()
 
 def evalModel(isDecision, mainPath, modelName, input, YTest, fusionType, scoreName):
@@ -38,7 +39,6 @@ def evalModel(isDecision, mainPath, modelName, input, YTest, fusionType, scoreNa
     score = model.evaluate(input, to_categorical(YTest))
     print(f"The loss for {fusionType} is: {score[0]}")
     print(f"The accuracy for {fusionType} is: {score[1]}")
-    print("\n")
     saveScore(score, scoreName)
 
 def main():
@@ -80,19 +80,19 @@ def main():
     # evalModel(True, mainPath, "textLr0001_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.0001)", "decision_model_score_st_lr0001")
 ################################## ST, non-st - DO FOR ARB
 
-    evalModel(True, mainPath, "textArb_model", [XTest, testImgProbs], YTest, "decision-level fusion (Non-ST images)", "decisionArb_NonST_model_score")
-    evalModel(True, mainPath, "textArb_model", [XTest, testImgStProbs], YTest, "decision-level fusion (ST images)", "decisioArb_ST_model_score")
-
-    evalModel(False, mainPath, "featureArb_model", [XTest, testImgFtrs], YTest, "feature-level fusion (Non-ST images)", "featureArb_model_NonST_score")
-    evalModel(False, mainPath, "featureArb_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (ST images)", "featureArb_model_ST_score")
+    # evalModel(True, mainPath, "textArb_model", [XTest, testImgProbs], YTest, "decision-level fusion (Non-ST images)", "decisionArb_NonST_model_score")
+    # evalModel(True, mainPath, "textArb_model", [XTest, testImgStProbs], YTest, "decision-level fusion (ST images)", "decisioArb_ST_model_score")
+    #
+    # evalModel(False, mainPath, "featureArb_model", [XTest, testImgFtrs], YTest, "feature-level fusion (Non-ST images)", "featureArb_model_NonST_score")
+    # evalModel(False, mainPath, "featureArb_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (ST images)", "featureArb_model_ST_score")
 
 ################################# <Arb>, Opt, Self, Adam, Lr0001
 
     # - ARB
 
-    # evalModel(False, mainPath, "textOptimised_model", XTest, YTest, "no fusion (text only) optimised", "text_model_opt_score")
-    # evalModel(True, mainPath, "textOptimised_model", [XTest, testImgStProbs], YTest, "decision-level fusion optimised (st)", "decision_model_st_opt_score")
-    # evalModel(False, mainPath, "featureOptimised_model", [XTest, testImgStFtrs], YTest, "feature-level fusion optimised (st)", "sntmt_ftr-lvl_model_st_opt_score")
+    evalModel(False, mainPath, "textOptimised_model", XTest, YTest, "no fusion (text only) optimised", "text_model_opt_score")
+    evalModel(True, mainPath, "textOptimised_model", [XTest, testImgStProbs], YTest, "decision-level fusion optimised (st)", "decision_model_st_opt_score")
+    evalModel(False, mainPath, "featureOptimised_model", [XTest, testImgStFtrs], YTest, "feature-level fusion optimised (st)", "sntmt_ftr-lvl_model_st_opt_score")
 
     # evalModel(False, mainPath, "textSelf_model", XTest, YTest, "no fusion (text only) (lr 0.001)", "text_model_score_lr001")
     # evalModel(True, mainPath, "textSelf_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.001)", "decision_model_score_st_lr001")
