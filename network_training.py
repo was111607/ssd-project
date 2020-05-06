@@ -126,7 +126,7 @@ def main():
     curDir = "."
     isAws = True
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to CPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to CPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -171,27 +171,27 @@ def main():
     #     dfVal.shape[0],
     #     mainPath)
 
-    trainMainModel(models.textModelArb(),
-        "textArb_model",
-        "textArb_model_history",
-        logDir,
-        "textArb_log",
-        XTrain,
-        YTrain,
-        XVal,
-        YVal,
-        mainPath)
-    #
-    # trainMainModel(models.ftrModelArb(),
-    #     "featureArb_model",
-    #     "featureArb_model_history",
+    # trainMainModel(models.textModelArb(),
+    #     "textArb_model",
+    #     "textArb_model_history",
     #     logDir,
-    #     "featureArb_log",
-    #     [XTrain, trainImgFeatures],
+    #     "textArb_log",
+    #     XTrain,
     #     YTrain,
-    #     [XVal, valImgFeatures],
+    #     XVal,
     #     YVal,
     #     mainPath)
+    #
+    trainMainModel(models.ftrModelArb(),
+        "featureArb_model",
+        "featureArb_model_history",
+        logDir,
+        "featureArb_log",
+        [XTrain, trainImgFeatures],
+        YTrain,
+        [XVal, valImgFeatures],
+        YVal,
+        mainPath)
 
 
     # trainMainModel(models.textModelOpt(),
