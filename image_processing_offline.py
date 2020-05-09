@@ -277,7 +277,7 @@ def loadModel(mainPath, fname):
 
 # Saves predictions, converted to a numpy array,
 def savePredictions(saveName, predictions):
-    np.save(saveName, predictions.to_numpy()) #np.array(predictions))#np.stack(predictions.apply(toArray)))
+    np.save(saveName, np.stack(predictions)) #np.array(predictions))#np.stack(predictions.apply(toArray)))
     print("Predictions saved")
 
 # For a provided image path, extract just the filename by matching all characters succeeding /
@@ -352,7 +352,7 @@ def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, bat
     # filename has been extracted out of its local path name
     for imagePath, prob in zip(inputOrder, probs):
         fileName = re.search(r"(?<=/)[0-9]+-[0-9].jpg", imagePath).group(0)
-        matchings[fileName] = prob.tolist()
+        matchings[fileName] = prob
     backupResults(matchings, mainPath, "image_predictions_backup")
     return matchings
 
