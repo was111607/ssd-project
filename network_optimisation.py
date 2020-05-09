@@ -10,6 +10,7 @@ from keras.wrappers.scikit_learn import KerasClassifier # for grid search for mu
 import slms_search
 from sklearn import model_selection # gridSearchCV
 import gs_models
+
 def saveResults(dname, results, mainPath):
     dir = path.join(mainPath, "grid search results", dname)
     os.makedirs(dir)
@@ -128,107 +129,5 @@ def main():
     # paramGrid = dict(batch_size = batchSizes)
     # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
     # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_batch_sizes")
-
-    # optimisers = [1, 2]
-    # paramGrid = dict(optimiserChoice = optimisers)
-    # model = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # gridSearch(False, mainPath, paramGrid, model, XTrain, YTrain, "text_optimiser")
-
-    # optimisers = [1, 2]
-    # paramGrid = dict(optimiserChoice = optimisers)
-    # model = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # gridSearch(True, mainPath, paramGrid, model, (XTrain, trainImgFeatures), YTrain, "feature_optimiser")
-
-
-
-
-
-    # batchSizes = [16, 32, 64, 128, 256]
-    # paramGrid = dict(batch_size = batchSizes)
-    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5)
-    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # results = grid.fit(XTrain, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("batch_sizes", results)
-
-    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    # paramGrid = dict(dRate = dropout)
-    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # results = grid.fit(XTrain, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("dropouts", results)
-
-    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    # paramGrid = dict(dRate = dropout)
-    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # results = grid.fit(XTrain, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("dropouts", results)
-
-    # lrs = [0.05]
-    # moms = [0.0, 0.2, 0.4, 0.6, 0.8]
-    # paramGrid = dict(lr = lrs, mom = moms)
-    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # results = grid.fit(XTrain, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("dropouts_005", results)
-
-    # dropout = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    # paramGrid = dict(dRate = dropout)
-    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # results = grid.fit(XTrain, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("lstm_dropouts", results, isAws)
-
-    # dropout = [0.6, 0.7, 0.8, 0.9]# [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    # paramGrid = dict(dRate = dropout)
-    # tModel = KerasClassifier(build_fn = textModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = model_selection.GridSearchCV(estimator = tModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # results = grid.fit(XTrain, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("lstm_rec_dropouts_2h", results, isAws)
-
-    # batchSizes = [16, 32, 64, 128, 256]
-    # paramGrid = dict(batch_size = batchSizes)
-    # dModel = KerasClassifier(build_fn = ftrModel, verbose = 1, epochs = 5)
-    # grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgFeatures[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("d_batch_sizes", results, mainPath)
-
-    # hiddenLayers = [0, 1]
-    # paramGrid = dict(extraHLayers = hiddenLayers)
-    # dModel = KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("d_extra_hidden_layers_opt4", results, isAws)
-
-    # lrs = [0.09]
-    # moms = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8]
-    # paramGrid = dict(lr = lrs, mom = moms)
-    # dModel = KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("d_lr_008", results, isAws)
-
-    # dropout = [0.5, 0.6, 0.7, 0.8, 0.9]
-    # paramGrid = dict(dRate = dropout)
-    # dModel = KerasClassifier(build_fn = catFtrModel, verbose = 1, epochs = 5, batch_size = 16)
-    # grid = slms_search.GridSearchCV(estimator = dModel, param_grid = paramGrid, n_jobs = 1, cv = 3)
-    # XCombined = np.array([[XTrain[i], trainImgCategories[i]] for i in range(XTrain.shape[0])])
-    # results = grid.fit(XCombined, to_categorical(YTrain))
-    # summariseResults(results)
-    # saveResults("d_h3_dropout_2h", results, isAws)
-
-
 if __name__ == "__main__":
     main()

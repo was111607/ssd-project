@@ -5,9 +5,9 @@ from keras.optimizers import SGD, Adam
 from keras.layers.merge import concatenate
 
 def textModel_lstmDropout(dRate = 0.0):
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
@@ -26,9 +26,9 @@ def textModel_lstmDropout(dRate = 0.0):
     return model
 
 def ftrModel_lstmDropout(dRate = 0.0):
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
@@ -50,9 +50,9 @@ def ftrModel_lstmDropout(dRate = 0.0):
 ##############################################################################################################
 
 def textModel_recDropout(dRate = 0.0):
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
@@ -71,9 +71,9 @@ def textModel_recDropout(dRate = 0.0):
     return model
 
 def ftrModel_recDropout(dRate = 0.0):
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
@@ -95,9 +95,9 @@ def ftrModel_recDropout(dRate = 0.0):
 ##############################################################################################################
 
 def textModel_x1Dropout(dRate = 0.0):
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
@@ -116,9 +116,9 @@ def textModel_x1Dropout(dRate = 0.0):
     return model
 
 def ftrModel_x1Dropout(dRate = 0.0):
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
@@ -140,9 +140,9 @@ def ftrModel_x1Dropout(dRate = 0.0):
 ##############################################################################################################
 
 def textModel_x2Dropout(dRate = 0.0):
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
@@ -161,9 +161,9 @@ def textModel_x2Dropout(dRate = 0.0):
     return model
 
 def ftrModel_x2Dropout(dRate = 0.0):
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
@@ -185,9 +185,9 @@ def ftrModel_x2Dropout(dRate = 0.0):
 ##############################################################################################################
 
 def textModel_Optimiser(optimiserChoice, lRate):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
@@ -209,9 +209,9 @@ def textModel_Optimiser(optimiserChoice, lRate):# (dRate = 0.0): # (lr = 0.0, mo
     return model
 
 def ftrModel_Optimiser(optimiserChoice, lRate): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
-    with open("./training_counter.pickle", "rb") as readFile:
-        tokeniser = pickle.load(readFile)
-        maxVocabSize = len(tokeniser) + 1 # ~ 120k
+    with open("./vocabulary.pickle", "rb") as readFile:
+        vocab = pickle.load(readFile)
+        maxVocabSize = len(vocab) + 1 # ~ 120k
         readFile.close()
     seqLength = 30
     embedDim = 512
