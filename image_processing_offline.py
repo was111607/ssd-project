@@ -373,7 +373,7 @@ def main():
     awsDir = "/media/Data3/sewell"
     curDir = "."
     isAws = True # Set if on external system
-    firstTime = False
+    firstTime = True
     if isAws is True:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to GPU to use
         mainPath = awsDir
@@ -387,7 +387,7 @@ def main():
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
 
     # Make first time predictions and results saving for image sentiments
-    dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
+    dir = path.join(mainPath, "b-t4sa", "image sentiment classifications_test")
     if (firstTime is True) and (not path.exists(dir)):
         os.makedirs(dir)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
@@ -395,7 +395,7 @@ def main():
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_training_subset", "train_subset", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_validation", "val", "bt4sa_img_model_class", True, firstTime, 16)
     else:
-        print(dir + " already exists, skipping first time creation")
+        print(dir + " already exists or is not first time, skipping first time creation")
 
     # Make first time predictions and results saving for image sentiment features
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
@@ -407,7 +407,7 @@ def main():
         predictAndSave(dir, valFile, mainPath, "image_sntmt_features_validation", "val", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_features_testing", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
     else:
-        print(dir + " already exists, skipping first time creation")
+        print(dir + " already exists or is not first time, skipping first time creation")
 
     ### Insert self-trained image model feature predictions here ###
     # Only the test set should be predicted on
