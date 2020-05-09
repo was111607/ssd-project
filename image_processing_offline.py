@@ -62,9 +62,9 @@ image_sntmt_ftrs_testing.npy - Stores predicted sentiment features for the
                                existing BT4SA testing split.
 
 OPTIONAL:
-Testing split image sentiment probability scores predicted by a self-trained model
+Testing split image sentiment probability scores predicted by a self-trained model.
 
-Testing split image sentiment features predicted by a self-trained model
+Testing split image sentiment features predicted by a self-trained model.
 """
 
 import pandas as pd
@@ -352,7 +352,7 @@ def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, bat
     # filename has been extracted out of its local path name
     for imagePath, prob in zip(inputOrder, probs):
         fileName = re.search(r"(?<=/)[0-9]+-[0-9].jpg", imagePath).group(0)
-        matchings[fileName] = prob #.tolist()
+        matchings[fileName] = prob.tolist()
     backupResults(matchings, mainPath, "image_predictions_backup")
     return matchings
 
