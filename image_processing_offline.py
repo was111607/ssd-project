@@ -390,10 +390,10 @@ def main():
     dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
     if (firstTime is True) and (not path.exists(dir)):
         os.makedirs(dir)
+        predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_probs_training", "train", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_training_subset", "train_subset", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_validation", "val", "bt4sa_img_model_class", True, firstTime, 16)
-        predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
     else:
         print(dir + " already exists, skipping first time creation")
 
