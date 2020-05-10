@@ -3,9 +3,9 @@
 Written by William Sewell
 --------------------------
 Performs image processing using image data stored locally to acquire predictions of
-image sentiment features and classifications
+image sentiment features and classifications.
 
-This was performed on an external system: AWS S3 (server group)
+This was performed on an external system: AWS S3 (server group).
 ---------------
 Files Required
 ---------------
@@ -33,7 +33,7 @@ vgg19_ft_weights.h5 - Stores the weights for the VGG-T4SA FT-F model from T4SA, 
 
 OPTIONAL:
 Trained image classification models - Saved as HDF5 files to be loaded in and predict the
-                                      testing split data (can be converted to predict features)
+                                      testing split data (can be converted to predict features).
 ---------------
 Files Produced
 ---------------
@@ -258,11 +258,8 @@ def ftrConvert(mainPath, imgModel):
 def backupResults(dict, mainPath, saveName):
     with open(path.join(mainPath, saveName + ".pickle"), "wb") as writeFile:
         pickle.dump(dict, writeFile)
+        print("saved matchings backup")
         writeFile.close()
-
-
-# def toArray(list):
-#     return np.array(literal_eval(str(list)))
 
 # Attempts to load a model using the provided filename, from the models subdirectory
 def loadModel(mainPath, fname):
@@ -277,7 +274,7 @@ def loadModel(mainPath, fname):
 
 # Saves predictions, converted to a numpy array,
 def savePredictions(saveName, predictions):
-    np.save(saveName, np.stack(predictions)) #np.array(predictions))#np.stack(predictions.apply(toArray)))
+    np.save(saveName, np.stack(predictions)) # Predictions are concatenated into a single Numpy array.
     print("Predictions saved")
 
 # For a provided image path, extract just the filename by matching all characters succeeding /
@@ -388,14 +385,15 @@ def main():
 
     # Make first time predictions and results saving for image sentiments
     dir = path.join(mainPath, "b-t4sa", "image sentiment classifications_test")
-    if (firstTime is True) and (not path.exists(dir)):
-        os.makedirs(dir)
-        predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
-        predictAndSave(dir, trainFile, mainPath, "image_sntmt_probs_training", "train", "bt4sa_img_model_class", True, firstTime, 16)
+    if (firstTime is True): # and (not path.exists(dir)):
+        #os.makedirs(dir)
+        #predictAndSave(dir, trainFile, mainPath, "image_sntmt_probs_training", "train", "bt4sa_img_model_class", True, firstTime, 16)
+        firstTime = False # Model has been saved
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_training_subset", "train_subset", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_validation", "val", "bt4sa_img_model_class", True, firstTime, 16)
-    else:
-        print(dir + " already exists or is not first time, skipping first time creation")
+        predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
+    # else:
+    #     print(dir + " already exists or is not first time, skipping first time creation")
 
     # Make first time predictions and results saving for image sentiment features
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
@@ -403,6 +401,7 @@ def main():
         os.makedirs(dir)
         dir = path.join(mainPath, "b-t4sa", "image sentiment features")
         predictAndSave(dir, trainFile, mainPath, "image_sntmt_features_training", "train", "bt4sa_img_model_ftrs", False, firstTime, 16)
+        firstTime = False # Model has been saved
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_features_training_subset", "train_subset", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, valFile, mainPath, "image_sntmt_features_validation", "val", "bt4sa_img_model_ftrs", False, firstTime, 16)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_features_testing", "test", "bt4sa_img_model_ftrs", False, firstTime, 16)
