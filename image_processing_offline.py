@@ -265,6 +265,7 @@ def backupResults(dict, mainPath, saveName):
 def loadModel(mainPath, fname):
     try:
         modelPath = path.join(mainPath, "models", fname + ".h5")
+        print(modelPath)
         model = load_model(modelPath)
         print(fname + " successfully loaded")
         return model
