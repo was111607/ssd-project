@@ -260,7 +260,7 @@ def backupResults(dict, mainPath, saveName):
         writeFile.close()
 
 # Attempts to load a model using the provided filename, from the models subdirectory
-def loadModel(mainPath, fname, gaOptimiser = True):
+def loadModel(mainPath, fname):
     try:
         modelPath = path.join(mainPath, "models", fname + ".h5")
         print(modelPath)
@@ -288,7 +288,7 @@ def matchPreds(matchings, df):
 
 # Saves the provided model in its entirety into the models directory under a provided filename,
 # with the choice to overwrite an existing model if it resides in the directory
-def saveModel(model, mainPath, fname, overWrite = False):
+def saveModel(model, mainPath, fname, overWrite = True):
     dir = path.join(mainPath, "models")
     if not path.exists(dir):
         os.makedirs(dir)
