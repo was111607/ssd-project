@@ -288,7 +288,7 @@ def matchPreds(matchings, df):
 
 # Saves the provided model in its entirety into the models directory under a provided filename,
 # with the choice to overwrite an existing model if it resides in the directory
-def saveModel(model, mainPath, fname, overWrite = True):
+def saveModel(model, mainPath, fname, overWrite = False):
     dir = path.join(mainPath, "models")
     if not path.exists(dir):
         os.makedirs(dir)
@@ -325,7 +325,7 @@ def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, bat
         else:
             print("Modifying model to output features")
             model = ftrConvert(mainPath, t4saVGG(mainPath))
-        saveModel(model, mainPath, modelName, overWrite = False)
+        saveModel(model, mainPath, modelName)
     # Otherwise load a provided model, converting it to predict features if required.
     else:
         if predictSntmt is True:
@@ -333,7 +333,7 @@ def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, bat
         else:
             print("Modifying model to output features")
             model = ftrConvert(mainPath, loadModel(mainPath, modelName))
-            saveModel(model, mainPath, modelName + "_converted_to_features", overWrite = False)
+            saveModel(model, mainPath, modelName + "_converted_to_features")
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "gen_data")
     # Images are resized to 224x224x3 when generated to be compatible as a VGG-based model input
