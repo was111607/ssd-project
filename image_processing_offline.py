@@ -260,7 +260,7 @@ def backupResults(dict, mainPath, saveName):
         writeFile.close()
 
 # Attempts to load a model using the provided filename, from the models subdirectory
-def loadModel(mainPath, fname, gaOptimiser = False):
+def loadModel(mainPath, fname, gaOptimiser = True):
     try:
         modelPath = path.join(mainPath, "models", fname + ".h5")
         print(modelPath)
