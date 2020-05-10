@@ -80,7 +80,6 @@ from keras.optimizers import SGD
 from keras import regularizers
 import pickle
 from ast import literal_eval
-from runai import ga
 
 # VGG-T4SA FT-F model definition that initialises according to its original training configuration
 # and loads its layers' weights before returning the completed model.
@@ -237,8 +236,7 @@ def t4saVGG(mainPath):
         trainable = True)(dropout2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.001, momentum = 0.9)  # learning rate decays
-    gaOptimiser = ga.keras.optimizers.Optimizer(optimiser, steps = 2) # Adds gradient accumulation
-    model.compile(optimizer = gaOptimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True) # Load weights into model matching layer names
     return model
 
@@ -262,7 +260,7 @@ def backupResults(dict, mainPath, saveName):
         writeFile.close()
 
 # Attempts to load a model using the provided filename, from the models subdirectory
-def loadModel(mainPath, fname):
+def loadModel(mainPath, fname, gaOptimiser = False):
     try:
         modelPath = path.join(mainPath, "models", fname + ".h5")
         print(modelPath)
@@ -389,8 +387,9 @@ def main():
     if (firstTime is True): # and (not path.exists(dir)):
         #os.makedirs(dir)
         #predictAndSave(dir, trainFile, mainPath, "image_sntmt_probs_training", "train", "bt4sa_img_model_class", True, firstTime, 16)
-        firstTime = False # Model has been saved
+        firstTime = True # Model has been saved
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_training_subset", "train_subset", "bt4sa_img_model_class", True, firstTime, 16)
+        #firstTime = False
         predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_validation", "val", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
     # else:
