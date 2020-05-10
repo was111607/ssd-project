@@ -16,6 +16,6 @@ with open("/media/Data3/sewell/image_predictions_backup.pickle", "rb") as rf:
 trainSubFile = path.join("/media/Data3/sewell/b-t4sa/model_input_training_subset.csv")
 pd.set_option('display.max_colwidth', -1)
 df = pd.read_csv(trainSubFile, header = 0)
-print(df[:6])
 mp = matchPreds(a, df)
-print(np.vstack(mp))
+print(np.stack(mp))
+print(np.stack(mp)[:7])
