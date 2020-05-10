@@ -2,6 +2,7 @@ import re
 import numpy as np
 from os import path
 import pickle
+import pandas as pd
 
 def getFilename(path):
     return re.search(r"(?<=/)[0-9]+-[0-9].jpg", path).group(0)
