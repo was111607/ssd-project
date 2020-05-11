@@ -108,10 +108,10 @@ def main():
 
     # Loads any relevant sentiment features and classifications to form a secondary input into a
     # fusion technique-implementing model.
-    testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing.npy"))
-    testImgStFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing_st.npy"))
-    testImgProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing.npy"))
-    testImgStProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing_st.npy"))
+    # testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing.npy"))
+    # testImgStFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing_st.npy"))
+    # testImgProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing.npy"))
+    # testImgStProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing_st.npy"))
 
     # Model testing function calls
     ### Testing image features and probabilities predicted by VGG-T4SA FT-F and self-trained models ###
@@ -147,7 +147,7 @@ def main():
 
     # Self-improved models
     evalModel(False, mainPath, "textSelf_model", XTest, YTest, "no fusion (text only) (self-improved)", "textSelf_model_score")
-    evalModel(True, mainPath, "textSelf_model", [XTest, testImgStProbs], YTest, "decision-level fusion (self-improved)", "decisionSelf_model_ST_score")
+    # evalModel(True, mainPath, "textSelf_model", [XTest, testImgStProbs], YTest, "decision-level fusion (self-improved)", "decisionSelf_model_ST_score")
     # evalModel(False, mainPath, "featureSelf_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (self-improved)", "featureSelf_model_ST_score")
 
     # # Adam models
