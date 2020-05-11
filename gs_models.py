@@ -1,18 +1,41 @@
+"""
+--------------------------
+Written by William Sewell
+--------------------------
+Supplies grid search network definitions to network_optimisation.py.
+
+This file does not have to be directly run.
+---------------
+Files Required
+---------------
+None
+
+---------------
+Files Produced
+---------------
+None
+
+"""
+
 import pickle
 from keras.models import Model
 from keras.layers import Dense, Embedding, LSTM, Input, Bidirectional, Dropout
 from keras.optimizers import SGD, Adam
 from keras.layers.merge import concatenate
 
+# Model definitions in order that they were defined/performed,
+# The hyperparameters are changed to be input into the next model
+
 def textModel_lstmDropout(dRate = 0.0):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, dropout = dRate, recurrent_dropout = 0.5))(textFtrs)
     hidden1 = Dense(512, activation = "relu")(lstm)
     x1 = Dropout(0.5)(hidden1)
@@ -21,19 +44,19 @@ def textModel_lstmDropout(dRate = 0.0):
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.0001, momentum = 0.9)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
-    # print(model.summary())
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
 def ftrModel_lstmDropout(dRate = 0.0):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, dropout = dRate, recurrent_dropout = 0.5))(textFtrs)
     imageFtrs = Input(shape=(embedDim,))
     concat = concatenate([lstm, imageFtrs])
@@ -50,14 +73,15 @@ def ftrModel_lstmDropout(dRate = 0.0):
 ##############################################################################################################
 
 def textModel_recDropout(dRate = 0.0):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, recurrent_dropout = dRate))(textFtrs)
     hidden1 = Dense(512, activation = "relu")(lstm)
     x1 = Dropout(0.5)(hidden1)
@@ -66,19 +90,20 @@ def textModel_recDropout(dRate = 0.0):
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.0001, momentum = 0.9)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
-    # print(model.summary())
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+
     return model
 
 def ftrModel_recDropout(dRate = 0.0):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.4, recurrent_dropout = dRate))(textFtrs)
     imageFtrs = Input(shape=(embedDim,))
     concat = concatenate([lstm, imageFtrs])
@@ -95,14 +120,15 @@ def ftrModel_recDropout(dRate = 0.0):
 ##############################################################################################################
 
 def textModel_x1Dropout(dRate = 0.0):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, recurrent_dropout = 0.4))(textFtrs)
     hidden1 = Dense(512, activation = "relu")(lstm)
     x1 = Dropout(dRate)(hidden1)
@@ -111,19 +137,19 @@ def textModel_x1Dropout(dRate = 0.0):
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.0001, momentum = 0.9)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
-    # print(model.summary())
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
 def ftrModel_x1Dropout(dRate = 0.0):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.6))(textFtrs)
     imageFtrs = Input(shape=(embedDim,))
     concat = concatenate([lstm, imageFtrs])
@@ -140,14 +166,15 @@ def ftrModel_x1Dropout(dRate = 0.0):
 ##############################################################################################################
 
 def textModel_x2Dropout(dRate = 0.0):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, recurrent_dropout = 0.4))(textFtrs)
     hidden1 = Dense(512, activation = "relu")(lstm)
     x1 = Dropout(0.6)(hidden1)
@@ -156,19 +183,19 @@ def textModel_x2Dropout(dRate = 0.0):
     output = Dense(3, activation = "softmax")(x2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.0001, momentum = 0.9)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
-    # print(model.summary())
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
 def ftrModel_x2Dropout(dRate = 0.0):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.6))(textFtrs)
     imageFtrs = Input(shape=(embedDim,))
     concat = concatenate([lstm, imageFtrs])
@@ -184,15 +211,16 @@ def ftrModel_x2Dropout(dRate = 0.0):
 
 ##############################################################################################################
 
-def textModel_Optimiser(optimiserChoice, lRate):# (dRate = 0.0): # (lr = 0.0, mom = 0.0): # (dRate = 0.0)
+def textModel_Optimiser(optimiserChoice, lRate):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.5))(textFtrs)
     hidden1 = Dense(512, activation = "relu")(lstm)
     x1 = Dropout(0.5)(hidden1)
@@ -204,19 +232,19 @@ def textModel_Optimiser(optimiserChoice, lRate):# (dRate = 0.0): # (lr = 0.0, mo
         optimiser = SGD(lr = lRate, momentum = 0.9)
     else:
         optimiser = Adam(learning_rate = lRate)
-    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"]) # optimizer = "adam"
-    # print(model.summary())
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-def ftrModel_Optimiser(optimiserChoice, lRate): #(lr = 0.0, mom = 0.0): # (dRate): # (extraHLayers)
+def ftrModel_Optimiser(optimiserChoice, lRate):
+    # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
-        maxVocabSize = len(vocab) + 1 # ~ 120k
+        maxVocabSize = len(vocab) + 1
         readFile.close()
     seqLength = 30
     embedDim = 512
     input = Input(shape=(seqLength,))
-    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input) # Output is 30*512 matrix (each word represented in 64 dimensions) = 1920
+    textFtrs = Embedding(maxVocabSize, embedDim, input_length = seqLength, mask_zero = True)(input)
     lstm = Bidirectional(LSTM(embedDim, dropout = 0.5, recurrent_dropout = 0.5))(textFtrs)
     imageFtrs = Input(shape=(embedDim,))
     concat = concatenate([lstm, imageFtrs])

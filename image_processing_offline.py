@@ -256,7 +256,7 @@ def ftrConvert(mainPath, imgModel):
 def backupResults(dict, mainPath, saveName):
     with open(path.join(mainPath, saveName + ".pickle"), "wb") as writeFile:
         pickle.dump(dict, writeFile)
-        print("saved matchings backup")
+        print("Saved " + saveName + " as a backup")
         writeFile.close()
 
 # Attempts to load a model using the provided filename, from the models subdirectory
@@ -322,18 +322,19 @@ def imgPredict(mainPath, dataLen, split, modelName, predictSntmt, firstTime, bat
         print("Initialising t4sa-vgg")
         if predictSntmt is True:
             model = t4saVGG(mainPath)
+            saveModel(model, mainPath, modelName)
         else:
             print("Modifying model to output features")
             model = ftrConvert(mainPath, t4saVGG(mainPath))
         saveModel(model, mainPath, modelName)
+    # First checks if model needs to be converted - only by ST models
     # Otherwise load a provided model, converting it to predict features if required.
     else:
-        if predictSntmt is True:
-            model = loadModel(mainPath, modelName)
-        else:
+        if (predictSntmt is False) and ("st" in saveName):
             print("Modifying model to output features")
-            model = ftrConvert(mainPath, loadModel(mainPath, modelName))
-            saveModel(model, mainPath, modelName + "_converted_to_features")
+            model = ftrConvert(mainPath, loadModel(mainPath, modelName)) # Compilation only required for training
+        else:
+            model = loadModel(mainPath, modelName)
     dataGen = ImageDataGenerator(preprocessing_function = preprocess_input)
     dir = path.join(mainPath, "b-t4sa", "gen_data")
     # Images are resized to 224x224x3 when generated to be compatible as a VGG-based model input
@@ -383,17 +384,16 @@ def main():
     testFile = path.join(mainPath, "b-t4sa/model_input_testing.csv")
 
     # Make first time predictions and results saving for image sentiments
-    dir = path.join(mainPath, "b-t4sa", "image sentiment classifications_test")
+    dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
     if (firstTime is True): # and (not path.exists(dir)):
-        #os.makedirs(dir)
-        #predictAndSave(dir, trainFile, mainPath, "image_sntmt_probs_training", "train", "bt4sa_img_model_class", True, firstTime, 16)
-        firstTime = True # Model has been saved
+        os.makedirs(dir)
+        predictAndSave(dir, trainFile, mainPath, "image_sntmt_probs_training", "train", "bt4sa_img_model_class", True, firstTime, 16)
+        firstTime = False # Model has been saved
         predictAndSave(dir, trainSubFile, mainPath, "image_sntmt_probs_training_subset", "train_subset", "bt4sa_img_model_class", True, firstTime, 16)
-        firstTime = False
         predictAndSave(dir, valFile, mainPath, "image_sntmt_probs_validation", "val", "bt4sa_img_model_class", True, firstTime, 16)
         predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing", "test", "bt4sa_img_model_class", True, firstTime, 16)
-    # else:
-    #     print(dir + " already exists or is not first time, skipping first time creation")
+    else:
+        print(dir + " already exists or is not first time, skipping first time creation")
 
     # Make first time predictions and results saving for image sentiment features
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
@@ -408,15 +408,17 @@ def main():
     else:
         print(dir + " already exists or is not first time, skipping first time creation")
 
-    ### Insert self-trained image model feature predictions here ###
-    # Only the test set should be predicted on
     firstTime = False
+    ### Insert self-trained image model feature predictions here, MUST HAVE ST IN THE SAVENAME TO CONVERT###
+    # Only the test set should be predicted on
+    # The self-trained model needs to be converted to output features.
+
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     # predictAndSave(dir, testFile, mainPath, "image_sntmt_features_testing_st", "test", "bt4sa_img_model_class_st", False, firstTime, 16)
 
-    ### Insert self-trained image model sentiment predictions ###
-    # Only the test set should be predicted on and
-    # the self-trained model should classify sentiments that needs to be converted to output features
+    ### Insert self-trained image model sentiment predictions here###
+    # Only the test set should be predicted on.
+
     dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
     # predictAndSave(dir, testFile, mainPath, "image_sntmt_probs_testing_st", "test", "bt4sa_img_model_class_st", True, firstTime, 16)
 

@@ -1,3 +1,21 @@
+"""
+The :mod:`sklearn.model_selection._validation` module includes classes and
+functions to validate the model.
+
+The _fit_and_score method has been repurposed to convert the
+KerasClassifier-compatible input of [[input1[0], input2[0]],..., [input1[n], input2[n]]
+back to the model definition's expected input of [input1, input2] to be fit
+and scored on.
+"""
+
+# Author: Alexandre Gramfort <alexandre.gramfort@inria.fr>
+#         Gael Varoquaux <gael.varoquaux@normalesup.org>
+#         Olivier Grisel <olivier.grisel@ensta.org>
+#         Raghav RV <rvraghav93@gmail.com>
+# License: BSD 3 clause
+
+#from sklearn.model_selection._validation import _fit_and_score
+
 import warnings
 import numbers
 import time
@@ -115,6 +133,11 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
     X_train, y_train = _safe_split(estimator, X, y, train)
     X_test, y_test = _safe_split(estimator, X, y, test, train)
 
+    # Iterates through X_train, then X_test, to store
+    # [input1[x], input2[x]] pairs and separate them into individual arrays
+    # corresponding to input type,
+    # The model definition's expected input is recreated by pairing the individual
+    # input arrays within a list.
     x0_tr = np.array([X_train[i][0] for i in range(X_train.shape[0])])
     x1_tr = np.array([X_train[i][1] for i in range(X_train.shape[0])])
     X_train = [x0_tr, x1_tr]
@@ -127,7 +150,6 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
         if y_train is None:
             estimator.fit(X_train, **fit_params)
         else:
-        #    estimator.fit([x0_tr, x1_tr], y_train, **fit_params)
             estimator.fit(X_train, y_train, **fit_params)
 
     except Exception as e:
@@ -192,6 +214,7 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
         ret.append(estimator)
     return ret
 
+# Unmodified from sklearn.model_selection._validation, defined to be called by _fit_and_score
 def _score(estimator, X_test, y_test, scorer):
     """Compute the score(s) of an estimator on a given test set.
     Will return a dict of floats if `scorer` is a dict, otherwise a single

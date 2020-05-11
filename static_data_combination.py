@@ -121,7 +121,7 @@ def getImgSntmt(lPoint, rPoint, targetPath):
         # Retrieve image sentiment from the line corresponding to the correct image
         if (id == target):
             path = str(lineParts[1])
-            imgNo = int(re.search(r"(?<=-)[0-9]", path).group(0))
+            imgNo = int(re.search(r"(?<=-)[0-9]", path).group(0)) # Extract image index from path
             # Correct line number is calculated by adding the offset between the current and target line, represented in index,
             # to the midpoint
             correctLine = lc.getline("./existing_image_sorted.csv", mPoint + (targetImgNo - imgNo)).rstrip()

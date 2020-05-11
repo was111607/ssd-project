@@ -64,7 +64,8 @@ def initDirs(dir):
         os.makedirs(path.join(testDir, "neu"))
         os.makedirs(path.join(testDir, "pos"))
         print("Initialised image directories")
-    print("Data storage already exists")
+    else:
+        print("Data storage already exists")
 
 # Copies images described by their paths stored in a list as a parameter to a new provided
 # directory path made up of the split name and sentiment class folder name

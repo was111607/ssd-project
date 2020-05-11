@@ -217,10 +217,10 @@ def preProcess(df):
 def tokenise(df, isTrain):
     tweets = list(df["NEW_TEXT"].values)
     for tweet in tweets:
-        counter.update(tweet.split())
+        counter.update(tweet.split()) # update vocabulary
     if (isTrain is True):
         tokeniser.fit_on_texts(tweets)
-    df["TOKENISED"] = tokeniser.texts_to_sequences(tweets) # Stores tokenised text into a new column.
+    df["TOKENISED"] = tokeniser.texts_to_sequences(tweets) # Stores tokenised text as a vector of tokens into a new column.
     df["TOKENISED"] = pad_sequences(df["TOKENISED"], maxlen = 30, padding = "pre", value = 0).tolist() # Converts numpy array to list for CSV storage.
     return df
 

@@ -1,6 +1,14 @@
 """
 The :mod:`sklearn.model_selection._search` includes utilities to fine-tune the
 parameters of an estimator.
+
+The BaseSearchCV.fit been repurposed, adding lines 747-749, to convert the
+KerasClassifier-compatible input of [[input1[0], input2[0]],..., [input1[n], input2[n]]
+back to the model definition's expected input of [input1, input2] to be re-fit
+the best resulting estimator.
+
+The entire file has been recreated as many use _fit_and_score , which has been
+modified in multi_input_scorer.
 """
 
 # Author: Alexandre Gramfort <alexandre.gramfort@inria.fr>,
@@ -733,6 +741,12 @@ class BaseSearchCV(MetaEstimatorMixin, BaseEstimator, metaclass=ABCMeta):
         if self.refit:
             # we clone again after setting params in case some
             # of the params are estimators as well.
+
+            # Iterates through the entire input data to store
+            # [input1[x], input2[x]] pairs and separate them into individual arrays
+            # corresponding to input type,
+            # The model definition's expected input is recreated by pairing the individual
+            # input arrays within a list.
             x0 = np.array([X[i][0] for i in range(X.shape[0])])
             x1 = np.array([X[i][1] for i in range(X.shape[0])])
             X = [x0, x1]

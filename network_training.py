@@ -3,9 +3,9 @@
 Written by William Sewell
 --------------------------
 Performs the network creation and training step, initialising networks as defined
-in networks.py
+in networks.py.
 
-This was performed on an external system: AWS S3 (server group)
+This was performed on an external system: AWS S3 (server group).
 ---------------
 Files Required
 ---------------
@@ -56,7 +56,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.vgg19 import preprocess_input
 from keras.utils import to_categorical
 from ast import literal_eval
-import models
+import networks
 
 # Defines the learning rate scheduler that, if applied to networks during training,
 # calculates the learning rate to train at each epoch.
@@ -110,12 +110,12 @@ def saveModel(model, mainPath, fname, overWrite = False):
     print(fname + " - " + msg) # Outputs status of saving the model
 
 # Evaluates the string, which stores a list of predictions, literally to infer that it is a list type
-# and converts it to a list, then being retyped as a Numpy array
+# and converts it to a list, then being retyped as a Numpy array.
 def toArray(list):
     return np.array(literal_eval(str(list)))
 
 # Initialises and returns callbacks to augment the model training process with,
-# With early stoppage and logging mandatory throughout and learning rate schedular is optional
+# With early stoppage and logging mandatory throughout and learning rate schedular is optional.
 def getCallbacks(scheduleLr, logDir, logName):
     # The training will stop if validation loss is increasing for 2 epochs straight
     earlyStoppage = EarlyStopping(monitor = "val_loss", mode = "min", patience = 2, verbose = 1)
@@ -128,8 +128,8 @@ def getCallbacks(scheduleLr, logDir, logName):
     return callbacks
 
 # Trains a text-only, decision-level or feature-level fusion model which has been initialised
-# and passed in as a parameter
-def trainMainModel(model, modelName, historyName, logDir, logName, trainInput, YTrain, valInput, YVal, mainPath, scheduleLr = True, batchSize = 16, epochs = 15):
+# and passed in as a parameter.
+def trainMainModel(model, modelName, historyName, logDir, logName, trainInput, YTrain, valInput, YVal, mainPath, scheduleLr = True, batchSize = 16, epochs = 3):
     # retrieves list of callbacks to pass to model.fit
     callbacks = getCallbacks(scheduleLr, logDir, logName)
     # Trains the provided model given its input, one-hot encoded Y labels to compare to and validation data
@@ -161,12 +161,12 @@ def trainImgModel(model, modelName, historyName, logDir, logName, trainLen, valL
     saveModel(model, mainPath, modelName, overWrite = True)
 
 def main():
-    # Configuration for alternate external directory structure
+    # Configuration for alternate external directory structure.
     awsDir = "/media/Data3/sewell"
     curDir = "."
-    isAws = True # Set if on external system
+    isAws = False # Set if on external system
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Set according to GPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to GPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -180,41 +180,44 @@ def main():
 
     # Create a Numpy array of training and validation input vectors to form network inputs by retrieving
     # columns storing the vectors in the DataFrame and typesetting them to a list, which can be converted to a Numpy array.
-    # The tweet sentiment classifications are initialised as numpy arrays storing integers
+    # The tweet sentiment classifications are initialised as numpy arrays storing integers.
+    dfTrain = dfTrain[~(dfTrain["TWID"].isin(dfVal["TWID"]))]
+
+
     XTrain = np.stack(dfTrain["TOKENISED"].apply(toArray))
     XVal = np.stack(dfVal["TOKENISED"].apply(toArray))
     YTrain = dfTrain["TXT_SNTMT"].to_numpy("int32")
     YVal = dfVal["TXT_SNTMT"].to_numpy("int32")
 
-    # Checks if sentiment features exist and warns the user if not
+    # Checks if sentiment features exist and exits the program if not.
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     if not path.exists(dir):
-        print("No image data found, only text models can be trained until image processing is carried out.")
+        print("No image data found, please run image_processing.py")
         exit()
 
-    # Loads image features ready for model input
+    # Loads image features ready for model input.
     print("Loading training features")
     trainImgFeatures = np.load(path.join(dir, "image_sntmt_features_training.npy"))
     print("Loading validation features")
     valImgFeatures = np.load(path.join(dir, "image_sntmt_features_validation.npy"))
 
-    # Creates directory to store logs from training
+    # Creates directory to store logs from training.
     logDir = "./logs"
     if not path.exists(logDir):
         os.makedirs(logDir)
 
-    ### Train networks here, must initialise networks from networks.py as part of training method call
+    ### Train networks here, must initialise networks from networks.py as part of training method call.
 
-    # trainImgModel(models.sentimentVGG(),
-    #     "bt4sa_img_model_class_st",
-    #     "bt4sa_img_model_probs_st_history",
+    # trainImgModel(networks.sentimentVGG(),
+    #     "bt4saST_img_model",
+    #     "bt4saST_img_model_history",
     #     logDir,
-    #     "bt4sa_img_model_ftrs_st_log",
+    #     "bt4saST_log",
     #     dfTrain.shape[0],
     #     dfVal.shape[0],
     #     mainPath)
 
-    # trainMainModel(models.textModelArb(),
+    # trainMainModel(networks.textModelArb(),
     #     "textArb_model",
     #     "textArb_model_history",
     #     logDir,
@@ -225,7 +228,7 @@ def main():
     #     YVal,
     #     mainPath)
 
-    # trainMainModel(models.ftrModelArb(),
+    # trainMainModel(networks.ftrModelArb(),
     #     "featureArb_model",
     #     "featureArb_model_history",
     #     logDir,
@@ -236,8 +239,7 @@ def main():
     #     YVal,
     #     mainPath)
 
-
-    # trainMainModel(models.textModelOpt(),
+    # trainMainModel(networks.textModelOpt(),
     #     "textOptimised_model",
     #     "textOptimised_history",
     #     logDir,
@@ -248,7 +250,7 @@ def main():
     #     YVal,
     #     mainPath)
 
-    # trainMainModel(models.ftrModelOpt(),
+    # trainMainModel(networks.ftrModelOpt(),
     #     "featureOptimised_model",
     #     "featureOptimised_model_history",
     #     logDir,
@@ -259,9 +261,9 @@ def main():
     #     YVal,
     #     mainPath)
 
-    # trainMainModel(models.textModelSelf(),
-    #     "textSelf_model_TEST",
-    #     "textSelf_model_historyTEST",
+    # trainMainModel(networks.textModelSelf(),
+    #     "textSelf_model",
+    #     "textSelf_model_history",
     #     logDir,
     #     "textSelf_logTEST",
     #     XTrain,
@@ -269,19 +271,19 @@ def main():
     #     XVal,
     #     YVal,
     #     mainPath)
-    #
-    trainMainModel(models.ftrModelSelf(),
-        "featureSelf_model_TEST",
-        "featureSelf_model_history_TEST",
-        logDir,
-        "featureSelf_log_TEST",
-        [XTrain, trainImgFeatures],
-        YTrain,
-        [XVal, valImgFeatures],
-        YVal,
-        mainPath)
 
-    # trainMainModel(models.textModelAdam(),
+    # trainMainModel(networks.ftrModelSelf(),
+    #     "featureSelf_model",
+    #     "featureSelf_model_history",
+    #     logDir,
+    #     "featureSelf_log_TEST",
+    #     [XTrain, trainImgFeatures],
+    #     YTrain,
+    #     [XVal, valImgFeatures],
+    #     YVal,
+    #     mainPath)
+
+    # trainMainModel(networks.textModelAdam(),
     #     "textAdam_model",
     #     "textAdam_model_history",
     #     logDir,
@@ -293,7 +295,7 @@ def main():
     #     mainPath,
     #     scheduleLr = False)
 
-    # trainMainModel(models.ftrModelAdam(),
+    # trainMainModel(networks.ftrModelAdam(),
     #     "featureAdam_model",
     #     "featureAdam_model_history",
     #     logDir,
@@ -305,7 +307,7 @@ def main():
     #     mainPath.
     #     scheduleLr = False)
 
-    # trainMainModel(models.textModelSelfLr0001(),
+    # trainMainModel(networks.textModelSelfLr0001(),
     #     "textLr0001_model,
     #     "textLr0001_model_history",
     #     logDir,
@@ -317,7 +319,7 @@ def main():
     #     mainPath,
     #     scheduleLr = False)
     #
-    # trainMainModel(models.ftrModelSelfLr0001(),
+    # trainMainModel(networks.ftrModelSelfLr0001(),
     #     "featureLr0001_model",
     #     "featureLr0001_model_history",
     #     logDir,

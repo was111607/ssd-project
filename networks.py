@@ -2,9 +2,9 @@
 --------------------------
 Written by William Sewell
 --------------------------
-Performs the network creation step, supplying network definitions to network_training.py
+Performs the network creation step, supplying network definitions to network_training.py.
 
-This file does not have to be run, unless locally to visualise model architectures.
+This file does not have to be directly run, unless locally to visualise model architectures.
 ---------------
 Files Required
 ---------------
@@ -14,11 +14,12 @@ None
 Files Produced
 ---------------
 OPTIONAL:
-Trained model architecture diagramds - Can only be retrieved when using local system.
+Trained model architecture diagrams - Can only be retrieved when using local system.
                                        Visualised and stored using Keras's plot_model method.
 """
 
 import pickle
+import runai
 from keras import regularizers
 from keras.models import Model
 from keras.layers import Dense, Embedding, LSTM, Input, Lambda, Bidirectional, Flatten, Dropout, Conv2D, MaxPooling2D
@@ -188,6 +189,7 @@ def sentimentVGG():
         trainable = True)(dropout2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.001, momentum = 0.9) # learning_rate decays
+    # optimiser = runai.ga.keras.optimizers.Optimizer(optimiser, steps = 2) # Not required for small batch sizes
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
@@ -417,8 +419,8 @@ def textModelSelfLr0001():
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 
-# Intuitive attempted improvement on a grid search-optimised feature-level model with a learning rate of 0.0001
-def ftrModelSelfLr0001():
+# Intuitive attempted improvement on a grid search-optimised feature-level model with a learning rate of 0.0005
+def ftrModelSelfLr0005():
     # Load vocabulary for embedding layer size
     with open("./vocabulary.pickle", "rb") as readFile:
         vocab = pickle.load(readFile)
@@ -437,7 +439,7 @@ def ftrModelSelfLr0001():
     x2 = Dropout(0.3)(hidden2)
     output = Dense(3, activation = "softmax")(x2)
     model = Model(inputs = [input, imageFtrs], output = output)
-    optimiser = SGD(lr = 0.0001, momentum = 0.9)
+    optimiser = SGD(lr = 0.0005, momentum = 0.9)
     model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     return model
 

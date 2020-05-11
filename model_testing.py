@@ -89,9 +89,9 @@ def evalModel(isDecision, mainPath, modelName, input, YTest, fusionType, scoreNa
 def main():
     awsDir = "/media/Data3/sewell"
     curDir = "."
-    isAws = True # Set if on external system
+    isAws = False # Set if on external system
     if isAws is True:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1" # Set according to GPU to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to GPU to use
         mainPath = awsDir
     else:
         mainPath = curDir
@@ -108,10 +108,10 @@ def main():
 
     # Loads any relevant sentiment features and classifications to form a secondary input into a
     # fusion technique-implementing model.
-    # testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing.npy"))
-    # testImgStFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing_st.npy"))
-    # testImgProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing.npy"))
-    # testImgStProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing_st.npy"))
+    testImgFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing.npy"))
+    testImgStFtrs = np.load(path.join(mainPath, "b-t4sa/image sentiment features/image_sntmt_features_testing_st.npy"))
+    testImgProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing.npy"))
+    testImgStProbs = np.load(path.join(mainPath, "b-t4sa/image sentiment classifications/image_sntmt_probs_testing_st.npy"))
 
     # Model testing function calls
     ### Testing image features and probabilities predicted by VGG-T4SA FT-F and self-trained models ###
@@ -120,45 +120,45 @@ def main():
     # Base arbitrary text model
     # evalModel(False, mainPath, "textArb_model", XTest, YTest, "text only", "textArb_NonST_model_score")
     #
-    # Arbitrary decision-level models
+    # # Arbitrary decision-level models
     # evalModel(True, mainPath, "textArb_model", [XTest, testImgProbs], YTest, "decision-level fusion (Non-ST images)", "decisionArbNST_model_score")
     # evalModel(True, mainPath, "textArb_model", [XTest, testImgStProbs], YTest, "decision-level fusion (ST images)", "decisionArbST_model_score")
     #
-    # Arbitrary feature-level models
+    # # Arbitrary feature-level models
     # evalModel(False, mainPath, "featureArb_model", [XTest, testImgFtrs], YTest, "feature-level fusion (Non-ST images)", "featureArbNST_model_score")
     # evalModel(False, mainPath, "featureArb_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (ST images)", "featureArbNST_model_score")
-    #
+
     # Self decision-level models
-    # evalModel(True, mainPath, "textSelf_model", [XTest, testImgProbs], YTest, "decision-level fusion (Non-ST images)", "decisionSelfNST_model_score")
-    # evalModel(True, mainPath, "textSelf_model", [XTest, testImgStProbs], YTest, "decision-level fusion (ST images)", "decisionSelfST_model_score")
-    #
+    evalModel(True, mainPath, "textSelf_model", [XTest, testImgProbs], YTest, "decision-level fusion (Non-ST images)", "decisionSelfNST_model_score")
+    evalModel(True, mainPath, "textSelf_model", [XTest, testImgStProbs], YTest, "decision-level fusion (ST images)", "decisionSelfST_model_score")
+
     # Self feature-level models
-    # evalModel(False, mainPath, "featureSelf_model", [XTest, testImgFtrs], YTest, "feature-level fusion (Non-ST images)", "featureSelfNST_model_score")
-    # evalModel(False, mainPath, "featureSelf_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (ST images)", "featureSelfST_model_score")
+    evalModel(False, mainPath, "featureSelf_model", [XTest, testImgFtrs], YTest, "feature-level fusion (Non-ST images)", "featureSelfNST_model_score")
+    evalModel(False, mainPath, "featureSelf_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (ST images)", "featureSelfST_model_score")
 
 
     ### Testing differing hyperparameter configurations for each model type using ST images. ###
     # Arbitrary scores can be used from the ST images tests.
 
     # GS Optimised models
-    # evalModel(False, mainPath, "textOptimised_model", XTest, YTest, "no fusion (text only) optimised", "textOpt_model_score")
-    # evalModel(True, mainPath, "textOptimised_model", [XTest, testImgStProbs], YTest, "decision-level fusion optimised (ST)", "decisionOpt_model_ST_score")
-    # evalModel(False, mainPath, "featureOptimised_model", [XTest, testImgStFtrs], YTest, "feature-level fusion optimised (ST)", "featureOpt_model_ST_score")
+    evalModel(False, mainPath, "textOptimised_model", XTest, YTest, "no fusion (text only) optimised", "textOpt_model_score")
+    evalModel(True, mainPath, "textOptimised_model", [XTest, testImgStProbs], YTest, "decision-level fusion optimised (ST)", "decisionOpt_model_ST_score")
+    evalModel(False, mainPath, "featureOptimised_model", [XTest, testImgStFtrs], YTest, "feature-level fusion optimised (ST)", "featureOpt_model_ST_score")
 
     # Self-improved models
     evalModel(False, mainPath, "textSelf_model", XTest, YTest, "no fusion (text only) (self-improved)", "textSelf_model_score")
-    # evalModel(True, mainPath, "textSelf_model", [XTest, testImgStProbs], YTest, "decision-level fusion (self-improved)", "decisionSelf_model_ST_score")
-    # evalModel(False, mainPath, "featureSelf_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (self-improved)", "featureSelf_model_ST_score")
+    evalModel(True, mainPath, "textSelf_model", [XTest, testImgStProbs], YTest, "decision-level fusion (self-improved)", "decisionSelf_model_ST_score")
+    evalModel(False, mainPath, "featureSelf_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (self-improved)", "featureSelf_model_ST_score")
 
     # # Adam models
-    # evalModel(False, mainPath, "textAdam_model", XTest, YTest, "no fusion (text only) Adam", "textAdam_model_score")
-    # evalModel(True, mainPath, "textAdam_model", [XTest, testImgStProbs], YTest, "decision-level fusion (Adam)", "decisionAdam_model_ST_score")
+    evalModel(False, mainPath, "textAdam_model", XTest, YTest, "no fusion (text only) Adam", "textAdam_model_score")
+    evalModel(True, mainPath, "textAdam_model", [XTest, testImgStProbs], YTest, "decision-level fusion (Adam)", "decisionAdam_model_ST_score")
     # feature-level Adam has not been tested
 
     # LR 0001 models
-    # evalModel(False, mainPath, "textLr0001_model", XTest, YTest, "no fusion (text only) (lr 0.0001)", "textLr0001_model_score")
-    # evalModel(True, mainPath, "textLr0001_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.0001)", "decisionLr0001_model_ST_score")
-    # evalModel(False, mainPath, "featureLr0001_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (lr 0.0001)", "featureLr0001_model_ST_score")
+    evalModel(False, mainPath, "textLr0001_model", XTest, YTest, "no fusion (text only) (lr 0.0001)", "textLr0001_model_score")
+    evalModel(True, mainPath, "textLr0001_model", [XTest, testImgStProbs], YTest, "decision-level fusion (lr 0.0001)", "decisionLr0001_model_ST_score")
+    evalModel(False, mainPath, "featureLr0001_model", [XTest, testImgStFtrs], YTest, "feature-level fusion (lr 0.0001)", "featureLr0001_model_ST_score")
 
 if __name__ == "__main__":
     main()

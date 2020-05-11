@@ -3,9 +3,9 @@
 Written by William Sewell
 --------------------------
 Performs image processing using image data stored externally to acquire predictions of
-image sentiment features and classifications
+image sentiment features and classifications.
 
-This was performed on an external system: Compute Nodes, AWS S3 (privately)
+This was performed on an external system: Compute Nodes, AWS S3 (privately).
 ---------------
 Files Required
 ---------------
@@ -62,9 +62,9 @@ image_sntmt_ftrs_testing.npy - Stores predicted sentiment features for the
                                existing BT4SA testing split.
 
 OPTIONAL:
-Testing split image sentiment probability scores predicted by a self-trained model
+Testing split image sentiment probability scores predicted by a self-trained model.
 
-Testing split image sentiment features predicted by a self-trained model
+Testing split image sentiment features predicted by a self-trained model.
 """
 
 import pandas as pd
@@ -78,7 +78,6 @@ from keras.layers import Dense, Input, Flatten, Dropout, Conv2D, MaxPooling2D
 from keras.applications.vgg19 import preprocess_input
 from keras.optimizers import SGD
 from keras import regularizers
-from runai import ga
 from io import BytesIO
 from urllib.request import urlopen
 
@@ -240,8 +239,7 @@ def t4saVGG(mainPath):
         trainable = True)(dropout2)
     model = Model(input = input, output = output)
     optimiser = SGD(lr = 0.001, momentum = 0.9) # learning rate decays
-    gaOptimiser = ga.keras.optimizers.Optimizer(optimiser, steps = 2) # Adds gradient accumulation
-    model.compile(optimizer = gaOptimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
+    model.compile(optimizer = optimiser, loss = "categorical_crossentropy", metrics = ["accuracy"])
     model.load_weights(path.join(mainPath, "vgg19_ft_weights.h5"), by_name = True) # Load weights into model matching layer names
     return model
 
@@ -279,7 +277,7 @@ def saveModel(model, mainPath, fname, overWrite = False):
 def loadModel(mainPath, fname):
     try:
         modelPath = path.join(mainPath, "models", fname + ".h5")
-        model = load_model(modelPath)
+        model = load_model(modelPath, compile = False) # Compilation only required for training
         print(fname + " successfully loaded")
         return model
     except OSError:
@@ -362,15 +360,15 @@ def predictAndSave(dir, filePath, mainPath, modelName, noPartitions, saveName, p
         else:
             print("Modifying model to output features")
             model = ftrConvert(mainPath, t4saVGG(mainPath))
-        saveModel(model, mainPath, modelName, overWrite = False)
+        saveModel(model, mainPath, modelName)
     # Otherwise load a provided model, converting it to predict features if required.
+    # First checks if model needs to be converted - only by ST models
     else:
-        if predictSntmt is True:
-            model = loadModel(mainPath, modelName)
-        else:
+        if (predictSntmt is False) and ("st" in saveName):
             print("Modifying model to output features")
             model = ftrConvert(mainPath, loadModel(mainPath, modelName))
-            saveModel(model, mainPath, modelName + "_converted_to_features", overWrite = False)
+        else:
+            model = loadModel(mainPath, modelName)
     print("Predicting for " + saveName)
     predictions = batchPredict(paths, model, noPartitions, mainPath, backupName, predictSntmt) # acquire predictions for image URLs
     np.save(path.join(dir, saveName), predictions)
@@ -395,14 +393,15 @@ def recoverPredictAndSave(dir, filePath, mainPath, modelName, noPartitions, save
         else:
             print("Modifying model to output features")
             model = ftrConvert(mainPath, t4saVGG(mainPath))
-        saveModel(model, mainPath, modelName, overWrite = False)
+        saveModel(model, mainPath, modelName)
+    # First checks if model needs to be converted - only by ST models
+    # Otherwise load a provided model, converting it to predict features if required.
     else:
-        if predictSntmt is True:
-            model = loadModel(mainPath, modelName)
-        else:
+        if (predictSntmt is False) and ("st" in saveName):
             print("Modifying model to output features")
             model = ftrConvert(mainPath, loadModel(mainPath, modelName))
-            saveModel(model, mainPath, modelName + "_converted_to_features", overWrite = False)
+        else:
+            model = loadModel(mainPath, modelName)
     print("Predicting for " + saveName)
     # Loads backups, iterating through backupnumbers to accumulate the total backup data if required
     for i in range(noBackups):
@@ -432,7 +431,7 @@ def main():
     awsDir = "/media/Data3/sewell"
     curDir = "."
     isAws = False # Set if on external system
-    firstTime = True
+    firstTime = False
     if isAws is True:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0" # Set according to GPU to use
         mainPath = awsDir
@@ -463,18 +462,30 @@ def main():
 
     dir = path.join(mainPath, "b-t4sa", "image sentiment features")
     ### Insert recoverPredictAndSave methods here followed by predictAndSave calls for unpredicted data splits ###
-    # recoverPredictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_ftrs", 30, "image_sntmt_ftrs_training", False, False, 1)
+    # recoverPredictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_ftrs", 30, "image_sntmt_features_training", False, False, 1)
 
     # Make first time predictions and results saving for image sentiment features
     if (firstTime is True) and (not path.exists(dir)):
         os.makedirs(dir)
-        predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_ftrs", 60, "image_sntmt_ftrs_training", False, firstTime)
+        predictAndSave(dir, trainFile, mainPath, "bt4sa_img_model_ftrs", 60, "image_sntmt_features_training", False, firstTime)
         firstTime = False # Model has been created
-        predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_ftrs", 30, "image_sntmt_probs_training_subset", False, firstTime)
-        predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_ftrs", 20, "image_sntmt_ftrs_validation", False, firstTime)
-        predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_ftrs", 20, "image_sntmt_ftrs_testing", False, firstTime)
+        predictAndSave(dir, trainSubFile, mainPath, "bt4sa_img_model_ftrs", 30, "image_sntmt_features_training_subset", False, firstTime)
+        predictAndSave(dir, valFile, mainPath, "bt4sa_img_model_ftrs", 20, "image_sntmt_features_validation", False, firstTime)
+        predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_ftrs", 20, "image_sntmt_features_testing", False, firstTime)
     else:
         print(dir + " already exists, skipping first time creation")
+
+    firstTime = False
+    ### Insert self-trained image model feature predictions here, ST MUST BE IN THE SAVENAME TO CONVERT###
+    # Only the test set should be predicted on.
+    # The self-trained model needs to be converted to output features.
+    dir = path.join(mainPath, "b-t4sa", "image sentiment features")
+    predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_class_st", 20, "image_sntmt_features_testing_st", False, firstTime)
+
+    ### Insert self-trained image model sentiment predictions here###
+    # Only the test set should be predicted on.
+    dir = path.join(mainPath, "b-t4sa", "image sentiment classifications")
+    predictAndSave(dir, testFile, mainPath, "bt4sa_img_model_class_st", 20, "image_sntmt_probs_testing_st", True, firstTime)
 
 if __name__ == "__main__":
     main()
